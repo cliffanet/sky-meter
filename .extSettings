@@ -1,0 +1,5 @@
+[ProjectFiles]
+HeaderPath=../src/u8g2;
+[Groups]
+Drivers/u8g2=src/u8g2/*.c
+[Others]
