@@ -21,6 +21,11 @@ uint32_t utm_diff(uint32_t prev) {
     return utm() - prev;
 }
 
+extern "C"
+uint32_t mill() {
+    return HAL_GetTick();
+}
+
 /* ------------------------------------------------------------------------------------------- *
  *      операции со временем в формате tm_t
  * ------------------------------------------------------------------------------------------- */
@@ -33,61 +38,6 @@ uint8_t tm_s::operator==(const tm_s &tm) {
             (this->h == tm.h) && (this->m == tm.m) && (this->s == tm.s)
         );
 }
-
-int32_t tm_s::operator-(const tm_s &tm) {
-    /*
-    DateTime
-        dtbeg(tmbeg.year, tmbeg.mon, tmbeg.day, tmbeg.h, tmbeg.m, tmbeg.s),
-        dtend(tmend.year, tmend.mon, tmend.day, tmend.h, tmend.m, tmend.s);
-    
-    int32_t tint = (dtend.unixtime() - dtbeg.unixtime()) * 1000;
-    int8_t tick1 = tmend.tick - tmbeg.tick;
-    int16_t tick = tick1;
-    return tint + (tick * TIME_TICK_INTERVAL);
-    */
-    return 0;
-}
-
-tm_s tm_s::operator-(uint32_t ms) {
-    return tm_s();
-}
-
-/* ------------------------------------------------------------------------------------------- *
- *      часы
- * ------------------------------------------------------------------------------------------- */
-
-/*
-tm_t tmNow(uint32_t earlerms) {
-    if (earlerms == 0)
-        return tmNow();
-    
-    auto tm = tmNow();
-    
-    DateTime dt1(tm.year, tm.mon, tm.day, tm.h, tm.m, tm.s);
-    uint32_t ut = dt1.unixtime() - (earlerms / 1000);
-    
-    int8_t tick = (earlerms % 1000) / TIME_TICK_INTERVAL;
-    tick = tm.tick - tick;
-    
-    ut += tick * TIME_TICK_INTERVAL / 1000;
-    tick = tick % (1000 / TIME_TICK_INTERVAL);
-    if (tick < 0) {
-        ut --;
-        tick += 100;
-    }
-    
-    DateTime dt(ut);
-    return { 
-        year: dt.year(),
-        mon : dt.month(),
-        day : dt.day(),
-        h   : dt.hour(),
-        m   : dt.minute(),
-        s   : dt.second(),
-        tick: static_cast<uint8_t>(tick >= 0 ? tick : 0)
-    };
-}
-*/
 
 /* ------------------------------------------------------------------------------------------- *
  *  работа с часами

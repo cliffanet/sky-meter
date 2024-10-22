@@ -25,6 +25,8 @@
 #include "usbd_cdc_if.h"
 #include "u8g2/u8g2.h"
 #include "jump/bmp280.h"
+#include "jump/wrk.h"
+#include "sys/worker.h"
 #include "sys/log.h"
 /* USER CODE END Includes */
 
@@ -192,11 +194,18 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+    HAL_Delay(5000);
+    jmp();
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    uint32_t t = wrkProcess(98);
+    if (t < 80)
+        HAL_Delay(99-t);
+    continue;
+
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_RESET);
 
     char s[64];
@@ -377,7 +386,6 @@ static void MX_RTC_Init(void)
   }
 
   /** Enable the WakeUp
-  */
   if (HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 20000, RTC_WAKEUPCLOCK_RTCCLK_DIV16) != HAL_OK)
   {
     Error_Handler();

@@ -38,9 +38,10 @@ static void vtxtlog(const char *s, va_list ap) {
         )
         sbeg =
             snprintf(
-                str, 32, "%2d.%02d.%04d %2d:%02d:%02d ",
+                str, 32, "%2d.%02d.%04d %2d:%02d:%02d.%03ld ",
                 sDate.Date, sDate.Month, sDate.Year,
-                sTime.Hours, sTime.Minutes, sTime.Seconds
+                sTime.Hours, sTime.Minutes, sTime.Seconds,
+                1000 * (sTime.SecondFraction-sTime.SubSeconds) / sTime.SecondFraction
             );
     
     len = vsnprintf(str+sbeg, len+1, s, ap) + sbeg;

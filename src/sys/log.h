@@ -2,8 +2,8 @@
     Log
 */
 
-#ifndef _core_log_H
-#define _core_log_H
+#ifndef _sys_log_H
+#define _sys_log_H
 
 #include "../../def.h"
 
@@ -30,4 +30,4 @@ void conslog(const char *s, ...);
 }
 #endif
 
-#endif // _core_log_H
+#endif // _sys_log_H

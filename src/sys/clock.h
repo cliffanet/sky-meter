@@ -2,8 +2,8 @@
     Clock
 */
 
-#ifndef _core_clock_H
-#define _core_clock_H
+#ifndef _sys_clock_H
+#define _sys_clock_H
 
 #include "../../def.h"
 #include <stdint.h>
@@ -29,9 +29,6 @@ typedef struct __attribute__((__packed__)) tm_s {
     
     uint8_t operator== (const struct tm_s & tm);
     bool operator!= (const struct tm_s & tm) { return !(*this == tm); };
-
-    int32_t operator-(const struct tm_s & tm);
-    struct tm_s operator-(uint32_t ms);
 } tm_t;
 
 #define TIME_TICK_INTERVAL      10
@@ -43,4 +40,4 @@ typedef struct __attribute__((__packed__)) tm_s {
 tm_t tmNow();
 bool tmAdjust(const tm_t &tm, uint8_t wday);
 
-#endif // _core_clock_H
+#endif // _sys_clock_H
