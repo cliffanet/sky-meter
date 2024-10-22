@@ -1,5 +1,10 @@
 [ProjectFiles]
-HeaderPath=../src/u8g2;
+HeaderPath=src;
 [Groups]
-Drivers/u8g2=src/u8g2/*.c
+# тут если указать с маленькой буквы: src/...
+# и то ли cube mx, то ли stm32-for-vscode
+# кто-то из них дублирует .o файлы из Src/ и src/
+# при итоговой линковке
+u8g2=Src/u8g2/*.c;
+src=Src/*/*.cpp;
 [Others]

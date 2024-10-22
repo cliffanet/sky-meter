@@ -23,7 +23,9 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "usbd_cdc_if.h"
-#include "u8g2.h"
+#include "u8g2/u8g2.h"
+#include "jump/bmp280.h"
+#include "sys/log.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -122,22 +124,23 @@ uint8_t u8x8_byte_4wire_hw_spi(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int,
     HAL_SPI_Transmit(&hspi1, (uint8_t *) arg_ptr, arg_int, 10000);
     break;
   case U8X8_MSG_BYTE_INIT:
-    HAL_GPIO_WritePin(DSPL_PIN_CS, u8x8->display_info->chip_disable_level);
+    HAL_GPIO_WritePin(DSPL_PIN_CS, u8x8->display_info->chip_disable_level ? GPIO_PIN_SET : GPIO_PIN_RESET);
     break;
   case U8X8_MSG_BYTE_SET_DC:
     HAL_GPIO_WritePin(DSPL_PIN_DC, arg_int);
     break;
   case U8X8_MSG_BYTE_START_TRANSFER:
-    HAL_GPIO_WritePin(DSPL_PIN_CS, u8x8->display_info->chip_enable_level);
+    HAL_GPIO_WritePin(DSPL_PIN_CS, u8x8->display_info->chip_enable_level ? GPIO_PIN_SET : GPIO_PIN_RESET);
     break;
   case U8X8_MSG_BYTE_END_TRANSFER:
-    HAL_GPIO_WritePin(DSPL_PIN_CS, u8x8->display_info->chip_disable_level);
+    HAL_GPIO_WritePin(DSPL_PIN_CS, u8x8->display_info->chip_disable_level ? GPIO_PIN_SET : GPIO_PIN_RESET);
     break;
   default:
     return 0;
   }
   return 1;
 }
+
 /* USER CODE END 0 */
 
 /**
@@ -197,6 +200,9 @@ int main(void)
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_RESET);
 
     char s[64];
+    
+    uint8_t r = bmpregid();
+    CONSOLE("bmp280 chipid2: %d = 0x%02x ? %d\n", r, r, r == 0x58);
 
     HAL_Delay(1000);
 
@@ -227,6 +233,7 @@ int main(void)
         HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
         HAL_Delay(100);
     }
+    continue;
 
     //
     /*## Configure the Wake up timer ###########################################*/
@@ -439,6 +446,9 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
+
+  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_11, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
@@ -456,8 +466,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PB1 PB2 PB11 */
-  GPIO_InitStruct.Pin = GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_11;
+  /*Configure GPIO pins : PB0 PB1 PB2 PB11 */
+  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_11;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
