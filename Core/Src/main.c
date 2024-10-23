@@ -23,7 +23,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "usbd_cdc_if.h"
-#include "u8g2/u8g2.h"
+#include "init.h"
 #include "jump/bmp280.h"
 #include "jump/wrk.h"
 #include "sys/worker.h"
@@ -51,11 +51,7 @@ RTC_HandleTypeDef hrtc;
 SPI_HandleTypeDef hspi1;
 
 /* USER CODE BEGIN PV */
-static u8g2_t u8g2;
 
-#define DSPL_PIN_DC     GPIOB, GPIO_PIN_2
-#define DSPL_PIN_RST    GPIOB, GPIO_PIN_1
-#define DSPL_PIN_CS     GPIOB, GPIO_PIN_11
 
 /* USER CODE END PV */
 
@@ -92,56 +88,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 }
 
 
-uint8_t u8x8_stm32_gpio_and_delay(U8X8_UNUSED u8x8_t *u8x8,
-    U8X8_UNUSED uint8_t msg, U8X8_UNUSED uint8_t arg_int,
-    U8X8_UNUSED void *arg_ptr)
-{
-  switch (msg)
-  {
-  case U8X8_MSG_GPIO_AND_DELAY_INIT:
-    HAL_Delay(1);
-    break;
-  case U8X8_MSG_DELAY_MILLI:
-    HAL_Delay(arg_int);
-    break;
-  case U8X8_MSG_GPIO_CS:
-    //HAL_GPIO_WritePin(DSPL_PIN_CS, arg_int);
-    break;
-  case U8X8_MSG_GPIO_DC:
-    HAL_GPIO_WritePin(DSPL_PIN_DC, arg_int);
-    break;
-  case U8X8_MSG_GPIO_RESET:
-    HAL_GPIO_WritePin(DSPL_PIN_RST, arg_int);
-    break;
-  }
-  return 1;
-}
-
-uint8_t u8x8_byte_4wire_hw_spi(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int,
-    void *arg_ptr)
-{
-  switch (msg)
-  {
-  case U8X8_MSG_BYTE_SEND:
-    HAL_SPI_Transmit(&hspi1, (uint8_t *) arg_ptr, arg_int, 10000);
-    break;
-  case U8X8_MSG_BYTE_INIT:
-    HAL_GPIO_WritePin(DSPL_PIN_CS, u8x8->display_info->chip_disable_level ? GPIO_PIN_SET : GPIO_PIN_RESET);
-    break;
-  case U8X8_MSG_BYTE_SET_DC:
-    HAL_GPIO_WritePin(DSPL_PIN_DC, arg_int);
-    break;
-  case U8X8_MSG_BYTE_START_TRANSFER:
-    HAL_GPIO_WritePin(DSPL_PIN_CS, u8x8->display_info->chip_enable_level ? GPIO_PIN_SET : GPIO_PIN_RESET);
-    break;
-  case U8X8_MSG_BYTE_END_TRANSFER:
-    HAL_GPIO_WritePin(DSPL_PIN_CS, u8x8->display_info->chip_disable_level ? GPIO_PIN_SET : GPIO_PIN_RESET);
-    break;
-  default:
-    return 0;
-  }
-  return 1;
-}
 
 /* USER CODE END 0 */
 
@@ -178,11 +124,7 @@ int main(void)
   MX_RTC_Init();
   MX_USB_Device_Init();
   /* USER CODE BEGIN 2 */
-  
-    //HAL_GPIO_WritePin(DSPL_PIN_CS, 0);
-    u8g2_Setup_st75256_jlx19296_f(&u8g2, U8G2_R0, u8x8_byte_4wire_hw_spi, u8x8_stm32_gpio_and_delay);
-    u8g2_InitDisplay(&u8g2);
-    u8g2_SetPowerSave(&u8g2, 0);
+    init_full();
 
     for (int i=0; i<6; i++)
     {
@@ -228,14 +170,6 @@ int main(void)
         sDate.Date, sDate.Month, sDate.Year,
         sTime.Hours, sTime.Minutes, sTime.Seconds);
     CDC_Transmit_FS((uint8_t *)s, strlen(s));
-
-    u8g2_FirstPage(&u8g2);
-    do
-    {
-      u8g2_SetFont(&u8g2, u8g2_font_ncenB12_tr);
-      u8g2_DrawStr(&u8g2, 0, 20, s);
-      //u8g2_DrawCircle(&u8g2, 64, 40, 10, U8G2_DRAW_ALL);
-    } while (u8g2_NextPage(&u8g2));
 
     for (int i=0; i<11; i++)
     {
@@ -386,6 +320,7 @@ static void MX_RTC_Init(void)
   }
 
   /** Enable the WakeUp
+  */
   if (HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 20000, RTC_WAKEUPCLOCK_RTCCLK_DIV16) != HAL_OK)
   {
     Error_Handler();
@@ -454,10 +389,10 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0|GPIO_PIN_11, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_11, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1|GPIO_PIN_2, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_RESET);
