@@ -75,7 +75,7 @@ bool tmAdjust(const tm_t &tm, uint8_t wday) {
     sTime.SubSeconds = 0x0;
     sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
     sTime.StoreOperation = RTC_STOREOPERATION_RESET;
-    if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BCD) != HAL_OK)
+    if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN) != HAL_OK)
         return false;
 
     RTC_DateTypeDef sDate = {0};
@@ -84,5 +84,5 @@ bool tmAdjust(const tm_t &tm, uint8_t wday) {
     sDate.Date          = tm.day;
     sDate.Year          = tm.year % 100;
 
-    return HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BCD) != HAL_OK;
+    return HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK;
 }
