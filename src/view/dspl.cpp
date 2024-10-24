@@ -3,6 +3,7 @@
 */
 
 #include "dspl.h"
+#include "page.h"
 #include "../sys/stm32drv.h"
 #include "../sys/worker.h"
 #include "../sys/log.h"
@@ -10,14 +11,17 @@
 #define DSPL_PIN_DC     GPIOB, GPIO_PIN_2
 #define DSPL_PIN_RST    GPIOB, GPIO_PIN_1
 #define DSPL_PIN_CS     GPIOB, GPIO_PIN_11
+#define DSPL_PIN_LGHT   GPIOA, GPIO_PIN_10
+
+static bool _lght = false;
+static void _lghtUpd() {
+    HAL_GPIO_WritePin(DSPL_PIN_LGHT, _lght ? GPIO_PIN_SET : GPIO_PIN_RESET);
+}
+
+static uint8_t _contrast = 10;
+static bool _flip180 = false;
 
 extern SPI_HandleTypeDef hspi1;
-
-static uint32_t n = 0;
-static void draw_test(DSPL_ARG) {
-    DSPL_FONT(u8g2_font_ncenB12_tr);
-    DSPL_PRN(20, 20, "n: %d", n);
-}
 
 class _wrkDspl : public Wrk {
     u8g2_t u8g2;
@@ -78,9 +82,16 @@ public:
         u8g2_Setup_st75256_jlx19296_f(&u8g2, U8G2_R0, _4wire_hw_spi, _gpio_and_delay);
         u8g2_InitDisplay(&u8g2);
         u8g2_SetPowerSave(&u8g2, 0);
-        _draw = draw_test;
+        u8g2_ClearDisplay(&u8g2);
+        _lghtUpd();
+
         CONSOLE("init");
     }
+    ~_wrkDspl() {
+        u8g2_SetPowerSave(&u8g2, 1);
+        HAL_GPIO_WritePin(DSPL_PIN_LGHT, GPIO_PIN_RESET);
+    }
+
     void draw(Dspl::draw_t _d) {
         u8g2_FirstPage(&u8g2);
         do {
@@ -92,6 +103,14 @@ public:
         _draw = _d;
     }
 
+    void contrast(uint8_t value) {
+        u8g2_SetContrast(&u8g2, 115+value);
+    }
+
+    void flip180(bool flip) {
+        u8g2_SetFlipMode(&u8g2, flip ? 1 : 0);
+    }
+
     state_t run () {
         if (_clear) {
             _clear = false;
@@ -100,8 +119,6 @@ public:
 
         if (_draw != NULL)
             draw(_draw);
-        
-        n++;
 
         return DLY;
     }
@@ -112,14 +129,60 @@ namespace Dspl {
     static _wrkDspl *_w = NULL;
 
 void init() {
-    if (_w != NULL)
-        return;
-    _w = new _wrkDspl();
+    on();
 }
 
 void set(draw_t draw) {
     if (_w != NULL)
         _w->set(draw);
+}
+
+void on() {
+    if (_w != NULL)
+        return;
+    
+    _w = new _wrkDspl();
+    if (_w == NULL)
+        return;
+    _w->contrast(_contrast);
+    _w->flip180(_flip180);
+    page();
+}
+
+void off() {
+    if (_w == NULL)
+        return;
+    delete _w;
+    _w = NULL;
+}
+
+void lightTgl() {
+    _lght = not _lght;
+    _lghtUpd();
+}
+
+bool light() {
+    return _lght;
+}
+
+uint8_t contrast() {
+    return _contrast;
+}
+
+void contrast(uint8_t value) {
+    _contrast = value;
+    if (_w != NULL)
+        _w->contrast(value);
+}
+
+bool flip180() {
+    return _flip180;
+}
+
+void flip180(bool flip) {
+    _flip180 = flip;
+    if (_w != NULL)
+        _w->flip180(flip);
 }
 
 }; // namespace Dspl
