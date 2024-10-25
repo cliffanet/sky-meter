@@ -24,6 +24,7 @@
 /* USER CODE BEGIN Includes */
 #include "usbd_cdc_if.h"
 #include "init.h"
+#include "view/btn.h"
 #include "jump/bmp280.h"
 #include "jump/wrk.h"
 #include "sys/worker.h"
@@ -76,6 +77,8 @@ void HAL_RTCEx_WakeUpTimerEventCallback(RTC_HandleTypeDef *hrtc)
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
+    btn_byexti(GPIO_Pin);
+    /*
   if ((GPIO_Pin == GPIO_PIN_0) || (GPIO_Pin == GPIO_PIN_1) || (GPIO_Pin == GPIO_PIN_2))
   {
 	  SystemClock_Config ();
@@ -85,6 +88,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	  CDC_Transmit_FS((uint8_t *)s, strlen (s));
 	  //HAL_PWR_DisableSleepOnExit();
   }
+  */
 }
 
 
