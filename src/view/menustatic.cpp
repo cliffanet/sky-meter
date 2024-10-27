@@ -1,8 +1,9 @@
 /*
-    Display: Menu
+    Display: Menu Static
 */
 
 #include "menustatic.h"
+#include "menumodal.h"
 #include "text.h"
 #include "../sys/log.h"
 
@@ -59,11 +60,10 @@ static const MenuStatic::el_t _mm[] = {
     }
 };
 
-
 static const MenuStatic::el_t _main[] = {
     {
         .name   = "menu 1",
-        .enter  = [] { CONSOLE("menu 1"); },
+        .enter  = [] { CONSOLE("menu 1"); new MenuConfirm("hello?", NULL); },
         .showval= [] (char *v) {
             strncpy(v, "test", MENUSZ_VAL);
         }

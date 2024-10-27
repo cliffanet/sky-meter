@@ -4,6 +4,7 @@
 
 #include "menu.h"
 #include "menustatic.h"
+#include "menumodal.h"
 #include "page.h"
 #include "btn.h"
 #include "text.h"
@@ -20,6 +21,8 @@ class _menuWrk : public Wrk {
     std::list<Menu *> _mall;
     Menu *_m = NULL;
 
+    MenuModal *_modal = NULL, *_modal_del = NULL;
+
     bool _exit = false;
     uint32_t _tout = MENU_TIMEOUT;
     void _toutupd() {
@@ -28,25 +31,38 @@ class _menuWrk : public Wrk {
     }
 
     static void _draw(DSPL_ARG) {
-        if ((_w != NULL) && (_w->_m != NULL))
-            _w->_m->draw(u8g2);
+        if (_w != NULL) {
+            if (_w->_m != NULL)
+                _w->_m->draw(u8g2);
+            if (_w->_modal != NULL)
+                _w->_modal->draw(u8g2);
+        }
     }
     static void _smplup() {
         if ((_w != NULL) && (_w->_m != NULL)) {
             _w->_toutupd();
-            _w->_m->smplup();
+            if (_w->_modal != NULL)
+                _w->_modal->smplup();
+            else
+                _w->_m->smplup();
         }
     }
     static void _smpldn() {
         if ((_w != NULL) && (_w->_m != NULL)) {
             _w->_toutupd();
-            _w->_m->smpldn();
+            if (_w->_modal != NULL)
+                _w->_modal->smpldn();
+            else
+                _w->_m->smpldn();
         }
     }
     static void _smplsel() {
         if ((_w != NULL) && (_w->_m != NULL)) {
             _w->_toutupd();
-            _w->_m->smplsel();
+            if (_w->_modal != NULL)
+                _w->_modal->smplsel();
+            else
+                _w->_m->smplsel();
         }
     }
 public:
@@ -64,6 +80,10 @@ public:
         _m = NULL;
         for (auto m: _mall)
             delete m;
+        if (_modal != NULL)
+            delete _modal;
+        if (_modal_del != NULL)
+            delete _modal_del;
         Dspl::page();
         if (_w == this)
             _w = NULL;
@@ -98,6 +118,18 @@ public:
         _exit = true;
     }
 
+    void modalset(MenuModal *modal) {
+        modalclose();
+        _modal = modal;
+        CONSOLE("set modal: 0x%08x", modal);
+    }
+    void modalclose() {
+        if (_modal_del != NULL)
+            delete _modal_del;
+        _modal_del = _modal;
+        _modal = NULL;
+    }
+
     state_t run() {
         if (_exit) {
             _exit = false;
@@ -122,6 +154,12 @@ public:
                 CONSOLE("timeout");
                 return END;
             }
+        }
+
+        if (_modal_del != NULL) {
+            CONSOLE("clear modal: 0x%08x", _modal_del);
+            delete _modal_del;
+            _modal_del = NULL;
         }
 
         return DLY;
@@ -236,4 +274,16 @@ bool Menu::prevstr(line_t &s) {
     m->str(s, m->_exit == EXIT_TOP ? m->_isel-1 : m->_isel);
 
     return true;
+}
+
+void Menu::modalset(MenuModal *m) {
+    if (_w != NULL)
+        _w->modalset(m);
+    else
+        delete m;
+}
+
+void Menu::modalclose() {
+    if (_w != NULL)
+        _w->modalclose();
 }

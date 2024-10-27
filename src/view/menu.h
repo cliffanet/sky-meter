@@ -21,6 +21,8 @@
 
 #define MENU_TIMEOUT    150
 
+class MenuModal;
+
 class Menu {
     public:
         typedef struct {
@@ -44,6 +46,9 @@ class Menu {
         void smplsel();
 
         bool prevstr(line_t &s);
+
+        static void modalset(MenuModal *m);
+        static void modalclose();
 
 private:
         virtual size_t sz() { return 0; }
