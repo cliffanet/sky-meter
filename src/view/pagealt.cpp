@@ -4,7 +4,7 @@
 
 #include "page.h"
 #include "btn.h"
-#include "menu.h"
+#include "menustatic.h"
 #include "../sys/log.h"
 
 namespace Dspl {
@@ -33,7 +33,7 @@ void pagealt() {
         [] () {
             CONSOLE("btn sel smpl: %d", ++s);
         },
-        Menu::activate
+        MenuStatic::main
     );
     Btn::set(
         Btn::DN,

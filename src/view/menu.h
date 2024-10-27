@@ -19,7 +19,7 @@
 #define MENUSZ_VAL      16
 #endif
 
-#define MENU_TIMEOUT    15000
+#define MENU_TIMEOUT    150
 
 class Menu {
     public:
@@ -34,18 +34,22 @@ class Menu {
             EXIT_BOTTOM,
         } exit_t;
 
-        static void activate();
-
         Menu(exit_t _exit = EXIT_TOP);
+        virtual
+        ~Menu() {}
 
-        virtual void draw(DSPL_ARG);
-        virtual void smplup();
-        virtual void smpldn();
-        virtual void smplsel();
+        void draw(DSPL_ARG);
+        void smplup();
+        void smpldn();
+        void smplsel();
 
+        bool prevstr(line_t &s);
+
+private:
         virtual size_t sz() { return 0; }
         virtual void title(char *s) { }
         virtual void str(line_t &s, int16_t i) { }
+        virtual void onsel(int16_t i) { }
 
     protected:
         int16_t _itop = 0, _isel = 0;

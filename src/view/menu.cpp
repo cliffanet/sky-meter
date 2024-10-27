@@ -3,68 +3,141 @@
 */
 
 #include "menu.h"
+#include "menustatic.h"
 #include "page.h"
 #include "btn.h"
 #include "text.h"
+#include "../sys/worker.h"
 #include "../sys/log.h"
 
 #include <string.h>
+#include <list>
 
-static Menu *_m = NULL;
+class _menuWrk;
+static _menuWrk* _w;
 
-static bool _e = false;
-void chk_e() {
-    if (_e) {
-        if (_m != NULL) {
-            CONSOLE("menu exit: 0x%08x", _m);
-            delete _m;
-            _m = NULL;
-            Dspl::page();
-        }
-        _e = false;
+class _menuWrk : public Wrk {
+    std::list<Menu *> _mall;
+    Menu *_m = NULL;
+
+    bool _exit = false;
+    uint32_t _tout = MENU_TIMEOUT;
+    void _toutupd() {
+        if (_tout > 0)
+            _tout = MENU_TIMEOUT;
     }
-}
 
-void Menu::activate() {
-    _m = new Menu();
-    CONSOLE("menu enter: 0x%08x", _m);
+    static void _draw(DSPL_ARG) {
+        if ((_w != NULL) && (_w->_m != NULL))
+            _w->_m->draw(u8g2);
+    }
+    static void _smplup() {
+        if ((_w != NULL) && (_w->_m != NULL)) {
+            _w->_toutupd();
+            _w->_m->smplup();
+        }
+    }
+    static void _smpldn() {
+        if ((_w != NULL) && (_w->_m != NULL)) {
+            _w->_toutupd();
+            _w->_m->smpldn();
+        }
+    }
+    static void _smplsel() {
+        if ((_w != NULL) && (_w->_m != NULL)) {
+            _w->_toutupd();
+            _w->_m->smplsel();
+        }
+    }
+public:
+    _menuWrk() {
+        _w = this;
+        optset(O_AUTODELETE);
 
-    Dspl::set([] (DSPL_ARG) {
-        if (_m != NULL)
-            _m->draw(u8g2);
-    });
+        Dspl::set(_draw);
+        Btn::set(Btn::UP,   _smplup);
+        Btn::set(Btn::DN,   _smpldn);
+        Btn::set(Btn::SEL,  _smplsel);
+    }
+    ~_menuWrk() {
+        CONSOLE("destroy 0x%08x", this);
+        _m = NULL;
+        for (auto m: _mall)
+            delete m;
+        Dspl::page();
+        if (_w == this)
+            _w = NULL;
+    }
 
-    Btn::set(
-        Btn::UP,
-        [] () {
-            if (_m != NULL)
-                _m->smplup();
-            chk_e();
+    Menu *prev() {
+        if (_mall.size() < 2)
+            return NULL;
+        auto it = _mall.begin();
+        it++;
+        return *it;
+    }
+
+    void add(Menu *m) {
+        CONSOLE("menu enter: 0x%08x", m);
+        _mall.push_front(m);
+        _m = m;
+    }
+    /*
+    void del(Menu *m) {
+        for (auto it = _mall.begin(); it != _mall.end(); it++)
+            if (*it == m) {
+                _mall.erase(it);
+                CONSOLE("found");
+                break;
+            }
+        _m = m;
+    }
+    */
+
+    void mexit() {
+        _exit = true;
+    }
+
+    state_t run() {
+        if (_exit) {
+            _exit = false;
+            
+            if (!_mall.empty()) {
+                auto *m = _mall.front();
+                CONSOLE("menu exit: 0x%08x", m);
+                _mall.erase(_mall.begin());
+                delete m;
+            }
+            if (_mall.empty()) {
+                _m = NULL;
+                return END;
+            }
+
+            _m = _mall.front();
         }
-    );
-    Btn::set(
-        Btn::SEL,
-        [] () {
-            if (_m != NULL)
-                _m->smplsel();
-            chk_e();
+
+        if (_tout > 0) {
+            _tout--;
+            if (_tout == 0) {
+                CONSOLE("timeout");
+                return END;
+            }
         }
-    );
-    Btn::set(
-        Btn::DN,
-        [] () {
-            if (_m != NULL)
-                _m->smpldn();
-            chk_e();
-        }
-    );
-}
+
+        return DLY;
+    }
+};
 
 Menu::Menu(exit_t _exit) :
     _exit(_exit)
-{ }
+{
+    if (_w == NULL)
+        _w = new _menuWrk();
+    if (_w != NULL)
+        _w->add(this);
+}
 
-#define _sz     (_exit == EXIT_NONE ? sz()+1 : sz())
+#define _sz     (_exit == EXIT_NONE ? sz() : sz()+1)
 
 void Menu::draw(DSPL_ARG) {
     DSPL_FONT(menuFont);
@@ -72,19 +145,20 @@ void Menu::draw(DSPL_ARG) {
     // Заголовок
     char t[MENUSZ_TITLE];
     title(t);
+    t[sizeof(t)-1] = '\0';
     DSPL_BOX(0, 0, DSPL_DWIDTH, 12);
     DSPL_COLOR(0);
     DSPL_STRU(DSPL_S_CENTER(t), 10, t);
     
     // выделение пункта меню, текст будем писать поверх
-    DSPL_BOX(0, (_isel-_itop)*10+14, DSPL_DWIDTH, 10);
     DSPL_COLOR(1);
+    DSPL_FRAME(0, (_isel-_itop)*10+14, DSPL_DWIDTH, 10);
     
     // Выводим видимую часть меню, n - это индекс строки на экране
     for (uint8_t n = 0; n<MENU_STR_COUNT; n++) {
         uint8_t i = n + _itop;          // i - индекс отрисовываемого пункта меню
-        if (i >= _sz) break;           // для меню, которые полностью отрисовались и осталось ещё место, не выходим за список меню
-        DSPL_COLOR(_isel == i ? 0 : 1); // Выделенный пункт рисуем прозрачным, остальные обычным
+        if (i >= _sz) break;            // для меню, которые полностью отрисовались и осталось ещё место, не выходим за список меню
+        //DSPL_COLOR(_isel == i ? 0 : 1); // Выделенный пункт рисуем прозрачным, остальные обычным
         int8_t y = (n+1)*10-1+14;       // координата y для отрисовки текста (в нескольких местах используется)
         
         // Получение текстовых данных текущей строки
@@ -144,6 +218,22 @@ void Menu::smpldn() {
 
 void Menu::smplsel() {
     bool isexit = ((_exit == EXIT_TOP) && (_isel == 0)) || ((_exit == EXIT_BOTTOM) && (_isel+1 >= _sz));
-    if (isexit)
-        _e = true;
+    if (isexit) {
+        if (_w != NULL)
+            _w->mexit();
+    }
+    else
+        onsel(_exit == EXIT_TOP ? _isel-1 : _isel);
+}
+
+bool Menu::prevstr(line_t &s) {
+    if (_w == NULL)
+        return false;
+    auto m = _w->prev();
+    if (m == NULL)
+        return false;
+    
+    m->str(s, m->_exit == EXIT_TOP ? m->_isel-1 : m->_isel);
+
+    return true;
 }

@@ -63,10 +63,16 @@ uint32_t wrkProcess(uint32_t msmax) {
                 if (!w->opt(Wrk::O_FINISHED))
                     w->end();
 
-                w->optclr(Wrk::O_FINISHED);
-                w->optclr(Wrk::O_INLIST);
+                if (w->opt(Wrk::O_AUTODELETE)) {
+                    delete w; // при выполнении delete - _wrkall.erase выполнится само в деструкторе Wrk
+                }
+                else {
+                    w->optclr(Wrk::O_FINISHED);
+                    w->optclr(Wrk::O_INLIST);
+                    _wrkall.erase(it);
+                }
+
                 CONSOLE("Wrk(0x%08x) finished", w);
-                _wrkall.erase(it);
             }
             else
             if ( ! w->opt(Wrk::O_NEEDWAIT) )
