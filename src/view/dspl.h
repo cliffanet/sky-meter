@@ -52,9 +52,7 @@ namespace Dspl {
     void off();
     void lightTgl();
     bool light();
-    uint8_t contrast();
     void contrast(uint8_t value);
-    bool flip180();
     void flip180(bool flip);
 
 }; // namespace Dspl

@@ -6,6 +6,7 @@
 #include "page.h"
 #include "../sys/stm32drv.h"
 #include "../sys/worker.h"
+#include "../sys/maincfg.h"
 #include "../sys/log.h"
 
 #define DSPL_PIN_DC     GPIOB, GPIO_PIN_2
@@ -17,9 +18,6 @@ static bool _lght = false;
 static void _lghtUpd() {
     HAL_GPIO_WritePin(DSPL_PIN_LGHT, _lght ? GPIO_PIN_SET : GPIO_PIN_RESET);
 }
-
-static uint8_t _contrast = 10;
-static bool _flip180 = false;
 
 extern SPI_HandleTypeDef hspi1;
 
@@ -144,8 +142,8 @@ void on() {
     _w = new _wrkDspl();
     if (_w == NULL)
         return;
-    _w->contrast(_contrast);
-    _w->flip180(_flip180);
+    _w->contrast(cfg->contrast);
+    _w->flip180(cfg->flip180);
     page();
 }
 
@@ -165,22 +163,14 @@ bool light() {
     return _lght;
 }
 
-uint8_t contrast() {
-    return _contrast;
-}
-
 void contrast(uint8_t value) {
-    _contrast = value;
+    (*cfg)->contrast = value;
     if (_w != NULL)
         _w->contrast(value);
 }
 
-bool flip180() {
-    return _flip180;
-}
-
 void flip180(bool flip) {
-    _flip180 = flip;
+    (*cfg)->flip180 = flip;
     if (_w != NULL)
         _w->flip180(flip);
 }

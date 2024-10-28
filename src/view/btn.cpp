@@ -5,9 +5,8 @@
 #include "btn.h"
 #include "../sys/stm32drv.h"
 #include "../sys/worker.h"
+#include "../sys/maincfg.h"
 
-
-static bool _flip180 = false;
 
 #define BTN_PIN_UP      GPIOA, GPIO_PIN_2
 #define BTN_PIN_SEL     GPIOA, GPIO_PIN_1
@@ -141,7 +140,7 @@ namespace Btn {
         _w = new _wrkBtn();
         if (_w == NULL)
             return;
-        _w->flip180(_flip180);
+        _w->flip180((*cfg)->flip180);
     }
 
     void set(code_t code, hnd_t hndsmpl, hnd_t hndlong) {
@@ -150,7 +149,7 @@ namespace Btn {
     }
 
     void flip180(bool flip) {
-        _flip180 = flip;
+        (*cfg)->flip180 = flip;
         if (_w != NULL)
             _w->flip180(flip);
     }

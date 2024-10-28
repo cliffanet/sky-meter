@@ -1,6 +1,7 @@
 
 #include "init.h"
 #include "../sys/clock.h"
+#include "../sys/maincfg.h"
 #include "../view/dspl.h"
 #include "../view/btn.h"
 
@@ -39,6 +40,7 @@ void init_full() {
         .s      = static_cast<uint8_t> ( __SEC(t) ),
     };
     tmAdjust(tm, 0);
+    Config::init();
     Btn::init(); // д.б. перед Dspl::init, т.к. Dspl::init выбирает страницу и присваивает хендлеры
     Dspl::init();
 }
