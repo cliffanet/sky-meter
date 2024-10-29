@@ -10,6 +10,8 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+extern USBD_HandleTypeDef hUsbDeviceFS;
+
 /* ------------------------------------------------------------------------------------------- *
  *  Логирование в консоль
  * ------------------------------------------------------------------------------------------- */
@@ -50,6 +52,10 @@ static void vtxtlog(const char *s, va_list ap) {
     str[len] = '\0';
     
     CDC_Transmit_FS((uint8_t *)str, len);
+    // надо дождаться окончания передачи, т.к. она ассинхронная, а буфер str уничтожается при выходе
+    USBD_CDC_HandleTypeDef *hcdc = (USBD_CDC_HandleTypeDef*)hUsbDeviceFS.pClassData;
+    for (int i = 0; (i < 100) && (hcdc->TxState != 0); i++)
+        HAL_Delay(2);
 }
 
 void conslog(const char *s, ...) {

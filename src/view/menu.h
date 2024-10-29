@@ -45,7 +45,7 @@ class Menu {
         void smpldn();
         void smplsel();
 
-        bool prevstr(line_t &s);
+        static bool prevstr(line_t &s, uint8_t n);
 
         static void modalset(MenuModal *m);
         static void modalclose();

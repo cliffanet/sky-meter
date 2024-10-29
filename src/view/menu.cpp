@@ -89,11 +89,12 @@ public:
             _w = NULL;
     }
 
-    Menu *prev() {
-        if (_mall.size() < 2)
+    Menu *prev(uint8_t n) {
+        if (_mall.size() <= n)
             return NULL;
         auto it = _mall.begin();
-        it++;
+        for (; n > 0; n--)
+            it++;
         return *it;
     }
 
@@ -264,10 +265,10 @@ void Menu::smplsel() {
         onsel(_exit == EXIT_TOP ? _isel-1 : _isel);
 }
 
-bool Menu::prevstr(line_t &s) {
+bool Menu::prevstr(line_t &s, uint8_t n) {
     if (_w == NULL)
         return false;
-    auto m = _w->prev();
+    auto m = _w->prev(n);
     if (m == NULL)
         return false;
     
