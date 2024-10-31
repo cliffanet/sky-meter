@@ -9,6 +9,7 @@
 #include "btn.h"
 #include "text.h"
 #include "../sys/worker.h"
+#include "../sys/maincfg.h"
 #include "../sys/log.h"
 
 #include <string.h>
@@ -84,6 +85,7 @@ public:
             delete _modal;
         if (_modal_del != NULL)
             delete _modal_del;
+        cfg.save();
         Dspl::page();
         if (_w == this)
             _w = NULL;

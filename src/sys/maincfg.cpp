@@ -44,22 +44,39 @@ typedef struct __attribute__((__packed__)) {
 
 static int efind(hdr_t &h) {
     uint32_t beg = CONFIG_ADDR, p = beg;
-    while (p+sizeof(hdr_t) < CONFIG_AEND) {
-        h = *const_cast<hdr_t *>(reinterpret_cast<__IO hdr_t *>(p));
-        if ((h.ver < 1) || (h.ver > CONFIG_VER) || (h.sz < 4) || (h.sz > 2048))
+    // особенности записи:
+    //      - запись словами - _FLASH_WBLK_SIZE = 8 байт (необходимо выравнивание данных)
+    //      - после erase каждое слово пишется только один раз, следующая запись возможна только после erase
+    // формат хранения:
+    //      - 1 слово (8 байт) - всегда индикатор, что следом актуальные данные или пусто.
+    //          при сохранении данных мы в это слово ничего не пишем
+    //      - 4 байта - заголовок hdr_t
+    //      - данные
+    //      - 2 байта - контрольная сумма.
+    //
+    // при следующей записи помечаем 1 слово-индикатор как 0xef.... - это значит, что следом
+    // идёт неактуальная запись, которую надо пропустить.
+    //
+    // - в любой непонятной ситуации возвращаем -1
+    // - если найдена валидная запись, возвращаем
+    while (p+_FLASH_WBLK_SIZE*2 < CONFIG_AEND) {
+        auto ff = *reinterpret_cast<__IO uint64_t *>(p);
+        bool ok = ff == 0xffffffffffffffff;
+        if (!ok && (ff != 0xefffffffffffffff))
             return -1;
-        auto d = p + sizeof(hdr_t);
-        if (h.id == CONFIG_HDR_OK) {
+        p += sizeof(uint64_t);
+        h = *const_cast<hdr_t *>(reinterpret_cast<__IO hdr_t *>(p));
+        if ((h.id != CONFIG_HDR) || (h.ver < 1) || (h.ver > CONFIG_VER) || (h.sz < 4) || (h.sz > 2048))
+            return -1;
+        if (ok) {
+            auto d = p + sizeof(hdr_t);
             cks_t c1 = { 0 };
             c1.add(const_cast<uint8_t *>(reinterpret_cast<__IO uint8_t *>(d)), h.sz);
             cks_t c2 = *const_cast<cks_t *>(reinterpret_cast<__IO cks_t *>(d + h.sz));
             return c1 == c2 ? p - beg : -1;
         }
         else
-        if (h.id == CONFIG_HDR_CLR)
-            p = d + h.sz + sizeof(cks_t);
-        else
-            return -1;
+            p += _FLASH_WBLK_ALIGN(sizeof(hdr_t) + h.sz + sizeof(cks_t));
     }
 
     return -1;
@@ -70,7 +87,8 @@ void Config::init() {
     // ищем валидный блок с данными
     auto p = efind(h);
     data_t d;
-    if (p >= 0) {
+    if (p > 0) {
+        CONSOLE("config found on: 0x%04x", p);
         uint16_t sz = h.sz < sizeof(data_t) ? h.sz : sizeof(data_t);
         memcpy(&d, const_cast<uint8_t *>(reinterpret_cast<__IO uint8_t *>(CONFIG_ADDR + p + sizeof(hdr_t))), sz);
     }
@@ -79,6 +97,34 @@ void Config::init() {
 }
 
 static bool esave(int p, const Config::data_t &data) {
+    if (p > 0) {
+        p += CONFIG_ADDR;
+        // а если валидный блок всё же найден,
+        // то пометим его как "пропустить"...
+        auto st = HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, p-_FLASH_WBLK_SIZE, 0xefffffffffffffff);
+        CONSOLE("HAL_FLASH_Program: %d, errno: %d", st, st == HAL_OK ? 0 : HAL_FLASH_GetError());
+        if (st != HAL_OK)
+            return false;
+        
+        // а под запись будем использовать уже следующий блок, выровненный до _FLASH_WBLK_SIZE
+        auto sz = reinterpret_cast<__IO hdr_t *>(p)->sz;
+        p += _FLASH_WBLK_ALIGN(sizeof(hdr_t) + sz + sizeof(cks_t));
+
+        if (p + _FLASH_WBLK_SIZE + _FLASH_WBLK_ALIGN(sizeof(hdr_t) + sizeof(Config::data_t) + sizeof(cks_t)) > CONFIG_AEND) {
+            CONSOLE("flash-page fulled, need erase!");
+            p = -1;
+        }
+    }
+    if (p > 0) {
+        auto ff = *reinterpret_cast<__IO uint64_t *>(p);
+        // слово индикатор - обязан быть как нетронутый ещё при записи
+        if (ff == 0xffffffffffffffff)
+            p += _FLASH_WBLK_SIZE;
+        else {
+            CONSOLE("free-indicator no nulled, need erase!");
+            p = -1;
+        }
+    }
     if (p < 0) {
         // в случае, если мы не нашли валидный блок
         // или новый после него не влезет,
@@ -93,30 +139,14 @@ static bool esave(int p, const Config::data_t &data) {
         CONSOLE("HAL_FLASHEx_Erase: %d", st);
         if (st != HAL_OK)
             return false;
-        p = 0;
-    }
-    else {
-        // а если валидный блок всё же найден,
-        // то пометим его как "пропустить"...
-        // читаем dword, т.к. побайтно писать не сможем
-        auto sz = reinterpret_cast<__IO hdr_t *>(p)->sz;
-        auto d = *reinterpret_cast<__IO uint64_t *>(p);
-        *reinterpret_cast<__IO uint8_t *>(d) = CONFIG_HDR_CLR;
-        auto st = HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, p, d);
-        CONSOLE("HAL_FLASH_Program: %d", st);
-        if (st != HAL_OK)
-            return false;
-
-        // а под запись будем использовать уже следующий блок
-        p += sizeof(hdr_t) + sz + sizeof(cks_t);
+        p = CONFIG_ADDR + _FLASH_WBLK_SIZE;
     }
     
     // подготавливаем данные под сохранение,
     // их надо выровнять до _FLASH_WBLK_SIZE
-    size_t wcnt = (sizeof(hdr_t) + sizeof(Config::data_t) + sizeof(cks_t) + _FLASH_WBLK_SIZE - 1) / _FLASH_WBLK_SIZE;
-    uint8_t d[wcnt * _FLASH_WBLK_SIZE] = { 0 };
+    uint8_t d[_FLASH_WBLK_ALIGN( sizeof(hdr_t) + sizeof(Config::data_t) + sizeof(cks_t) )] = { 0 };
     hdr_t h = {
-        .id     = CONFIG_HDR_OK,
+        .id     = CONFIG_HDR,
         .ver    = CONFIG_VER,
         .sz     = sizeof(Config::data_t)
     };
@@ -127,14 +157,17 @@ static bool esave(int p, const Config::data_t &data) {
     memcpy(d + sizeof(hdr_t) + sizeof(Config::data_t), &c, sizeof(cks_t));
 
     // пишем подготовленные данные
+    CONSOLE("config saving to: 0x%04x", p-CONFIG_ADDR);
     auto sz = sizeof(d);
     auto dd = d;
-    for (; sz >= _FLASH_WBLK_SIZE; dd += _FLASH_WBLK_SIZE, sz -= _FLASH_WBLK_SIZE) {
-        auto st = HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, p, *reinterpret_cast<uint64_t *>(d));
-        CONSOLE("HAL_FLASH_Program: %d", st);
+    for (; sz >= _FLASH_WBLK_SIZE; p += _FLASH_WBLK_SIZE, dd += _FLASH_WBLK_SIZE, sz -= _FLASH_WBLK_SIZE) {
+        auto st = HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, p, *reinterpret_cast<uint64_t *>(dd));
+        CONSOLE("HAL_FLASH_Program: %d, errno: %d", st, st == HAL_OK ? 0 : HAL_FLASH_GetError());
         if (st != HAL_OK)
             return false;
     }
+
+    CONSOLE("saved OK on: 0x%04x", p-CONFIG_ADDR);
 
     return true;
 }

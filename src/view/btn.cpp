@@ -140,7 +140,7 @@ namespace Btn {
         _w = new _wrkBtn();
         if (_w == NULL)
             return;
-        _w->flip180((*cfg)->flip180);
+        _w->flip180(cfg->flip180);
     }
 
     void set(code_t code, hnd_t hndsmpl, hnd_t hndlong) {
