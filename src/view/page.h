@@ -9,11 +9,10 @@
 
 namespace Dspl {
 
-    void drawState(DSPL_ARG);
+    void drawBatt(DSPL_ARG);
     void drawClock(DSPL_ARG);
 
     void page();
-    void pagealt();
 
 }; // namespace Dspl
 

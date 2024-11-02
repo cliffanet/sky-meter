@@ -15,11 +15,16 @@
 #define DSPL_DWIDTH             u8g2_GetDisplayWidth(u8g2)
 #define DSPL_DHEIGHT            u8g2_GetDisplayHeight(u8g2)
 #define DSPL_COLOR(v)           u8g2_SetDrawColor(u8g2, v)
+
 #define DSPL_GLYPH(x, y, c)     u8g2_DrawGlyph(u8g2, x, y, c)
+
 #define DSPL_BOX(x, y, w, h)    u8g2_DrawBox(u8g2, x, y, w, h)
 #define DSPL_FRAME(x, y, w, h)  u8g2_DrawFrame(u8g2, x, y, w, h)
 #define DSPL_RFRAME(x, y, w, h, r) \
                                 u8g2_DrawRFrame(u8g2, x, y, w, h, r)
+#define DSPL_LINE(x1, y1, x2, y2) \
+                                u8g2_DrawLine(u8g2, x1, y1, x2, y2)
+
 #define DSPL_STR(x, y, s)       u8g2_DrawStr(u8g2, x, y, s);
 #define DSPL_PRN(x, y, _s, ...) \
         do { char s[48]; snprintf(s, sizeof(s), _s, ##__VA_ARGS__); u8g2_DrawStr(u8g2, x, y, s); } while (0)
@@ -37,8 +42,12 @@
 #define DSPL_S_WIDTH(s)         u8g2_GetStrWidth(s)
 #endif
 
+#define DSPL_S_HEIGHT           u8g2_GetAscent(u8g2)
 #define DSPL_S_RIGHT(s)         (DSPL_DWIDTH-DSPL_S_WIDTH(s))
 #define DSPL_S_CENTER(s)        ((DSPL_DWIDTH-DSPL_S_WIDTH(s))/2)
+
+#define strsz           32
+#define sprn(ss, ...)    snprintf(s, strsz, ss, ##__VA_ARGS__)
 
 
 namespace Dspl {

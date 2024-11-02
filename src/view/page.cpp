@@ -3,9 +3,12 @@
 */
 
 #include "page.h"
+#include "btn.h"
+#include "menustatic.h"
 #include "../sys/clock.h"
+#include "../jump/wrk.h"
 
-void Dspl::drawState(DSPL_ARG) {
+void Dspl::drawBatt(DSPL_ARG) {
     /*
     DSPL_COLOR(1);
     uint8_t blev = pwrBattLevel();
@@ -29,9 +32,25 @@ void Dspl::drawClock(DSPL_ARG) {
 
     DSPL_COLOR(1);
     DSPL_FONT(u8g2_font_amstrad_cpc_extended_8n);
-    DSPL_PRN(80, 10, "%d:%02d", tm.h, tm.m);
+    char s[strsz];
+    sprn("%d:%02d", tm.h, tm.m);
+    DSPL_STR(DSPL_S_RIGHT(s)-25, 10, s);
 }
 
 void Dspl::page() {
-    pagealt();
+    jmp::setdraw();
+
+    Btn::set(
+        Btn::UP,
+        NULL
+    );
+    Btn::set(
+        Btn::SEL,
+        NULL,
+        MenuStatic::main
+    );
+    Btn::set(
+        Btn::DN,
+        jmp::pagenxt
+    );
 }

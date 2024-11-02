@@ -68,6 +68,8 @@ class _menuWrk : public Wrk {
     }
 public:
     _menuWrk() {
+        if (_w != NULL)
+            delete _w;
         _w = this;
         optset(O_AUTODELETE);
 

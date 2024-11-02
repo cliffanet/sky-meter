@@ -24,11 +24,8 @@
 /* USER CODE BEGIN Includes */
 #include "usbd_cdc_if.h"
 #include "init.h"
-#include "view/btn.h"
-#include "jump/bmp280.h"
-#include "jump/wrk.h"
 #include "sys/worker.h"
-#include "sys/log.h"
+#include "view/btn.h" // btn_byexti
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -128,6 +125,7 @@ int main(void)
   MX_RTC_Init();
   MX_USB_Device_Init();
   /* USER CODE BEGIN 2 */
+    HAL_Delay(4000);
     init_full();
 
     for (int i=0; i<6; i++)
@@ -140,8 +138,6 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-    HAL_Delay(5000);
-    jmp();
   while (1)
   {
     /* USER CODE END WHILE */
@@ -155,9 +151,6 @@ int main(void)
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_RESET);
 
     char s[64];
-    
-    uint8_t r = bmpregid();
-    CONSOLE("bmp280 chipid2: %d = 0x%02x ? %d\n", r, r, r == 0x58);
 
     HAL_Delay(1000);
 

@@ -4,6 +4,7 @@
 #include "../sys/maincfg.h"
 #include "../view/dspl.h"
 #include "../view/btn.h"
+#include "../jump/wrk.h"
 
 #define __MONTH(d) (\
     d[2] == 'n' ? (d[1] == 'a' ? 1 : 6) \
@@ -43,4 +44,5 @@ void init_full() {
     Config::init();
     Btn::init(); // д.б. перед Dspl::init, т.к. Dspl::init выбирает страницу и присваивает хендлеры
     Dspl::init();
+    jmp::init();
 }
