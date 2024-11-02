@@ -24,6 +24,8 @@
                                 u8g2_DrawRFrame(u8g2, x, y, w, h, r)
 #define DSPL_LINE(x1, y1, x2, y2) \
                                 u8g2_DrawLine(u8g2, x1, y1, x2, y2)
+#define DSPL_PIXEL(x, y)        u8g2_DrawPixel(u8g2, x, y)
+#define DSPL_DISC(x, y, r)      u8g2_DrawDisc(u8g2, x, y, r, 15U)
 
 #define DSPL_STR(x, y, s)       u8g2_DrawStr(u8g2, x, y, s);
 #define DSPL_PRN(x, y, _s, ...) \

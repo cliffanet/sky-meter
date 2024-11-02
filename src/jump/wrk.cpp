@@ -25,6 +25,15 @@ class _jmpWrk : public Wrk {
     AltJmp _jmp = AltJmp(true);
     AltSqBig _sq;
     AltStrict _jstr;
+
+    typedef struct {
+        int alt;
+        bool ismode;
+        bool mchg;
+    } log_t;
+    ring<log_t, 3*60*10> _log;
+    int _lmin = 0, _lmax = 0;
+
 public:
     _jmpWrk() :
         _spi(GPIOB, GPIO_PIN_0),
@@ -70,6 +79,28 @@ public:
             _jmp.reset();
             CONSOLE("auto GND reseted");
         }
+
+        // добавление в _log
+        _log.push({ static_cast<int>(_ac.alt()), false, chgmode });
+        if (chgmode && (_jmp.cnt() < _log.size()))
+            _log[_jmp.cnt()].ismode = true;
+
+        _lmin = _log[0].alt;
+        _lmax = _log[0].alt;
+        for (const auto &l : _log) {
+            if (_lmin > l.alt)
+                _lmin = l.alt;
+            if (_lmax < l.alt)
+                _lmax = l.alt;
+        }
+
+        auto y = _lmin - (_lmin % 300);
+        if (y > _lmin+5) y -= 300; // +5, чтобы случайные -1-2m не уводили в -300
+        _lmin = y;
+        for (; y <= 15000; y += 300)
+            if (y > _lmax) break;
+        _lmax = y;
+        // -------------------
         
         return DLY;
     }
@@ -183,41 +214,39 @@ public:
                 DSPL_LINE(DSPL_DWIDTH-5, DSPL_DHEIGHT-1,    DSPL_DWIDTH, DSPL_DHEIGHT-1);
                 DSPL_LINE(DSPL_DWIDTH-5, DSPL_DHEIGHT/2,    DSPL_DWIDTH, DSPL_DHEIGHT/2);
 
-                /*
                 DSPL_FONT(u8g2_font_b10_b_t_japanese1);
-                sprn("%d", lmin);
+                sprn("%d", _w->_lmin);
                 DSPL_STR(DSPL_S_RIGHT(s)-5, DSPL_DHEIGHT-1, s);
-                sprn("%d", lmax);
+                sprn("%d", _w->_lmax);
                 DSPL_STR(DSPL_S_RIGHT(s)-5, DSPL_S_HEIGHT, s);
-                sprn("%d", lmin+(lmax-lmin)/2);
+                sprn("%d", _w->_lmin+(_w->_lmax-_w->_lmin)/2);
                 DSPL_STR(DSPL_S_RIGHT(s)-5, (DSPL_DHEIGHT+DSPL_S_HEIGHT-1)/2, s);
 
                 // рисуем графики
 #define LPADD 12
-                double dx = static_cast<double>(u8g2.getDisplayWidth()-LPADD) / log.capacity();
-                double xd = u8g2.getDisplayWidth();
-                double dy = static_cast<double>(DSPL_DHEIGHT) / (lmax-lmin);
-                for (const auto &l : log) {
+                double dx = static_cast<double>(DSPL_DWIDTH-LPADD) / _w->_log.capacity();
+                double xd = DSPL_DWIDTH;
+                double dy = static_cast<double>(DSPL_DHEIGHT) / (_w->_lmax-_w->_lmin);
+                for (const auto &l : _w->_log) {
                     // точки графика
                     int x = static_cast<int>(round(xd));
-                    int y = static_cast<int>(round(dy * (l.alt - lmin)));
+                    int y = static_cast<int>(round(dy * (l.alt - _w->_lmin)));
                     if ((y >= 0) && (y < DSPL_DHEIGHT)) {
                         y = DSPL_DHEIGHT-y-1;
-                        u8g2.drawPixel(x, y);
+                        DSPL_PIXEL(x, y);
                     
                         // высчитанное место изменения режима
                         if (l.ismode)
-                            u8g2.drawDisc(x, y, 2);
+                            DSPL_DISC(x, y, 2);
                     }
                     
                     if (l.mchg)
                         // точка изменения режима (принятия реешения)
                         for (int y = 0; y < DSPL_DHEIGHT; y+=3)
-                            u8g2.drawPixel(x, y);
+                            DSPL_PIXEL(x, y);
 
                     xd -= dx;
                 }
-                */
             }
             break;
         }

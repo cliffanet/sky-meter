@@ -8,7 +8,7 @@
 #include <stdint.h>
 #include "ringsimple.h"
 
-#define AC_DATA_COUNT           10
+#define AC_DATA_COUNT           20
 
 // ************************************************
 //  Параметры для определения direct и state
@@ -225,7 +225,7 @@ private:
 
 #define AC_JMP_GND_COUNT        6
 // Время (мс), которое должен удерживаться state() == ACST_GROUND для перехода в NONE
-#define AC_JMP_GND_TIME         6000
+#define AC_JMP_GND_TIME         12000
 
 class AltJmp {
 public:
