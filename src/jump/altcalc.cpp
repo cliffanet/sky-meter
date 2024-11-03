@@ -552,6 +552,12 @@ void AltStrict::tick(const AltCalc &ac) {
     }
 }
 
+void AltStrict::reset() {
+    _mode = AltJmp::INIT;
+    _cnt = 0;
+    _tm = 0;
+}
+
 /*******************************
  *          AltSleep
  *******************************/

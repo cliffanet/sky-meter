@@ -211,7 +211,7 @@ void Menu::draw(DSPL_ARG) {
         // данные требуют оперативного обновления, а затраты на
         // их получение минимальны, при этом очень много гемора,
         // связанного с обновлением кеша
-        line_t m;
+        line_t m = { 0 };
         bool isexit = ((_exit == EXIT_TOP) && (i == 0)) || ((_exit == EXIT_BOTTOM) && (i+1 >= _sz));
         if (isexit) {
             strncpy(m.name, TXT_MENU_EXIT, sizeof(m.name));

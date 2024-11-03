@@ -149,7 +149,8 @@ namespace Btn {
     }
 
     void flip180(bool flip) {
-        (*cfg)->flip180 = flip;
+        if (cfg->flip180 != flip)
+            (*cfg)->flip180 = flip;
         if (_w != NULL)
             _w->flip180(flip);
     }

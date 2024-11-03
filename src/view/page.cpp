@@ -42,7 +42,7 @@ void Dspl::page() {
 
     Btn::set(
         Btn::UP,
-        NULL
+        Dspl::lightTgl
     );
     Btn::set(
         Btn::SEL,

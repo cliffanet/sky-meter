@@ -282,6 +282,7 @@ public:
     const uint32_t  cnt()   const { return _cnt; }
     const uint32_t  tm()    const { return _tm; }
     const AltProfile &prof() const { return _prof; }
+    void reset();
 
 private:
     AltJmp::mode_t _mode = AltJmp::INIT, _nxt = AltJmp::GROUND;

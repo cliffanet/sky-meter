@@ -1,6 +1,8 @@
 #ifndef _jump_wrk_H
 #define _jump_wrk_H
 
+#include <stdint.h>
+
 // Шаг отображения высоты
 #define ALT_STEP                5
 // Порог перескока к следующему шагу
@@ -14,6 +16,10 @@ namespace jmp {
     void stop();
     void setdraw();
     void pagenxt();
+    void resetgnd();
+    void resetmode();
+    uint8_t chipid();
+    float press();
 } // namespace jmp
 
 #endif // _jump_wrk_H

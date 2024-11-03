@@ -57,6 +57,24 @@ public:
             _w = NULL;
     }
 
+    void resetgnd() {
+        _ac.gndreset();
+    }
+
+    void resetmode() {
+        _jmp.reset();
+        _sq.reset();
+        _jstr.reset();
+    }
+
+    uint8_t chipid() {
+        return _bmp.chipid();
+    }
+
+    float press() {
+        return _bmp.press();
+    }
+
     Wrk::state_t run() {
         auto tck = HAL_GetTick();
         auto interval = tck - _tck;
@@ -167,7 +185,7 @@ public:
 
         uint8_t y = 40;
         sprn("%.1f m/s", _w->_ac.avg().speed());
-        DSPL_STR(0, y, s);
+        DSPL_STR(static_cast<int>(DSPL_S_RIGHT(s))+60-DSPL_DWIDTH, y, s);
 
         y += DSPL_S_HEIGHT+2;
         sprn("%s (%s)", modestr(m, _w->_jmp.mode()), strtm(t, _w->_jmp.tm()));
@@ -271,6 +289,24 @@ void setdraw() {
 
 void pagenxt() {
     page++; page %= 2;
+}
+
+void resetgnd() {
+    if (_w != NULL)
+        _w->resetgnd();
+}
+
+void resetmode() {
+    if (_w != NULL)
+        _w->resetmode();
+}
+
+uint8_t chipid() {
+    return _w != NULL ? _w->chipid() : 0;
+}
+
+float press() {
+    return _w != NULL ? _w->press() : 0;
 }
 
 } // namespace jmp 

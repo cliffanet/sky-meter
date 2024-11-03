@@ -46,6 +46,8 @@ class Config {
         data_t* operator*();
         bool changed() const { return _chg; }
 
+        bool resetdefault();
+
     private:
         data_t _d;
         bool _chg = false;

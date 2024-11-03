@@ -9,14 +9,37 @@
 
 #define TXT_MENU_EXIT               "> exit"
 #define TXT_MENU_CONFIRM            "confirm?"
+#define TXT_MENU_ON                 "On"
+#define TXT_MENU_OFF                "Off"
 #define TXT_MENU_YES                "Yes"
 #define TXT_MENU_NO                 "No"
+#define TXT_MENU_OK                 "OK"
+#define TXT_MENU_FAIL               "fail"
 
 #define TXT_MAIN_JMPCNT             "Jump count"
 #define TXT_MAIN_FLIP180            "Flipped 180"
 #define TXT_MAIN_CONTRAST           "Contrast"
-#define TXT_MAIN_AUTOGND            "Auto correct GND"
-#define TXT_MAIN_ALTMETER           "Alt (<1000) on meter"
-#define TXT_MAIN_ALTCORRECT         "Alt correction"
+#define TXT_MAIN_ALT                "Altimeter"
+#define TXT_MAIN_SYSTEM             "System"
+
+#define TXT_ALT_AUTOGND             "Auto correct GND"
+#define TXT_ALT_METER               "Alt (<1000) on meter"
+#define TXT_ALT_CORRECT             "Alt correction"
+#define TXT_ALT_RESETGND            "Reset GND now"
+#define TXT_ALT_RESETMODE           "Reset mode"
+
+#define TXT_SYSTEM_DATETIME         "Change Clock"
+#define TXT_SYSTEM_RESET            "Reset CPU"
+#define TXT_SYSTEM_CFGDEFAULT       "Factory default"
+#define TXT_SYSTEM_HWTEST           "Hardware test"
+
+#define TXT_TEST_CLOCK              "Clock"
+#define TXT_TEST_BATTERY            "Battery"
+#define TXT_TEST_BATTCHARGE         "Batt charge"
+#define TXT_TEST_PRESSID            "Press ID"
+#define TXT_TEST_PRESSURE           "Pressure"
+#define TXT_TEST_PRESSVAL           "(%0.0f Pa) %s"
+#define TXT_TEST_LIGHT              "Light test"
+#define TXT_TEST_SDCARD             "SD-card"
 
 #endif // _view_text_lang_H

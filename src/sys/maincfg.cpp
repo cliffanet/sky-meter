@@ -212,3 +212,11 @@ const Config::data_t* Config::operator->() const {
     _chg = true;
     return &_d;
 }
+
+bool Config::resetdefault() {
+    data_t d;
+    cfg._d      = d;
+    cfg._chg    = true;
+
+    return save();
+}
