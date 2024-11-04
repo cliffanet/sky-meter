@@ -323,6 +323,11 @@ static const MenuStatic::el_t _system[] = {
         .enter  = [] { new MenuTimeEdit(); }
     },
     {
+        .name   = TXT_SYSTEM_LOPWRONJMP,
+        .enter  = [] { new MenuValBool(cfg->lopwronjmp, [] (bool v) { (*cfg)->lopwronjmp = v; }); },
+        .showval= [] (char *v) { vyesno(v, cfg->lopwronjmp); }
+    },
+    {
         .name   = TXT_SYSTEM_RESET,
         .enter  = [] { new MenuConfirm(HAL_NVIC_SystemReset); }
     },

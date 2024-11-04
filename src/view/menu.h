@@ -45,6 +45,7 @@ class Menu {
         void smpldn();
         void smplsel();
 
+        static bool isactive();
         static bool prevstr(line_t &s, uint8_t n);
 
         static void modalset(MenuModal *m);

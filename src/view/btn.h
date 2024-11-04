@@ -14,6 +14,8 @@
 #define BTN_FILTER_TIME     10
 // время длинного нажатия
 #define BTN_LONG_TIME       1000
+// время без любых нажатий, после которого считается, что нет активности по кнопкам
+#define BTN_ACTIVE_TIMEOUT  30000
 
 #ifdef __cplusplus
 
@@ -31,6 +33,8 @@ namespace Btn {
 
     void init();
     void set(code_t code, hnd_t hndsmpl, hnd_t hndlong = NULL);
+
+    bool isactive();
 
     void flip180(bool flip);
 

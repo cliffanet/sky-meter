@@ -269,7 +269,12 @@ void Menu::smplsel() {
         onsel(_exit == EXIT_TOP ? _isel-1 : _isel);
 }
 
-bool Menu::prevstr(line_t &s, uint8_t n) {
+bool Menu::isactive() {
+    return _w != NULL;
+}
+
+bool Menu::prevstr(line_t &s, uint8_t n)
+{
     if (_w == NULL)
         return false;
     auto m = _w->prev(n);

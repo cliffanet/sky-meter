@@ -31,12 +31,14 @@
 class Config {
     public:
         typedef struct __attribute__((__packed__)) {
-            uint32_t    jmpcnt      = 0;
-            bool        flip180     = false;
-            uint8_t     contrast    = 10;
-            bool        autognd     = true;
-            bool        altmeter    = true;
-            int16_t     altcorrect  = 0;
+            uint32_t    jmpcnt      = 0;        // кол-во прыжков
+            bool        flip180     = false;    // развернуть экран/кнопки на 180
+            uint8_t     contrast    = 10;       // контраст экрана
+            bool        autognd     = true;     // автоподстройка уровня земли
+            bool        altmeter    = true;     // показывать высоту в метрах (на высотах менее 1000)
+            int16_t     altcorrect  = 0;        // превышение площадки приземления
+            int16_t     :0;
+            bool        lopwronjmp  = false;    // использовать энергосбер. режим (с уходом в сон на 100мс) в режиме прыжка
         } data_t;
 
         static void init();

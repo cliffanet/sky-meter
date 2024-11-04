@@ -75,6 +75,10 @@ public:
         return _bmp.press();
     }
 
+    AltJmp::mode_t mode() {
+        return _jmp.mode();
+    }
+
     Wrk::state_t run() {
         auto tck = HAL_GetTick();
         auto interval = tck - _tck;
@@ -307,6 +311,10 @@ uint8_t chipid() {
 
 float press() {
     return _w != NULL ? _w->press() : 0;
+}
+
+bool isgnd() {
+    return (_w != NULL) && (_w->mode() == AltJmp::GROUND);
 }
 
 } // namespace jmp 

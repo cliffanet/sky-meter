@@ -1,7 +1,8 @@
 
 #include "init.h"
-#include "../sys/clock.h"
-#include "../sys/maincfg.h"
+#include "power.h"
+#include "clock.h"
+#include "maincfg.h"
 #include "../view/dspl.h"
 #include "../view/btn.h"
 #include "../jump/wrk.h"
@@ -30,6 +31,7 @@
 
 extern "C"
 void init_full() {
+    pwr::init();
     const char *d = __DATE__;
     const char *t = __TIME__;
     tm_t tm = {

@@ -35,6 +35,17 @@ namespace Btn {
         void _setpin(el_t &b, GPIO_TypeDef *gpiox, uint16_t pin) {
             b.gpiox = gpiox;
             b.pin = pin;
+            b.state = HAL_GPIO_ReadPin(b.gpiox, b.pin);
+            b.tmrls = HAL_GetTick();
+            if (b.state == GPIO_PIN_RESET) {
+                // pushed
+                b.tmpsh = b.tmrls;
+                b.evtlong = true;
+            }
+            else {
+                b.tmpsh = 0;
+                b.evtlong = false;
+            }
         }
 
         void _read(el_t &b) {
@@ -80,6 +91,15 @@ namespace Btn {
                     b.hndlong = hndlong;
                     return;
                 }
+        }
+
+        bool isactive() {
+            auto tm = HAL_GetTick();
+            for (const auto &b: btnall)
+                if ((tm-b.tmrls) < BTN_ACTIVE_TIMEOUT)
+                    return true;
+
+            return false;
         }
 
         void byexti(uint16_t pin) {
@@ -146,6 +166,10 @@ namespace Btn {
     void set(code_t code, hnd_t hndsmpl, hnd_t hndlong) {
         if (_w != NULL)
             _w->set(code, hndsmpl, hndlong);
+    }
+
+    bool isactive() {
+        return (_w != NULL) && _w->isactive();
     }
 
     void flip180(bool flip) {

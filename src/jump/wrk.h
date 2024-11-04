@@ -20,6 +20,7 @@ namespace jmp {
     void resetmode();
     uint8_t chipid();
     float press();
+    bool isgnd();
 } // namespace jmp
 
 #endif // _jump_wrk_H
