@@ -11,7 +11,7 @@
 #include "../view/btn.h"
 #include "../view/dspl.h"
 
-#include "../jump/wrk.h"
+#include "../jump/proc.h"
 #include "../sys/clock.h"
 #include "../sys/stm32drv.h"
 

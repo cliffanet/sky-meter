@@ -6,7 +6,7 @@
 #include "btn.h"
 #include "menustatic.h"
 #include "../sys/clock.h"
-#include "../jump/wrk.h"
+#include "../jump/proc.h"
 
 void Dspl::drawBatt(DSPL_ARG) {
     /*

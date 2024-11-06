@@ -54,8 +54,7 @@ static void vtxtlog(const char *s, va_list ap) {
     CDC_Transmit_FS((uint8_t *)str, len);
     // надо дождаться окончания передачи, т.к. она ассинхронная, а буфер str уничтожается при выходе
     USBD_CDC_HandleTypeDef *hcdc = (USBD_CDC_HandleTypeDef*)hUsbDeviceFS.pClassData;
-    for (int i = 0; (i < 100) && (hcdc->TxState != 0); i++)
-        HAL_Delay(2);
+    for (volatile int i = 0; (i < 100000) && (hcdc->TxState != 0); i++);
 }
 
 void conslog(const char *s, ...) {

@@ -5,7 +5,7 @@
 #include "maincfg.h"
 #include "../view/dspl.h"
 #include "../view/btn.h"
-#include "../jump/wrk.h"
+#include "../jump/proc.h"
 
 #define __MONTH(d) (\
     d[2] == 'n' ? (d[1] == 'a' ? 1 : 6) \

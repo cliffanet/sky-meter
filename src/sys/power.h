@@ -19,7 +19,7 @@ namespace pwr {
  extern "C" {
 #endif
 
-void pwr_delay(uint32_t ms);
+void pwr_tick();
 
 #ifdef __cplusplus
 }

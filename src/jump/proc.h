@@ -1,5 +1,5 @@
-#ifndef _jump_wrk_H
-#define _jump_wrk_H
+#ifndef _jump_proc_H
+#define _jump_proc_H
 
 #include <stdint.h>
 
@@ -13,7 +13,6 @@
 
 namespace jmp {
     void init();
-    void stop();
     void setdraw();
     void pagenxt();
     void resetgnd();
@@ -21,6 +20,7 @@ namespace jmp {
     uint8_t chipid();
     float press();
     bool isgnd();
+    void tick(uint32_t ms);
 } // namespace jmp
 
-#endif // _jump_wrk_H
+#endif // _jump_proc_H
