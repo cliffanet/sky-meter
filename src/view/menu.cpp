@@ -8,176 +8,101 @@
 #include "page.h"
 #include "btn.h"
 #include "text.h"
-#include "../sys/worker.h"
 #include "../sys/maincfg.h"
 #include "../sys/log.h"
 
 #include <string.h>
 #include <list>
 
-class _menuWrk;
-static _menuWrk* _w;
+static Menu *_menu = NULL;
+static MenuModal *_modal = NULL;
 
-class _menuWrk : public Wrk {
-    std::list<Menu *> _mall;
-    Menu *_m = NULL;
+static uint32_t _tout = MENU_TIMEOUT;
+static void _toutupd() {
+    if (_tout > 0)
+        _tout = MENU_TIMEOUT;
+}
 
-    MenuModal *_modal = NULL, *_modal_del = NULL;
+static void _draw(DSPL_ARG) {
+    if (_menu != NULL)
+        _menu->draw(u8g2);
+    if (_modal != NULL)
+        _modal->draw(u8g2);
+}
+static void _smplup() {
+    _toutupd();
+    if (_modal != NULL)
+        _modal->smplup();
+    else
+    if (_menu != NULL)
+        _menu->smplup();
+}
+static void _smpldn() {
+    _toutupd();
+    if (_modal != NULL)
+        _modal->smpldn();
+    else
+    if (_menu != NULL)
+        _menu->smpldn();
+}
+static void _smplsel() {
+    _toutupd();
+    if (_modal != NULL)
+        _modal->smplsel();
+    else
+    if (_menu != NULL)
+        _menu->smplsel();
+}
 
-    bool _exit = false;
-    uint32_t _tout = MENU_TIMEOUT;
-    void _toutupd() {
-        if (_tout > 0)
-            _tout = MENU_TIMEOUT;
-    }
-
-    static void _draw(DSPL_ARG) {
-        if (_w != NULL) {
-            if (_w->_m != NULL)
-                _w->_m->draw(u8g2);
-            if (_w->_modal != NULL)
-                _w->_modal->draw(u8g2);
+static void _tick() {
+    if (_tout > 0) {
+        _tout--;
+        if (_tout == 0) {
+            CONSOLE("timeout");
+            while (_menu != NULL)
+                delete _menu;
         }
     }
-    static void _smplup() {
-        if ((_w != NULL) && (_w->_m != NULL)) {
-            _w->_toutupd();
-            if (_w->_modal != NULL)
-                _w->_modal->smplup();
-            else
-                _w->_m->smplup();
-        }
-    }
-    static void _smpldn() {
-        if ((_w != NULL) && (_w->_m != NULL)) {
-            _w->_toutupd();
-            if (_w->_modal != NULL)
-                _w->_modal->smpldn();
-            else
-                _w->_m->smpldn();
-        }
-    }
-    static void _smplsel() {
-        if ((_w != NULL) && (_w->_m != NULL)) {
-            _w->_toutupd();
-            if (_w->_modal != NULL)
-                _w->_modal->smplsel();
-            else
-                _w->_m->smplsel();
-        }
-    }
-public:
-    _menuWrk() {
-        if (_w != NULL)
-            delete _w;
-        _w = this;
-        optset(O_AUTODELETE);
 
-        Dspl::set(_draw);
-        Btn::set(Btn::UP,   _smplup);
-        Btn::set(Btn::DN,   _smpldn);
-        Btn::set(Btn::SEL,  _smplsel);
-    }
-    ~_menuWrk() {
-        CONSOLE("destroy 0x%08x", this);
-        _m = NULL;
-        for (auto m: _mall)
-            delete m;
-        if (_modal != NULL)
-            delete _modal;
-        if (_modal_del != NULL)
-            delete _modal_del;
-        cfg.save();
-        Dspl::page();
-        if (_w == this)
-            _w = NULL;
-    }
+    if (_menu != NULL)
+        return;
+    
+    if (_modal != NULL)
+        delete _modal;
+    cfg.save();
+    Dspl::page();
+}
 
-    Menu *prev(uint8_t n) {
-        if (_mall.size() <= n)
-            return NULL;
-        auto it = _mall.begin();
-        for (; n > 0; n--)
-            it++;
-        return *it;
-    }
-
-    void add(Menu *m) {
-        CONSOLE("menu enter: 0x%08x", m);
-        _mall.push_front(m);
-        _m = m;
-    }
-    /*
-    void del(Menu *m) {
-        for (auto it = _mall.begin(); it != _mall.end(); it++)
-            if (*it == m) {
-                _mall.erase(it);
-                CONSOLE("found");
-                break;
-            }
-        _m = m;
-    }
-    */
-
-    void mexit() {
-        _exit = true;
-    }
-
-    void modalset(MenuModal *modal) {
-        modalclose();
-        _modal = modal;
-        CONSOLE("set modal: 0x%08x", modal);
-    }
-    void modalclose() {
-        if (_modal_del != NULL)
-            delete _modal_del;
-        _modal_del = _modal;
-        _modal = NULL;
-    }
-
-    state_t run() {
-        if (_exit) {
-            _exit = false;
-            
-            if (!_mall.empty()) {
-                auto *m = _mall.front();
-                CONSOLE("menu exit: 0x%08x", m);
-                _mall.erase(_mall.begin());
-                delete m;
-            }
-            if (_mall.empty()) {
-                _m = NULL;
-                return END;
-            }
-
-            _m = _mall.front();
-        }
-
-        if (_tout > 0) {
-            _tout--;
-            if (_tout == 0) {
-                CONSOLE("timeout");
-                return END;
-            }
-        }
-
-        if (_modal_del != NULL) {
-            CONSOLE("clear modal: 0x%08x", _modal_del);
-            delete _modal_del;
-            _modal_del = NULL;
-        }
-
-        return DLY;
-    }
-};
-
-Menu::Menu(exit_t _exit) :
+Menu::Menu(exit_t _exit) : 
     _exit(_exit)
 {
-    if (_w == NULL)
-        _w = new _menuWrk();
-    if (_w != NULL)
-        _w->add(this);
+    CONSOLE("new 0x%08x", this);
+
+    _prv = _menu;
+    if (_menu != NULL)
+        _menu->_nxt = this;
+    _menu = this;
+    _tout = MENU_TIMEOUT;
+
+    Dspl::set(_draw, _tick);
+    Btn::set(Btn::UP,   _smplup);
+    Btn::set(Btn::DN,   _smpldn);
+    Btn::set(Btn::SEL,  _smplsel);
+}
+
+Menu::~Menu() {
+    CONSOLE("destroy 0x%08x", this);
+
+    if (_menu == this)
+        _menu = _prv;
+    if (_prv != NULL)
+        _prv->_nxt = _nxt;
+    if (_nxt != NULL)
+        _nxt->_prv = _prv;
+}
+
+void Menu::close() {
+    delete this;
 }
 
 #define _sz     (_exit == EXIT_NONE ? sz() : sz()+1)
@@ -261,23 +186,21 @@ void Menu::smpldn() {
 
 void Menu::smplsel() {
     bool isexit = ((_exit == EXIT_TOP) && (_isel == 0)) || ((_exit == EXIT_BOTTOM) && (_isel+1 >= _sz));
-    if (isexit) {
-        if (_w != NULL)
-            _w->mexit();
-    }
+    if (isexit)
+        close();
     else
         onsel(_exit == EXIT_TOP ? _isel-1 : _isel);
 }
 
-bool Menu::isactive() {
-    return _w != NULL;
+Menu *Menu::prev(uint8_t n) {
+    auto m = _menu;
+    for (; (m != NULL) && (n > 0); n--)
+        m = m->_prv;
+    return m;
 }
 
-bool Menu::prevstr(line_t &s, uint8_t n)
-{
-    if (_w == NULL)
-        return false;
-    auto m = _w->prev(n);
+bool Menu::prevstr(line_t &s, uint8_t n) {
+    auto m = prev(n);
     if (m == NULL)
         return false;
     
@@ -286,14 +209,18 @@ bool Menu::prevstr(line_t &s, uint8_t n)
     return true;
 }
 
-void Menu::modalset(MenuModal *m) {
-    if (_w != NULL)
-        _w->modalset(m);
-    else
-        delete m;
+bool Menu::isactive() {
+    return _menu != NULL;
 }
 
-void Menu::modalclose() {
-    if (_w != NULL)
-        _w->modalclose();
+void Menu::modalset(MenuModal *m) {
+    if ((_modal != NULL) && (_modal != m))
+        delete _modal;
+    _modal = m;
+    CONSOLE("set modal: 0x%08x", m);
+}
+
+void Menu::modaldel(MenuModal *m) {
+    if (_modal == m)
+        _modal = NULL;
 }

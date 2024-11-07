@@ -9,6 +9,7 @@
 #include "worker.h"
 #include "../jump/proc.h"
 #include "../view/btn.h"
+#include "../view/dspl.h"
 #include "../view/menu.h"
 
 /* ------  RTC timer  --------- */
@@ -99,6 +100,7 @@ void pwr_tick() {
 
         jmp::tick(100);
         wrkProcess(98);
+        Dspl::tick();
 
         // Надо забыть об использовании HAL_GetTick в качестве опорного времени
         // в длинных процессах. Дело в том, что он основан на таймере, который

@@ -24,6 +24,7 @@
 class MenuModal;
 
 class Menu {
+    Menu *_prv = NULL, *_nxt = NULL;
     public:
         typedef struct {
             char name[MENUSZ_NAME] = { '\0' };
@@ -37,21 +38,24 @@ class Menu {
         } exit_t;
 
         Menu(exit_t _exit = EXIT_TOP);
-        virtual
-        ~Menu() {}
+        ~Menu();
+
+        void close();
 
         void draw(DSPL_ARG);
         void smplup();
         void smpldn();
         void smplsel();
 
-        static bool isactive();
+        static Menu *prev(uint8_t n);
         static bool prevstr(line_t &s, uint8_t n);
 
-        static void modalset(MenuModal *m);
-        static void modalclose();
+        static bool isactive();
 
-private:
+        static void modalset(MenuModal *m);
+        static void modaldel(MenuModal *m);
+
+    private:
         virtual size_t sz() { return 0; }
         virtual void title(char *s) { }
         virtual void str(line_t &s, int16_t i) { }

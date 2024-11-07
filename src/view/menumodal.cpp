@@ -21,9 +21,12 @@ MenuModal::MenuModal(uint8_t lncnt) :
     Menu::modalset(this);
 }
 
-void MenuModal::close()
-{
-    Menu::modalclose();
+MenuModal::~MenuModal() {
+    Menu::modaldel(this);
+}
+
+void MenuModal::close() {
+    delete this;
 }
 
 void MenuModal::draw(DSPL_ARG) {

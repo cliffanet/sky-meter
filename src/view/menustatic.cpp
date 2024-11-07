@@ -49,7 +49,7 @@ MenuStatic::MenuStatic(const el_t *m, int16_t sz) :
         prevstr(l, 1) ?
             strdup(l.name) :
             NULL;
-    CONSOLE("sz: %d, title: %s", _sz, _title || "-null-");
+    CONSOLE("sz: %d, title: %s", _sz, _title != NULL ? _title : "-null-");
 }
 
 MenuStatic::~MenuStatic() {

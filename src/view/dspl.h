@@ -55,9 +55,10 @@
 namespace Dspl {
 
     typedef void (*draw_t)(u8g2_t *u8g2);
+    typedef void (*tick_t)();
 
     void init();
-    void set(draw_t draw);
+    void set(draw_t draw, tick_t tick = NULL);
 
     void on();
     void off();
@@ -65,6 +66,8 @@ namespace Dspl {
     bool light();
     void contrast(uint8_t value);
     void flip180(bool flip);
+
+    void tick();
 
 }; // namespace Dspl
 

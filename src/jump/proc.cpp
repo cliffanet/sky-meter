@@ -221,12 +221,7 @@ namespace jmp {
     }
 
     void tick(uint32_t ms) {
-        auto p = _bmp.press();
-        if (p > 100000) {
-            CONSOLE("press: %0.1f", p);
-            return;
-        }
-        _ac.tick(p, ms);
+        _ac.tick(_bmp.press(), ms);
         auto m = _jmp.mode();
         _jmp.tick(_ac);
         const bool chgmode = m != _jmp.mode();

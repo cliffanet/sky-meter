@@ -19,6 +19,7 @@ class MenuModal {
     char _title[MENUSZ_MODAL];
     public:
         MenuModal(uint8_t lncnt = 1);
+        virtual ~MenuModal();
         void close();
 
         virtual void draw(DSPL_ARG);

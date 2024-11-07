@@ -5,7 +5,6 @@
 #include "dspl.h"
 #include "page.h"
 #include "../sys/stm32drv.h"
-#include "../sys/worker.h"
 #include "../sys/maincfg.h"
 #include "../sys/log.h"
 
@@ -21,11 +20,11 @@ static void _lghtUpd() {
 
 extern SPI_HandleTypeDef hspi1;
 
-class _wrkDspl : public Wrk {
-    u8g2_t u8g2;
+static u8g2_t u8g2;
 
-    Dspl::draw_t _draw = NULL;
-    bool _clear = true;
+static Dspl::draw_t _draw = NULL;
+static Dspl::tick_t _tick = NULL;
+static bool _clear = true;
 
     static uint8_t _4wire_hw_spi(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *arg_ptr) {
         switch (msg) {
@@ -75,83 +74,34 @@ class _wrkDspl : public Wrk {
         return 1;
     }
 
-public:
-    _wrkDspl() {
-        u8g2_Setup_st75256_jlx19296_f(&u8g2, U8G2_R0, _4wire_hw_spi, _gpio_and_delay);
-        u8g2_InitDisplay(&u8g2);
-        u8g2_SetPowerSave(&u8g2, 0);
-        u8g2_ClearDisplay(&u8g2);
-        _lghtUpd();
-
-        CONSOLE("init");
-    }
-    ~_wrkDspl() {
-        u8g2_SetPowerSave(&u8g2, 1);
-        HAL_GPIO_WritePin(DSPL_PIN_LGHT, GPIO_PIN_RESET);
-    }
-
-    void draw(Dspl::draw_t _d) {
-        u8g2_FirstPage(&u8g2);
-        do {
-            _d(&u8g2);
-        } while (u8g2_NextPage(&u8g2));
-    }
-    void set(Dspl::draw_t _d) {
-        _clear = true;
-        _draw = _d;
-    }
-
-    void contrast(uint8_t value) {
-        u8g2_SetContrast(&u8g2, 115+value);
-    }
-
-    void flip180(bool flip) {
-        u8g2_SetFlipMode(&u8g2, flip ? 1 : 0);
-    }
-
-    state_t run () {
-        if (_clear) {
-            _clear = false;
-            u8g2_ClearDisplay(&u8g2);
-        }
-
-        if (_draw != NULL)
-            draw(_draw);
-
-        return DLY;
-    }
-};
-
 namespace Dspl {
 
-    static _wrkDspl *_w = NULL;
-
 void init() {
+    u8g2_Setup_st75256_jlx19296_f(&u8g2, U8G2_R0, _4wire_hw_spi, _gpio_and_delay);
     on();
 }
 
-void set(draw_t draw) {
-    if (_w != NULL)
-        _w->set(draw);
+void set(draw_t draw, tick_t tick) {
+    _clear = true;
+    _draw = draw;
+    _tick = tick;
 }
 
 void on() {
-    if (_w != NULL)
-        return;
-    
-    _w = new _wrkDspl();
-    if (_w == NULL)
-        return;
-    _w->contrast(cfg->contrast);
-    _w->flip180(cfg->flip180);
+    u8g2_InitDisplay(&u8g2);
+    u8g2_SetPowerSave(&u8g2, 0);
+    u8g2_ClearDisplay(&u8g2);
+
+    contrast(cfg->contrast);
+    flip180(cfg->flip180);
+    _lghtUpd();
+
     page();
 }
 
 void off() {
-    if (_w == NULL)
-        return;
-    delete _w;
-    _w = NULL;
+    u8g2_SetPowerSave(&u8g2, 1);
+    HAL_GPIO_WritePin(DSPL_PIN_LGHT, GPIO_PIN_RESET);
 }
 
 void lightTgl() {
@@ -166,15 +116,29 @@ bool light() {
 void contrast(uint8_t value) {
     if (cfg->contrast != value)
         (*cfg)->contrast = value;
-    if (_w != NULL)
-        _w->contrast(value);
+    u8g2_SetContrast(&u8g2, 115+value);
 }
 
 void flip180(bool flip) {
     if (cfg->flip180 != flip)
         (*cfg)->flip180 = flip;
-    if (_w != NULL)
-        _w->flip180(flip);
+    u8g2_SetFlipMode(&u8g2, flip ? 1 : 0);
+}
+
+void tick() {
+    if (_clear) {
+        _clear = false;
+        u8g2_ClearDisplay(&u8g2);
+    }
+
+    if (_tick != NULL)
+        _tick();
+
+    u8g2_FirstPage(&u8g2);
+    do {
+        if (_draw != NULL)
+            _draw(&u8g2);
+    } while (u8g2_NextPage(&u8g2));
 }
 
 }; // namespace Dspl
