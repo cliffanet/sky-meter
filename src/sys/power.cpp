@@ -6,7 +6,6 @@
 #include "power.h"
 #include "maincfg.h"
 #include "log.h"
-#include "worker.h"
 #include "../jump/proc.h"
 #include "../view/btn.h"
 #include "../view/dspl.h"
@@ -99,7 +98,7 @@ void pwr_tick() {
         _tmr = false;
 
         jmp::tick(100);
-        wrkProcess(98);
+        Btn::tick();
         Dspl::tick();
 
         // Надо забыть об использовании HAL_GetTick в качестве опорного времени

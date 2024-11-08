@@ -38,6 +38,7 @@ namespace Btn {
 
     void flip180(bool flip);
 
+    void tick();
 }; // namespace Btn
 
     extern "C"

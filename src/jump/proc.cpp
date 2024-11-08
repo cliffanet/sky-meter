@@ -4,7 +4,6 @@
 #include "altcalc.h"
 #include "../sys/trwire.h"
 #include "../sys/stm32drv.h"
-#include "../sys/worker.h"
 #include "../sys/maincfg.h"
 #include "../sys/log.h"
 #include "../view/page.h"
