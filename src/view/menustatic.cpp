@@ -13,6 +13,7 @@
 
 #include "../jump/proc.h"
 #include "../sys/clock.h"
+#include "../sys/power.h"
 #include "../sys/stm32drv.h"
 
 #include <stdlib.h>
@@ -330,6 +331,10 @@ static const MenuStatic::el_t _system[] = {
     {
         .name   = TXT_SYSTEM_RESET,
         .enter  = [] { new MenuConfirm(HAL_NVIC_SystemReset); }
+    },
+    {
+        .name   = TXT_SYSTEM_POWEROFF,
+        .enter  = [] { new MenuConfirm(pwr::off); }
     },
     {
         .name   = TXT_SYSTEM_CFGDEFAULT,

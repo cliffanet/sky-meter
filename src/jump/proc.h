@@ -20,6 +20,10 @@ namespace jmp {
     uint8_t chipid();
     float press();
     bool isgnd();
+
+    void sleep();
+    bool sleep2toff(uint32_t ms);
+
     void tick(uint32_t ms);
 } // namespace jmp
 

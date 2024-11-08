@@ -64,8 +64,8 @@ bool BMP280::init() {
     calib();
 
     return
-        setctrl(MODE_NORMAL, SAMPLING_X16, SAMPLING_X16) &&
-        setconf(FILTER_OFF, STANDBY_MS_1);
+        setctrl() &&
+        setconf();
 }
 
 uint8_t BMP280::chipid() {

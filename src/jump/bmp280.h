@@ -90,7 +90,7 @@ class BMP280 {
             /** Normal mode. */
             MODE_NORMAL = 0x03
         } ctrl_mode_t;
-        bool setctrl(ctrl_mode_t mode, ctrl_sampling_t smpltemp, ctrl_sampling_t smplpres);
+        bool setctrl(ctrl_mode_t mode = MODE_NORMAL, ctrl_sampling_t smpltemp = SAMPLING_X16, ctrl_sampling_t smplpres = SAMPLING_X16);
 
         /** Filtering level for sensor data. */
         typedef enum {
@@ -125,7 +125,7 @@ class BMP280 {
             /** 4000 ms standby. */
             STANDBY_MS_4000 = 0x07
         } ctrl_standby_t;
-        bool setconf(ctrl_filter_t filter, ctrl_standby_t standby);
+        bool setconf(ctrl_filter_t filter = FILTER_OFF, ctrl_standby_t standby = STANDBY_MS_1);
 
         bool reset();
 

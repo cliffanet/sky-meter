@@ -11,7 +11,6 @@
  extern "C" {
 #endif
 
-
 void init_full();
 
 #ifdef __cplusplus

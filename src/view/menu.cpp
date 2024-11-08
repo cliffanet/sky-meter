@@ -59,18 +59,9 @@ static void _tick() {
         _tout--;
         if (_tout == 0) {
             CONSOLE("timeout");
-            while (_menu != NULL)
-                delete _menu;
+            Menu::clear();
         }
     }
-
-    if (_menu != NULL)
-        return;
-    
-    if (_modal != NULL)
-        delete _modal;
-    cfg.save();
-    Dspl::page();
 }
 
 Menu::Menu(exit_t _exit) : 
@@ -211,6 +202,15 @@ bool Menu::prevstr(line_t &s, uint8_t n) {
 
 bool Menu::isactive() {
     return _menu != NULL;
+}
+
+void Menu::clear() {
+    while (_menu != NULL)
+        delete _menu;
+    if (_modal != NULL)
+        delete _modal;
+    cfg.save();
+    Dspl::page();
 }
 
 void Menu::modalset(MenuModal *m) {

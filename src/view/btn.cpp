@@ -11,6 +11,9 @@
 #define BTN_PIN_SEL     GPIOA, GPIO_PIN_1
 #define BTN_PIN_DN      GPIOA, GPIO_PIN_0
 
+#define BSTATE(btn)     HAL_GPIO_ReadPin(btn.gpiox, btn.pin)
+#define PUSHED(state)   ((state) == GPIO_PIN_RESET)
+
 namespace Btn {
 
     typedef struct {
@@ -33,9 +36,9 @@ namespace Btn {
     static void _setpin(el_t &b, GPIO_TypeDef *gpiox, uint16_t pin) {
         b.gpiox = gpiox;
         b.pin = pin;
-        b.state = HAL_GPIO_ReadPin(b.gpiox, b.pin);
+        b.state = BSTATE(b);
         b.tmrls = HAL_GetTick();
-        if (b.state == GPIO_PIN_RESET) {
+        if (PUSHED(b.state)) {
             // pushed
             b.tmpsh = b.tmrls;
             b.evtlong = true;
@@ -47,8 +50,8 @@ namespace Btn {
     }
 
     static void _read(el_t &b) {
-        auto st = HAL_GPIO_ReadPin(b.gpiox, b.pin);
-        bool pushed = st == GPIO_PIN_RESET;
+        auto st = BSTATE(b);
+        bool pushed = PUSHED(st);
         bool chg = st != b.state;
         auto tm = HAL_GetTick();
 
@@ -96,12 +99,19 @@ namespace Btn {
             }
     }
 
-    bool isactive() {
+    bool isactive(uint32_t ms) {
         auto tm = HAL_GetTick();
         for (const auto &b: btnall)
-            if ((tm-b.tmrls) < BTN_ACTIVE_TIMEOUT)
+            if ((tm-b.tmrls) <= ms)
                 return true;
 
+        return false;
+    }
+
+    bool ispushed() {
+        for (const auto &b: btnall)
+            if (PUSHED(BSTATE(b)))
+                return true;
         return false;
     }
 

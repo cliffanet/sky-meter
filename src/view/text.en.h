@@ -31,6 +31,7 @@
 #define TXT_SYSTEM_DATETIME         "Change Clock"
 #define TXT_SYSTEM_LOPWRONJMP       "LoPwr on jump"
 #define TXT_SYSTEM_RESET            "Reset CPU"
+#define TXT_SYSTEM_POWEROFF         "Power OFF"
 #define TXT_SYSTEM_CFGDEFAULT       "Factory default"
 #define TXT_SYSTEM_HWTEST           "Hardware test"
 

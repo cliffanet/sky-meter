@@ -176,6 +176,12 @@ static int _lmin = 0, _lmax = 0;
     }
     //-----------------------------------
 
+/* ------------------------------------------------------------------------------------------- *
+ *  Текущее давление "у земли", нужно для отслеживания начала подъёма в режиме "сон"
+ * ------------------------------------------------------------------------------------------- */
+static AltSleep _slp;
+    //-----------------------------------
+
 namespace jmp {
 
     void init() {
@@ -217,6 +223,37 @@ namespace jmp {
 
     bool isgnd() {
         return _jmp.mode() == AltJmp::GROUND;
+    }
+
+
+    void sleep() {
+        _slp.clear();
+        _slp.tick(_ac.pressgnd(), 100);
+        _slp.tick(_ac.press(), 1);
+        _bmp.setctrl(BMP280::MODE_SLEEP, BMP280::SAMPLING_NONE, BMP280::SAMPLING_NONE);
+        CONSOLE("saved");
+    }
+
+    bool sleep2toff(uint32_t ms) {
+        if (!_bmp.setctrl()) {
+            CONSOLE("NO BMP280");
+            return false;
+        }
+        
+        _slp.tick(_bmp.press(), ms);
+        _ac.gndset(_slp.pressgnd());
+        if (!_slp.istoff()) {
+            _bmp.setctrl(BMP280::MODE_SLEEP, BMP280::SAMPLING_NONE, BMP280::SAMPLING_NONE);
+            return false;
+        }
+
+        CONSOLE("TAKEOFF _pressgnd: %0.2f", _slp.pressgnd());
+        _jmp.reset(AltJmp::TAKEOFF);
+        _sq.reset();
+        _jstr.reset();
+        _slp.clear();
+
+        return true;
     }
 
     void tick(uint32_t ms) {

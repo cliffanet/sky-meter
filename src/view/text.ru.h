@@ -37,6 +37,7 @@ extern const uint8_t u8g2_font_robotobd_08_tx[] U8G2_FONT_SECTION("u8g2_font_rob
 #define TXT_SYSTEM_DATETIME         "Изменить часы"
 #define TXT_SYSTEM_LOPWRONJMP       "Энергосбер. в прыжке"
 #define TXT_SYSTEM_RESET            "Перезагрузить"
+#define TXT_SYSTEM_POWEROFF         "Выкл. питания"
 #define TXT_SYSTEM_CFGDEFAULT       "Сбросить настройки"
 #define TXT_SYSTEM_HWTEST           "Тестирование аппарат."
 

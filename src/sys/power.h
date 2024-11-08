@@ -14,6 +14,7 @@
 namespace pwr {
     
     void init();
+    void off();
 };
 
  extern "C" {

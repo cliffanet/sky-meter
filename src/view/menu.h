@@ -51,6 +51,7 @@ class Menu {
         static bool prevstr(line_t &s, uint8_t n);
 
         static bool isactive();
+        static void clear();
 
         static void modalset(MenuModal *m);
         static void modaldel(MenuModal *m);
