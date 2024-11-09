@@ -24,7 +24,7 @@
 /* USER CODE BEGIN Includes */
 #include "usbd_cdc_if.h"
 #include "init.h"
-#include "sys/worker.h"
+#include "sys/power.h"
 #include "view/btn.h" // btn_byexti
 /* USER CODE END Includes */
 
@@ -64,28 +64,10 @@ static void MX_RTC_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-void HAL_RTCEx_WakeUpTimerEventCallback(RTC_HandleTypeDef *hrtc)
-{
-	SystemClock_Config ();
-	HAL_ResumeTick();
-	char *str = "WAKEUP FROM RTC\n NOW GOING IN STOP MODE AGAIN\n\n";
-	CDC_Transmit_FS((uint8_t *)str, strlen (str));
-}
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
     btn_byexti(GPIO_Pin);
-    /*
-  if ((GPIO_Pin == GPIO_PIN_0) || (GPIO_Pin == GPIO_PIN_1) || (GPIO_Pin == GPIO_PIN_2))
-  {
-	  SystemClock_Config ();
-	  HAL_ResumeTick();
-	  char s[64];
-      sprintf(s, "WAKEUP FROM EXTII: gpio-%d\n\n", GPIO_Pin);
-	  CDC_Transmit_FS((uint8_t *)s, strlen (s));
-	  //HAL_PWR_DisableSleepOnExit();
-  }
-  */
 }
 
 
@@ -125,14 +107,8 @@ int main(void)
   MX_RTC_Init();
   MX_USB_Device_Init();
   /* USER CODE BEGIN 2 */
-    HAL_Delay(4000);
-    init_full();
 
-    for (int i=0; i<6; i++)
-    {
-        HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
-        HAL_Delay(100);
-    }
+    init_full();
 
   /* USER CODE END 2 */
 
@@ -143,61 +119,9 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    uint32_t t = wrkProcess(98);
-    if (t < 80)
-        HAL_Delay(99-t);
-    continue;
 
-    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_RESET);
-
-    char s[64];
-
-    HAL_Delay(1000);
-
-    RTC_TimeTypeDef sTime = {0};
-    HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
-    RTC_DateTypeDef sDate = {0};
-    HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
-
-    static int n = 0;
-    n++;
-
-    sprintf(s, "[%d] %02d.%02d.%02d / %02d:%02d:%02d\n", 
-        n,
-        sDate.Date, sDate.Month, sDate.Year,
-        sTime.Hours, sTime.Minutes, sTime.Seconds);
-    CDC_Transmit_FS((uint8_t *)s, strlen(s));
-
-    for (int i=0; i<11; i++)
-    {
-        HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
-        HAL_Delay(100);
-    }
-    continue;
-
-    //
-    /*## Configure the Wake up timer ###########################################*/
-    /*  RTC Wake-up Interrupt Generation:
-        Wake-up Time Base = (RTC_WAKEUPCLOCK_RTCCLK_DIV /(LSI))
-        ==> WakeUpCounter = Wake-up Time / Wake-up Time Base
-
-        To configure the wake up timer to 20s the WakeUpCounter is set to 0xA017:
-            RTC_WAKEUPCLOCK_RTCCLK_DIV = RTCCLK_Div16 = 16
-            Wake-up Time Base = 16 /(32KHz) = 0.0005 seconds
-            ==> WakeUpCounter = ~10s/0.0005s = 20000 = 0x4E20 */
-
-    HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 0x4E20, RTC_WAKEUPCLOCK_RTCCLK_DIV16);
-
-
-    HAL_SuspendTick();
-
-    //HAL_PWR_EnableSleepOnExit();
-
-    HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_STOPENTRY_WFI);
-
-
-    HAL_RTCEx_DeactivateWakeUpTimer(&hrtc);
-
+    pwr_tick();
+    
   }
   /* USER CODE END 3 */
 }
@@ -291,6 +215,7 @@ static void MX_RTC_Init(void)
   }
 
   /* USER CODE BEGIN Check_RTC_BKUP */
+  return;
 
   /* USER CODE END Check_RTC_BKUP */
 

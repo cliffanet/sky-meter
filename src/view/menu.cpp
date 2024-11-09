@@ -90,6 +90,9 @@ Menu::~Menu() {
         _prv->_nxt = _nxt;
     if (_nxt != NULL)
         _nxt->_prv = _prv;
+    
+    if (_menu == NULL)
+        clear();
 }
 
 void Menu::close() {

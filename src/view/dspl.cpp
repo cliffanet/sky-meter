@@ -90,13 +90,13 @@ void set(draw_t draw, tick_t tick) {
 void on() {
     u8g2_InitDisplay(&u8g2);
     u8g2_SetPowerSave(&u8g2, 0);
-    u8g2_ClearDisplay(&u8g2);
 
     contrast(cfg->contrast);
     flip180(cfg->flip180);
     _lghtUpd();
 
     page();
+    tick();
 }
 
 void off() {

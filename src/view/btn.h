@@ -14,11 +14,11 @@
 #define BTN_FILTER_TIME     10
 // время длинного нажатия
 #define BTN_LONG_TIME       1000
-// время без любых нажатий, после которого считается, что нет активности по кнопкам
-#define BTN_ACTIVE_LONG     30000
-// время без любых нажатий, при которых устройство будет оставаться
+// кол-во тиков без любых нажатий, после которого считается, что нет активности по кнопкам
+#define BTN_ACTIVE_LONG     300
+// кол-во тиков без любых нажатий, при которых устройство будет оставаться
 // в power-active режиме, чтобы верно отрабатывал HAL_GetTick
-#define BTN_ACTIVE_SHORT    3000
+#define BTN_ACTIVE_SHORT    30
 
 #ifdef __cplusplus
 
@@ -36,8 +36,9 @@ namespace Btn {
 
     void init();
     void set(code_t code, hnd_t hndsmpl, hnd_t hndlong = NULL);
+    void sleep();
 
-    bool isactive(uint32_t ms = BTN_ACTIVE_SHORT);
+    bool isactive(uint32_t tickcnt = BTN_ACTIVE_SHORT);
     bool ispushed();
 
     void flip180(bool flip);

@@ -13,8 +13,9 @@
 
 /* ------  RTC timer  --------- */
 extern RTC_HandleTypeDef hrtc;
+extern "C" void SystemClock_Config(void);
 
-static bool _tmr = false;
+static __IO bool _tmr = false;
 
 extern "C"
 void HAL_RTCEx_WakeUpTimerEventCallback(RTC_HandleTypeDef *hrtc) {
@@ -26,7 +27,7 @@ static void _tmr_stop() {
 }
 
 static void _tmr_set(uint32_t ms) {
-    _tmr_stop();
+    HAL_RTCEx_DeactivateWakeUpTimer(&hrtc);
     // div16 делит частоту 32.768 кГц на 16,
     // получаем 2048 тик в секунду,
     // длительность 1 ms = 2048/1000
@@ -64,8 +65,6 @@ static pwr_mode_t _mode() {
     return PWR_SLEEP;
 }
 
-extern "C" void SystemClock_Config(void);
-
 static void _stop() {
     HAL_SuspendTick();
     HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_STOPENTRY_WFI);
@@ -78,6 +77,7 @@ static void _sleep_beg() {
     Dspl::off();
     jmp::sleep();
     _tmr_set(5000);
+    Btn::sleep();
 }
 
 static void _sleep_tick() {
@@ -98,6 +98,8 @@ static void _sleep_tick() {
     }
 
     CONSOLE("sleep end");
+    while (Btn::ispushed())
+        asm("");
     pwr::init();
     Dspl::on();
     Btn::init();

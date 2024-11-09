@@ -16,6 +16,10 @@
 
 namespace Btn {
 
+    static bool     _sleep = false;         // в sleep-режиме в прерываниях мы не делаем обработку
+                                            // на нажатия. Прерывание тут нужно только для пробуждения.
+    static uint32_t _tickact = 0;           // кол-во тиков после крайней активности
+
     typedef struct {
         code_t          code;               // Код кнопки
         GPIO_TypeDef *  gpiox;              // группа пинов
@@ -23,8 +27,8 @@ namespace Btn {
         GPIO_PinState   state;              // текущее состояние пина кнопки
         uint32_t        tmpsh, tmrls;       // время предыдущего нажатия на кнопку и отпускания (для антидребезга)
         uint8_t         cntsmpl, cntlong;   // счётчик сработавших событий simple и long
+        bool            evtok;              // указывает на то, что hnd уже сработало при текущем удержании
         hnd_t           hndsmpl, hndlong;   // обработчики событий simple и long
-        bool            evtlong;            // указывает на то, что hndlong уже сработало при текущем удержании
     } el_t;
 
     static el_t btnall[3] = {
@@ -41,11 +45,11 @@ namespace Btn {
         if (PUSHED(b.state)) {
             // pushed
             b.tmpsh = b.tmrls;
-            b.evtlong = true;
+            b.evtok = true;
         }
         else {
             b.tmpsh = 0;
-            b.evtlong = false;
+            b.evtok = false;
         }
     }
 
@@ -56,13 +60,16 @@ namespace Btn {
         auto tm = HAL_GetTick();
 
         if (chg) {
+            _tickact = 0;
             if (pushed && ((tm-b.tmrls) > BTN_FILTER_TIME)) {
                 // отфильтрованное нажатие
                 b.tmpsh = tm;
-                if ((b.hndsmpl != NULL) && (b.hndlong == NULL))
+                if (!b.evtok && (b.hndsmpl != NULL) && (b.hndlong == NULL)) {
                     // hndsmpl при отсутствующем hndlong
                     // срабатывает при нажатии
                     b.cntsmpl ++;
+                    b.evtok = true;
+                }
             }
             b.tmrls = tm;
             b.state = st;
@@ -70,23 +77,26 @@ namespace Btn {
         else
         if (!pushed && (b.tmpsh > 0) && ((tm-b.tmrls) > BTN_FILTER_TIME)) {
             // отфильтрованное отпускание
-            if (!b.evtlong && (b.hndsmpl != NULL) && (b.hndlong != NULL))
+            if (!b.evtok && (b.hndsmpl != NULL) && (b.hndlong != NULL)) {
                 // hndsmpl при наличии hndlong
                 // срабатывает при отпускании
                 b.cntsmpl ++;
+            }
             b.tmpsh = 0;
-            b.evtlong = false;
+            b.evtok = false;
         }
 
-        if (!b.evtlong && (b.hndlong != NULL) && pushed && (b.tmpsh > 0) && ((tm-b.tmpsh) > BTN_LONG_TIME)) {
-            b.evtlong = true;
+        if (!b.evtok && (b.hndlong != NULL) && pushed && (b.tmpsh > 0) && ((tm-b.tmpsh) > BTN_LONG_TIME)) {
             b.cntlong ++;
+            b.evtok = true;
         }
     }
 
     // ------------------------------------
 
     void init() {
+        _sleep = false;
+        _tickact = 0;
         flip180(cfg->flip180);
     }
 
@@ -99,13 +109,12 @@ namespace Btn {
             }
     }
 
-    bool isactive(uint32_t ms) {
-        auto tm = HAL_GetTick();
-        for (const auto &b: btnall)
-            if ((tm-b.tmrls) <= ms)
-                return true;
+    void sleep() {
+        _sleep = true;
+    }
 
-        return false;
+    bool isactive(uint32_t tickcnt) {
+        return _tickact <= tickcnt;
     }
 
     bool ispushed() {
@@ -140,6 +149,7 @@ namespace Btn {
     }
 
     void tick() {
+        _tickact ++;
         for (auto &b: btnall) {
             _read(b);
 
@@ -164,6 +174,8 @@ namespace Btn {
     extern "C"
 #endif
 void btn_byexti(uint16_t pin) {
+    if (Btn::_sleep)
+        return;
     for (auto &b: Btn::btnall)
         if ((b.gpiox != NULL) && (b.pin == pin))
             Btn::_read(b);
