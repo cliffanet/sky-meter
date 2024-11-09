@@ -32,17 +32,21 @@
 extern "C"
 void init_full() {
     pwr::init();
-    const char *d = __DATE__;
-    const char *t = __TIME__;
-    tm_t tm = {
-        .year   = static_cast<uint16_t>( __YEAR(d) ),
-        .mon    = static_cast<uint8_t> ( __MONTH(d) ),
-        .day    = static_cast<uint8_t> ( __DAY(d) ),
-        .h      = static_cast<uint8_t> ( __HR(t) ),
-        .m      = static_cast<uint8_t> ( __MIN(t) ),
-        .s      = static_cast<uint8_t> ( __SEC(t) ),
-    };
-    tmAdjust(tm, 0);
+
+    if (!tmSetFlag()) {
+        const char *d = __DATE__;
+        const char *t = __TIME__;
+        tm_t tm = {
+            .year   = static_cast<uint16_t>( __YEAR(d) ),
+            .mon    = static_cast<uint8_t> ( __MONTH(d) ),
+            .day    = static_cast<uint8_t> ( __DAY(d) ),
+            .h      = static_cast<uint8_t> ( __HR(t) ),
+            .m      = static_cast<uint8_t> ( __MIN(t) ),
+            .s      = static_cast<uint8_t> ( __SEC(t) ),
+        };
+        tmAdjust(tm, 0);
+    }
+    
     Config::init();
     Btn::init(); // д.б. перед Dspl::init, т.к. Dspl::init выбирает страницу и присваивает хендлеры
     Dspl::init();

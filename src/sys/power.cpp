@@ -15,11 +15,11 @@
 extern RTC_HandleTypeDef hrtc;
 extern "C" void SystemClock_Config(void);
 
-static __IO bool _tmr = false;
+static __IO uint32_t _tmr = 0;
 
 extern "C"
 void HAL_RTCEx_WakeUpTimerEventCallback(RTC_HandleTypeDef *hrtc) {
-    _tmr = true;
+    _tmr += (HAL_RTCEx_GetWakeUpTimer(hrtc)+1) * 1000 / 2048;
 }
 
 static void _tmr_stop() {
@@ -31,7 +31,7 @@ static void _tmr_set(uint32_t ms) {
     // div16 делит частоту 32.768 кГц на 16,
     // получаем 2048 тик в секунду,
     // длительность 1 ms = 2048/1000
-    HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, ms*2048/1000, RTC_WAKEUPCLOCK_RTCCLK_DIV16);
+    HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, ms*2048/1000-1, RTC_WAKEUPCLOCK_RTCCLK_DIV16);
 }
 
 /* ------  power mode  --------- */
@@ -85,15 +85,16 @@ static void _sleep_tick() {
     while (Btn::ispushed())
         asm("");
     
-    _tmr = false;
+    _tmr = 0;
     
     _stop();
     CONSOLE("sleep resume: _tmr=%d", _tmr);
     
-    if (_tmr) {
-        _tmr = false;
+    if (_tmr > 0) {
         // проверка высотомера, не на до ли просыпаться
-        if (!jmp::sleep2toff(5000))
+        bool toff = jmp::sleep2toff(_tmr);
+        _tmr = 0;
+        if (!toff)
             return;
     }
 
@@ -110,7 +111,7 @@ static void _poweroff() {
     while (Btn::ispushed())
         asm("");
     
-    _tmr = false;
+    _tmr = 0;
     Menu::clear();
     Dspl::off();
     jmp::sleep();
@@ -157,12 +158,12 @@ namespace pwr {
  extern "C"
 #endif
 void pwr_tick() {
-    if (_tmr) {
-        _tmr = false;
-
-        jmp::tick(100);
+    if (_tmr > 0) {
+        jmp::tick(_tmr);
         Btn::tick();
         Dspl::tick();
+
+        _tmr = 0;
 
         // Надо забыть об использовании HAL_GetTick в качестве опорного времени
         // в длинных процессах. Дело в том, что он основан на таймере, который
@@ -202,6 +203,6 @@ void pwr_tick() {
             return;
         
         default:
-            while (!_tmr) asm("");
+            while (_tmr == 0) asm("");
     }
 }
