@@ -150,6 +150,9 @@ namespace pwr {
     void off() {
         _m = PWR_OFF;
     }
+    void hwen(bool en) {
+        HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, en ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    }
 };
 
 /* ------  -------  --------- */

@@ -351,6 +351,21 @@ static const MenuStatic::el_t _system[] = {
         .name   = TXT_SYSTEM_HWTEST,
         .enter  = [] { MENU_STATIC(_hwtest); }
     },
+    {
+        .name   = "led red",
+        .enter  = [] { HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_3); },
+        .showval= [] (char *v) { vyesno(v, HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_3)); }
+    },
+    {
+        .name   = "led blue",
+        .enter  = [] { HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_4); },
+        .showval= [] (char *v) { vyesno(v, HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_4)); }
+    },
+    {
+        .name   = "hwen",
+        .enter  = [] { HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6); },
+        .showval= [] (char *v) { vyesno(v, HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_6)); }
+    }
 };
 
 static const MenuStatic::el_t _main[] = {

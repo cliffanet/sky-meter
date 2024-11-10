@@ -66,6 +66,10 @@ void Error_Handler(void);
 #define btn_up_Pin GPIO_PIN_2
 #define btn_up_GPIO_Port GPIOA
 #define btn_up_EXTI_IRQn EXTI2_IRQn
+#define led_red_Pin GPIO_PIN_3
+#define led_red_GPIO_Port GPIOA
+#define led_blue_Pin GPIO_PIN_4
+#define led_blue_GPIO_Port GPIOA
 #define bmp280_cs_Pin GPIO_PIN_0
 #define bmp280_cs_GPIO_Port GPIOB
 #define display_rst_Pin GPIO_PIN_1

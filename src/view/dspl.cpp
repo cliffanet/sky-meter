@@ -6,6 +6,7 @@
 #include "page.h"
 #include "../sys/stm32drv.h"
 #include "../sys/maincfg.h"
+#include "../sys/power.h"
 #include "../sys/log.h"
 
 #define DSPL_PIN_DC     GPIOB, GPIO_PIN_2
@@ -88,6 +89,7 @@ void set(draw_t draw, tick_t tick) {
 }
 
 void on() {
+    pwr::hwen(true);
     u8g2_InitDisplay(&u8g2);
     u8g2_SetPowerSave(&u8g2, 0);
 
@@ -102,6 +104,7 @@ void on() {
 void off() {
     u8g2_SetPowerSave(&u8g2, 1);
     HAL_GPIO_WritePin(DSPL_PIN_LGHT, GPIO_PIN_RESET);
+    pwr::hwen(false);
 }
 
 void lightTgl() {

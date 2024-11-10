@@ -15,6 +15,7 @@ namespace pwr {
     
     void init();
     void off();
+    void hwen(bool en);
 };
 
  extern "C" {

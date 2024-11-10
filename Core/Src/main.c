@@ -311,16 +311,16 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, led_red_Pin|led_blue_Pin|display_light_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, bmp280_cs_Pin|display_cs_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, display_rst_Pin|display_rs_dc_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(hwen_GPIO_Port, hwen_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(display_light_GPIO_Port, display_light_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(hwen_GPIO_Port, hwen_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pins : btn_dn_Pin btn_sel_Pin */
   GPIO_InitStruct.Pin = btn_dn_Pin|btn_sel_Pin;
@@ -333,6 +333,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(btn_up_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : led_red_Pin led_blue_Pin display_light_Pin */
+  GPIO_InitStruct.Pin = led_red_Pin|led_blue_Pin|display_light_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pins : bmp280_cs_Pin display_rst_Pin display_rs_dc_Pin display_cs_Pin */
   GPIO_InitStruct.Pin = bmp280_cs_Pin|display_rst_Pin|display_rs_dc_Pin|display_cs_Pin;
@@ -347,13 +354,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(hwen_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : display_light_Pin */
-  GPIO_InitStruct.Pin = display_light_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(display_light_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
