@@ -11,7 +11,7 @@
 
 #define DSPL_ARG                u8g2_t *u8g2
 #define DSPL_FONT(f)            u8g2_SetFont(u8g2, f)
-#define DSPL_FDIR(v)            u8g2_SetFontDirection()(u8g2, v)
+#define DSPL_FDIR(v)            u8g2_SetFontDirection(u8g2, v)
 #define DSPL_DWIDTH             u8g2_GetDisplayWidth(u8g2)
 #define DSPL_DHEIGHT            u8g2_GetDisplayHeight(u8g2)
 #define DSPL_COLOR(v)           u8g2_SetDrawColor(u8g2, v)

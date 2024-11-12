@@ -78,6 +78,12 @@ void Error_Handler(void);
 #define display_rs_dc_GPIO_Port GPIOB
 #define display_cs_Pin GPIO_PIN_11
 #define display_cs_GPIO_Port GPIOB
+#define batt_info_Pin GPIO_PIN_12
+#define batt_info_GPIO_Port GPIOB
+#define chg_ind_Pin GPIO_PIN_14
+#define chg_ind_GPIO_Port GPIOB
+#define chg_hi_Pin GPIO_PIN_15
+#define chg_hi_GPIO_Port GPIOB
 #define hwen_Pin GPIO_PIN_6
 #define hwen_GPIO_Port GPIOC
 #define display_light_Pin GPIO_PIN_10

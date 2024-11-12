@@ -5,26 +5,28 @@
 #include "page.h"
 #include "btn.h"
 #include "menustatic.h"
+#include "../sys/batt.h"
 #include "../sys/clock.h"
 #include "../jump/proc.h"
 
 void Dspl::drawBatt(DSPL_ARG) {
-    /*
     DSPL_COLOR(1);
-    uint8_t blev = pwrBattLevel();
-    if ((blev > 0) || isblink()) {
+    uint8_t v05 = batt::val05();
+    //if ((v05 > 0) || isblink()) {
         DSPL_FONT(u8g2_font_battery19_tn);
         DSPL_FDIR(1);
-        DSPL_GLYPH(0, 0, '0' + blev);
+        DSPL_GLYPH(0, 0, '0' + v05);
         DSPL_FDIR(0);
-    }
-    if (pwrBattCharge()) {
+    //}
+    auto chrg = batt::charge();
+    if (chrg > 0) {
         DSPL_FONT(u8g2_font_open_iconic_embedded_1x_t);
         DSPL_GLYPH(0, 20, 'C');
+        if (chrg == batt::CHRG_HI)
+            DSPL_GLYPH(10, 20, 'C');
     }
     
-    DSPL_FONT(u8g2_font_helvB08_tr);
-    */
+    //DSPL_FONT(u8g2_font_helvB08_tr);
 }
 
 void Dspl::drawClock(DSPL_ARG) {

@@ -365,6 +365,11 @@ static const MenuStatic::el_t _system[] = {
         .name   = "hwen",
         .enter  = [] { HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6); },
         .showval= [] (char *v) { vyesno(v, HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_6)); }
+    },
+    {
+        .name   = "chg hi",
+        .enter  = [] { HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_15); },
+        .showval= [] (char *v) { vyesno(v, HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_15)); }
     }
 };
 

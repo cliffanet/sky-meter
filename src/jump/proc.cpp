@@ -189,6 +189,8 @@ namespace jmp {
             CONSOLE("BMP280 ok: chipid=0x%02x, version=0x%02x", _bmp.chipid(), _bmp.version());
         else
             CONSOLE("BMP280 fail (chipid: 0x%02x)", _bmp.chipid());
+        // тут мы оказываемся только после физической подачи питания,
+        HAL_Delay(500); // надо дать успеть датчику проинициироваться
     }
 
     void setdraw() {
