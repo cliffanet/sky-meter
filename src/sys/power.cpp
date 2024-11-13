@@ -4,6 +4,7 @@
 
 #include "stm32drv.h"
 #include "power.h"
+#include "batt.h"
 #include "maincfg.h"
 #include "log.h"
 #include "../jump/proc.h"
@@ -94,8 +95,10 @@ static void _sleep_tick() {
         // проверка высотомера, не на до ли просыпаться
         bool toff = jmp::sleep2toff(_tmr);
         _tmr = 0;
-        if (!toff)
+        if (!toff) {
+            batt::tick(true);
             return;
+        }
     }
 
     CONSOLE("sleep end");
@@ -165,6 +168,7 @@ void pwr_tick() {
         jmp::tick(_tmr);
         Btn::tick();
         Dspl::tick();
+        batt::tick();
 
         _tmr = 0;
 

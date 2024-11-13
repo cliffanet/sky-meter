@@ -22,6 +22,8 @@ namespace batt {
 
     chrg_t charge();
 
+    void tick(bool force=false);
+
 } // namespace batt 
 
 #endif // _sys_batt_H

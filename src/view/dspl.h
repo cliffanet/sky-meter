@@ -66,6 +66,7 @@ namespace Dspl {
     bool light();
     void contrast(uint8_t value);
     void flip180(bool flip);
+    bool isblink();
 
     void tick();
 

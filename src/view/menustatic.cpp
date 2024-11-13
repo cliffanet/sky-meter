@@ -14,6 +14,7 @@
 #include "../jump/proc.h"
 #include "../sys/clock.h"
 #include "../sys/power.h"
+#include "../sys/batt.h"
 #include "../sys/stm32drv.h"
 
 #include <stdlib.h>
@@ -106,23 +107,21 @@ static const MenuStatic::el_t _hwtest[] {
             snprintf(txt, MENUSZ_VAL, "%d:%02d:%02d", t.h, t.m, t.s);
         },
     },
-/*
     {
         .name = TXT_TEST_BATTERY,
         .enter = NULL,
         .showval = [] (char *txt) {
             char ok[15];
-            uint16_t bval = pwrBattRaw();
-            valOk(ok, (bval > 2400) && (bval < 3450));
-            sprintf_P(txt, PSTR("(%0.2fv) %s"), pwrBattValue(), ok);
+            uint16_t bval = batt::raw();
+            vok(ok, (bval > 3300) && (bval < 3900));
+            snprintf(txt, MENUSZ_VAL, "(%d) %s", bval, ok);
         },
     },
     {
         .name = TXT_TEST_BATTCHARGE,
         .enter = NULL,
-        .showval = [] (char *txt) { valYes(txt, pwrBattCharge()); },
+        .showval = [] (char *txt) { vyesno(txt, batt::charge()); },
     },
-*/
     {
         .name = TXT_TEST_PRESSID,
         .enter = NULL,

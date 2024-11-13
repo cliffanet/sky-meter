@@ -128,7 +128,14 @@ void flip180(bool flip) {
     u8g2_SetFlipMode(&u8g2, flip ? 1 : 0);
 }
 
+uint8_t _blink = 0;
+bool isblink() {
+    return (_blink & 0x04) == 0;
+}
+
 void tick() {
+    _blink ++;
+
     if (_clear) {
         _clear = false;
         u8g2_ClearDisplay(&u8g2);

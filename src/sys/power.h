@@ -10,6 +10,10 @@
 
 #define PWR_SLEEP_TIMEOUT   30000
 
+
+#define LED_PIN_RED         GPIOA, GPIO_PIN_3
+#define LED_PIN_BLUE        GPIOA, GPIO_PIN_4
+
 #ifdef __cplusplus
 namespace pwr {
     

@@ -12,12 +12,12 @@
 void Dspl::drawBatt(DSPL_ARG) {
     DSPL_COLOR(1);
     uint8_t v05 = batt::val05();
-    //if ((v05 > 0) || isblink()) {
+    if ((v05 > 0) || Dspl::isblink()) {
         DSPL_FONT(u8g2_font_battery19_tn);
         DSPL_FDIR(1);
         DSPL_GLYPH(0, 0, '0' + v05);
         DSPL_FDIR(0);
-    //}
+    }
     auto chrg = batt::charge();
     if (chrg > 0) {
         DSPL_FONT(u8g2_font_open_iconic_embedded_1x_t);
@@ -27,6 +27,7 @@ void Dspl::drawBatt(DSPL_ARG) {
     }
     
     //DSPL_FONT(u8g2_font_helvB08_tr);
+    //DSPL_PRN(40, 10, "%d", batt::raw());
 }
 
 void Dspl::drawClock(DSPL_ARG) {
