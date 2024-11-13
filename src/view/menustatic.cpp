@@ -111,10 +111,11 @@ static const MenuStatic::el_t _hwtest[] {
         .name = TXT_TEST_BATTERY,
         .enter = NULL,
         .showval = [] (char *txt) {
-            char ok[15];
-            uint16_t bval = batt::raw();
+            char ok[32] = {0};
+            auto bval = batt::raw();
             vok(ok, (bval > 3300) && (bval < 3900));
-            snprintf(txt, MENUSZ_VAL, "(%d) %s", bval, ok);
+            float v = vmap(static_cast<float>(bval), 3360, 3850, 3.6, 4.2);
+            snprintf(txt, MENUSZ_VAL, "(%d = %0.1fv) %s", bval, v, ok);
         },
     },
     {
@@ -133,7 +134,7 @@ static const MenuStatic::el_t _hwtest[] {
         .name = TXT_TEST_PRESSURE,
         .enter = NULL,
         .showval = [] (char *txt) {
-            char ok[15];
+            char ok[32];
             float press = jmp::press();
             
             vok(ok, (press > 60000) && (press < 150000));

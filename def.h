@@ -9,6 +9,9 @@
 #define TOSTRING(x)         STRINGIFY(x)
 #define PPCAT_NX(A, B)      A ## B
 
+#define vmap(value, low1, high1, low2, high2) \
+                            (low2 + (value - low1) * (high2 - low2) / (high1 - low1))
+
 #ifndef HWVER
 #define HWVER               1
 #endif
