@@ -27,15 +27,13 @@
 #define DSPL_PIXEL(x, y)        u8g2_DrawPixel(u8g2, x, y)
 #define DSPL_DISC(x, y, r)      u8g2_DrawDisc(u8g2, x, y, r, 15U)
 
-#define DSPL_STR(x, y, s)       u8g2_DrawStr(u8g2, x, y, s);
-#define DSPL_PRN(x, y, _s, ...) \
-        do { char s[48]; snprintf(s, sizeof(s), _s, ##__VA_ARGS__); u8g2_DrawStr(u8g2, x, y, s); } while (0)
+#define DSPL_STR(x, y, s)       u8g2_DrawStr(u8g2, x, y, s)
+#define DSPL_PRN(x, y, _s, ...) Dspl::prnstr(u8g2, x, y, s, ##__VA_ARGS__)
 
 
 #if defined(FWVER_LANG) && (FWVER_LANG == 'R')
 #define DSPL_STRU(x, y, s)      u8g2_DrawUTF8(u8g2, x, y, s)
-#define DSPL_PRNU(x, y, _s, ...) \
-        do { char s[96]; snprintf(s, sizeof(s), _s, ##__VA_ARGS__); u8g2_DrawUTF8(u8g2, x, y, s); } while (0)
+#define DSPL_PRNU(x, y, _s, ...) Dspl::prnutf(u8g2, x, y, s, ##__VA_ARGS__)
 #define DSPL_S_WIDTH(s)         u8g2_GetUTF8Width(u8g2, s)
 #include "text.ru.h"
 #else
@@ -67,6 +65,9 @@ namespace Dspl {
     void contrast(uint8_t value);
     void flip180(bool flip);
     bool isblink();
+
+    void prnstr(u8g2_t *u8g2, int x, int y, const char *s, ...);
+    void prnutf(u8g2_t *u8g2, int x, int y, const char *s, ...);
 
     void tick();
 

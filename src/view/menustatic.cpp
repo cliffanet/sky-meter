@@ -3,6 +3,9 @@
 */
 
 #include "menustatic.h"
+
+#ifdef USE_MENU
+
 #include "menumodal.h"
 #include "text.h"
 #include "../sys/log.h"
@@ -402,3 +405,5 @@ static const MenuStatic::el_t _main[] = {
 void MenuStatic::main() {
     MENU_STATIC(_main);
 }
+
+#endif // USE_MENU

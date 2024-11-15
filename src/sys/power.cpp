@@ -49,8 +49,12 @@ static pwr_mode_t _m = PWR_ACTIVE;
 static pwr_mode_t _mode() {
     if (!jmp::isgnd() && !cfg->lopwronjmp)
         return PWR_ACTIVE;
+
+#ifdef USE_MENU
     if (Menu::isactive())
         return PWR_ACTIVE;
+#endif // USE_MENU
+
     if (Btn::isactive(BTN_ACTIVE_SHORT))
         // в обработчике кнопок мы используем HAL_GetTick,
         // а он не работает при уходе в сон, интервалы считаются неверно,
@@ -115,7 +119,11 @@ static void _poweroff() {
         asm("");
     
     _tmr = 0;
+
+#ifdef USE_MENU
     Menu::clear();
+#endif // USE_MENU
+
     Dspl::off();
     jmp::sleep();
     _tmr_stop();

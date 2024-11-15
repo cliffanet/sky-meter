@@ -21,6 +21,7 @@ static AltStrict _jstr;
 
 static uint8_t page = 0;
 
+#ifdef USE_JMPTRACE
 typedef struct {
     int alt;
     bool ismode;
@@ -28,6 +29,7 @@ typedef struct {
 } log_t;
 static ring<log_t, 3*60*10> _log;
 static int _lmin = 0, _lmax = 0;
+#endif // USE_JMPTRACE
 
     //-----------------------------------
     //---           draw
@@ -124,6 +126,7 @@ static int _lmin = 0, _lmax = 0;
 
             }
             break;
+#ifdef USE_JMPTRACE
             case 1: {
                 // alt
                 DSPL_FONT(u8g2_font_fub20_tr);
@@ -172,6 +175,7 @@ static int _lmin = 0, _lmax = 0;
                 }
             }
             break;
+#endif // USE_JMPTRACE
         }
     }
     //-----------------------------------
@@ -198,7 +202,9 @@ namespace jmp {
     }
 
     void pagenxt() {
+#ifdef USE_JMPTRACE
         page++; page %= 2;
+#endif // USE_JMPTRACE
     }
 
     void resetgnd() {
@@ -277,6 +283,7 @@ namespace jmp {
             CONSOLE("auto GND reseted");
         }
 
+#ifdef USE_JMPTRACE
         // добавление в _log
         _log.push({ static_cast<int>(_ac.alt()), false, chgmode });
         if (chgmode && (_jmp.cnt() < _log.size()))
@@ -298,6 +305,7 @@ namespace jmp {
             if (y > _lmax) break;
         _lmax = y;
         // -------------------
+#endif // USE_JMPTRACE
     }
 
 } // namespace jmp 

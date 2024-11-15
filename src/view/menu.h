@@ -7,6 +7,8 @@
 
 #include "dspl.h"
 
+#ifdef USE_MENU
+
 #define MENU_STR_COUNT  8
 
 #if defined(FWVER_LANG) && (FWVER_LANG == 'R')
@@ -66,5 +68,7 @@ class Menu {
         int16_t _itop = 0, _isel = 0;
         exit_t _exit;
 };
+
+#endif // USE_MENU
 
 #endif // _view_menu_H

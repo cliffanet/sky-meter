@@ -104,6 +104,8 @@ void on() {
 void off() {
     u8g2_SetPowerSave(&u8g2, 1);
     HAL_GPIO_WritePin(DSPL_PIN_LGHT, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(DSPL_PIN_DC,   GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(DSPL_PIN_RST,  GPIO_PIN_RESET);
     pwr::hwen(false);
 }
 
@@ -131,6 +133,26 @@ void flip180(bool flip) {
 uint8_t _blink = 0;
 bool isblink() {
     return (_blink & 0x04) == 0;
+}
+
+void prnstr(u8g2_t *u8g2, int x, int y, const char *s, ...) {
+    va_list ap;
+    char str[128];
+    va_start (ap, s);
+    vsnprintf(str, sizeof(str), s, ap);
+    va_end (ap);
+
+    u8g2_DrawStr(u8g2, x, y, str);
+}
+
+void prnutf(u8g2_t *u8g2, int x, int y, const char *s, ...) {
+    va_list ap;
+    char str[128];
+    va_start (ap, s);
+    vsnprintf(str, sizeof(str), s, ap);
+    va_end (ap);
+
+    u8g2_DrawUTF8(u8g2, x, y, str);
 }
 
 void tick() {

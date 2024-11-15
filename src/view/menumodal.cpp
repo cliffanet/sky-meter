@@ -3,6 +3,9 @@
 */
 
 #include "menumodal.h"
+
+#ifdef USE_MENU
+
 #include "menu.h"
 #include "../sys/log.h"
 #include <string.h>
@@ -168,3 +171,5 @@ void MenuValInt::smpldn() {
     if (_ok != NULL)
         _ok(_val);
 }
+
+#endif // USE_MENU

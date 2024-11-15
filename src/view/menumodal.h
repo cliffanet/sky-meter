@@ -7,6 +7,8 @@
 
 #include "dspl.h"
 
+#ifdef USE_MENU
+
 #if defined(FWVER_LANG) && (FWVER_LANG == 'R')
 #define MENUSZ_MODAL    128
 #else
@@ -66,5 +68,7 @@ class MenuValInt : public MenuModal {
         int _val, _min, _max;
         hnd_t _ok;
 };
+
+#endif // USE_MENU
 
 #endif // _view_menu_modal_H

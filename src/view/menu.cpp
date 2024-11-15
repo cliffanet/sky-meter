@@ -3,6 +3,8 @@
 */
 
 #include "menu.h"
+
+#ifdef USE_MENU
 #include "menustatic.h"
 #include "menumodal.h"
 #include "page.h"
@@ -227,3 +229,5 @@ void Menu::modaldel(MenuModal *m) {
     if (_modal == m)
         _modal = NULL;
 }
+
+#endif // USE_MENU

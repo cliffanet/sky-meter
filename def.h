@@ -53,4 +53,7 @@
 
 #endif
 
+#define USE_MENU
+#define USE_JMPTRACE
+
 #endif // _def_H

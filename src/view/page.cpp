@@ -49,8 +49,11 @@ void Dspl::page() {
     );
     Btn::set(
         Btn::SEL,
-        NULL,
+        NULL
+#ifdef USE_MENU
+        ,
         MenuStatic::main
+#endif // USE_MENU
     );
     Btn::set(
         Btn::DN,

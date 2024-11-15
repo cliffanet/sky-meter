@@ -7,6 +7,8 @@
 
 #include "menu.h"
 
+#ifdef USE_MENU
+
 #define MENU_STATIC(v)  (new MenuStatic(v, sizeof(v)/sizeof(MenuStatic::el_t)))
 
 class MenuStatic : public Menu {
@@ -34,5 +36,7 @@ class MenuStatic : public Menu {
         const el_t *_m;
         int16_t _sz;
 };
+
+#endif // USE_MENU
 
 #endif // _view_menu_static_H
