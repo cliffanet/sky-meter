@@ -87,9 +87,8 @@ static bool esave(int p, const Config::data_t &data) {
         }
     }
     if (p > 0) {
-        auto ff = *reinterpret_cast<__IO uint64_t *>(p);
         // слово индикатор - обязан быть как нетронутый ещё при записи
-        if (ff == 0xffffffffffffffff)
+        if (_FLASH_WBLK_ISERASE(p))
             p += _FLASH_WBLK_SIZE;
         else {
             CONSOLE("free-indicator no nulled, need erase!");
@@ -100,15 +99,7 @@ static bool esave(int p, const Config::data_t &data) {
         // в случае, если мы не нашли валидный блок
         // или новый после него не влезет,
         // то надо выполнить стирание всей страницы
-        FLASH_EraseInitTypeDef e = { 0 };
-        e.TypeErase = FLASH_TYPEERASE_PAGES;
-	    e.Banks     = 1;
-        e.Page      = 63;
-        e.NbPages   = 1;
-        uint32_t epage = 0;
-        auto st = HAL_FLASHEx_Erase(&e, &epage);
-        CONSOLE("HAL_FLASHEx_Erase: %d", st);
-        if (st != HAL_OK)
+        if (!iflash::erase(CONFIG_ADDR))
             return false;
         p = CONFIG_ADDR + _FLASH_WBLK_SIZE;
     }
@@ -146,18 +137,9 @@ bool Config::save() {
     
     // далее, приступаем к записи, для этого
     // надо разблокировать флеш-память
-    auto st = HAL_FLASH_Unlock();
-    CONSOLE("FLASH_Unlock: %d", st);
-    if (st != HAL_OK)
-        return false;
+    iflash::Unlocker _l;
 
-    bool ok = esave(p, _d);
-
-    // всё сделали, пора обратно блокировать память
-    st = HAL_FLASH_Lock();
-    CONSOLE("HAL_FLASH_Lock: %d", st);
-
-    if (!ok)
+    if (!_l || !esave(p, _d))
         return false;
     
     _chg = false;

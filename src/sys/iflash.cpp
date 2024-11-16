@@ -8,6 +8,38 @@
 
 
 namespace iflash {
+    Unlocker::Unlocker() {
+        auto st = HAL_FLASH_Unlock();
+        CONSOLE("FLASH_Unlock: %d", st);
+        ok = st == HAL_OK;
+    }
+
+    Unlocker::~Unlocker() {
+        if (!ok)
+            return;
+        auto st = HAL_FLASH_Lock();
+        CONSOLE("HAL_FLASH_Lock: %d", st);
+    }
+
+    bool erase(int addr) {
+        if (addr < _FLASH_BASE)
+            return false;
+        auto ea = addr - _FLASH_BASE;
+        if ((ea % _FLASH_PAGE_SIZE) > 0)
+            return false;
+
+        FLASH_EraseInitTypeDef e = { 0 };
+        e.TypeErase = FLASH_TYPEERASE_PAGES;
+	    e.Banks     = 1;
+        e.Page      = ea / _FLASH_PAGE_SIZE;
+        e.NbPages   = 1;
+        uint32_t err = 0;
+        auto st = HAL_FLASHEx_Erase(&e, &err);
+        CONSOLE("HAL_FLASHEx_Erase[0x%06x, page: %d]: %d", ea, e.Page, st);
+        
+        return st == HAL_OK;
+    }
+
     bool write(int addr, const uint8_t *d, size_t sz) {
         auto a = addr;
         while (sz > 0) {
@@ -24,7 +56,7 @@ namespace iflash {
                 sz = 0;
             }
 
-            auto st = HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, addr, *reinterpret_cast<uint64_t *>(v));
+            auto st = HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, addr, *reinterpret_cast<_FLASH_WBLK_TYPE *>(v));
             CONSOLE("HAL_FLASH_Program[0x%06x]: %d, errno: %d", addr-_FLASH_BASE, st, st == HAL_OK ? 0 : HAL_FLASH_GetError());
             if (st != HAL_OK)
                 return false;
@@ -63,5 +95,4 @@ namespace iflash {
         cks_t c2 = *const_cast<cks_t *>(reinterpret_cast<__IO cks_t *>(addr + sz));
         return c1 == c2;
     }
-
 } // namespace iflash

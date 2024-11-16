@@ -46,6 +46,13 @@ tm_t tmNow() {
     return tm;
 }
 
+uint16_t tmRand() {
+    RTC_TimeTypeDef sTime = {0};
+    if (HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN) != HAL_OK)
+        return 0;
+    return sTime.SubSeconds * sTime.Seconds * sTime.Minutes * sTime.Hours;
+}
+
 bool tmSetFlag() {
     auto f = HAL_RTCEx_BKUPRead(&hrtc, RTC_BKP_DR0);
     return f == '*';

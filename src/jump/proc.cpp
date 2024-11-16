@@ -2,6 +2,7 @@
 #include "proc.h"
 #include "bmp280.h"
 #include "altcalc.h"
+#include "logbook.h"
 #include "../sys/trwire.h"
 #include "../sys/stm32drv.h"
 #include "../sys/maincfg.h"
@@ -283,6 +284,54 @@ namespace jmp {
             CONSOLE("auto GND reseted");
         }
 
+        // логбук
+#ifdef USE_LOGBOOK
+        if (chgmode)
+            switch (_jmp.mode()) {
+                case AltJmp::GROUND:
+                    LogBook::end();
+                    break;
+                case AltJmp::TAKEOFF:
+                    LogBook::beg_toff();
+                    break;
+                case AltJmp::FREEFALL:
+#ifdef USE_JMPTRACE
+                    LogBook::beg_ff(_jmp.newtm(), _log[_jmp.cnt()].alt);
+#else // USE_JMPTRACE
+                    LogBook::beg_ff(_jmp.newtm(), _ac.alt()+100);
+#endif //USE_JMPTRACE
+                    break;
+                case AltJmp::CANOPY:
+#ifdef USE_JMPTRACE
+                    LogBook::beg_cnp(_jmp.newtm(), _log[_jmp.cnt()].alt);
+#else // USE_JMPTRACE
+                    LogBook::beg_cnp(_jmp.newtm(), _ac.alt()+100);
+#endif //USE_JMPTRACE
+                    break;
+            }
+        switch (_jmp.mode()) {
+            case AltJmp::TAKEOFF:
+                LogBook::tick_toff(ms);
+                break;
+            case AltJmp::FREEFALL:
+                LogBook::tick_ff(ms);
+                break;
+            case AltJmp::CANOPY:
+                LogBook::tick_cnp(ms);
+                break;
+        }
+#else // USE_LOGBOOK
+
+        if ((m > AltJmp::GROUND) && (_jmp.mode() == AltJmp::GROUND)) {
+            // При отсутствии LogBook
+            // будем сами увеличивать кол-во прыжков
+            (*cfg)->jmpcnt ++;
+            cfg.save();
+        }
+
+#endif // USE_LOGBOOK
+
+
 #ifdef USE_JMPTRACE
         // добавление в _log
         _log.push({ static_cast<int>(_ac.alt()), false, chgmode });
@@ -306,6 +355,8 @@ namespace jmp {
         _lmax = y;
         // -------------------
 #endif // USE_JMPTRACE
+
+        m = _jmp.mode();
     }
 
 } // namespace jmp 

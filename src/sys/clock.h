@@ -31,6 +31,7 @@ typedef struct __attribute__((__packed__)) tm_s {
  * ------------------------------------------------------------------------------------------- */
 
 tm_t tmNow();
+uint16_t tmRand();
 bool tmSetFlag();
 bool tmAdjust(const tm_t &tm, uint8_t wday);
 

@@ -320,6 +320,7 @@ class MenuTimeEdit : public MenuModal {
         }
 };
 
+#include "../jump/logbook.h"
 
 static const MenuStatic::el_t _system[] = {
     {
@@ -365,9 +366,12 @@ static const MenuStatic::el_t _system[] = {
         .showval= [] (char *v) { vyesno(v, HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_4)); }
     },
     {
-        .name   = "hwen",
-        .enter  = [] { HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6); },
-        .showval= [] (char *v) { vyesno(v, HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_6)); }
+        .name   = "logbook test",
+        .enter  = [] {
+            LogBook::beg_cnp(15500, 1000);
+            LogBook::end();
+        },
+        //.showval= [] (char *v) { vyesno(v, HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_6)); }
     },
     {
         .name   = "chg hi",

@@ -18,11 +18,29 @@
 #define _FLASH_BASE         0x08000000
 #define _FLASH_PAGE_SIZE    2048
 #define _FLASH_PAGE_ALL     64
-#define _FLASH_WBLK_SIZE    8
+
+#define _FLASH_PAGE_ISBEG(addr)     ((((addr) - _FLASH_BASE) % _FLASH_PAGE_SIZE) == 0)
+
+#define _FLASH_WBLK_TYPE    uint64_t
+#define _FLASH_WBLK_SIZE    sizeof(_FLASH_WBLK_TYPE)
+#define _FLASH_WBLK_ERASE   0xffffffffffffffff
+
+#define _FLASH_WBLK_ISERASE(addr)   (*reinterpret_cast<__IO _FLASH_WBLK_TYPE *>(addr) == _FLASH_WBLK_ERASE)
 
 #define _FLASH_WBLK_ALIGN(sz)   (static_cast<size_t>(((sz) + _FLASH_WBLK_SIZE - 1) / _FLASH_WBLK_SIZE) * _FLASH_WBLK_SIZE)
+#define _FLASH_PAGE_ALIGN(sz)   (static_cast<size_t>(((sz) + _FLASH_PAGE_SIZE - 1) / _FLASH_PAGE_SIZE) * _FLASH_PAGE_SIZE)
 
 namespace iflash {
+    class Unlocker {
+        bool ok;
+        public:
+            Unlocker();
+            ~Unlocker();
+            operator bool() const { return ok; };
+    };
+
+    bool erase(int addr);
+
     // простая запись данных размером sz
     // во внутреннюю память, начиная с адреса addr (абсолютное значение)
     // итоговый записанный размер будет равен: _FLASH_WBLK_ALIGN(sz)
