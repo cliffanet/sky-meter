@@ -4,37 +4,13 @@
 
 #include "maincfg.h"
 #include "stm32drv.h"
+#include "cks.h"
+#include "iflash.h"
 #include "log.h"
 
 #include <string.h>
     
 Config cfg;
-
-typedef struct __attribute__((__packed__)) cks_s {
-    uint8_t a, b;
-
-    bool operator== (const struct cks_s & cks) {
-        return (this == &cks) || ((this->a == cks.a) && (this->b == cks.b));
-    };
-    operator bool() const { return (a != 0) || (b != 0); }
-
-    void clear() {
-        a = 0;
-        b = 0;
-    }
-
-    void add(uint8_t d) {
-        a += d;
-        b += a;
-    }
-
-    void add(const uint8_t *d, size_t _sz) {
-        for (; _sz > 0; _sz--, d++) {
-            a += *d;
-            b += a;
-        }
-    }
-} cks_t;
 
 typedef struct __attribute__((__packed__)) {
     uint8_t id;
@@ -68,13 +44,8 @@ static int efind(hdr_t &h) {
         h = *const_cast<hdr_t *>(reinterpret_cast<__IO hdr_t *>(p));
         if ((h.id != CONFIG_HDR) || (h.ver < 1) || (h.ver > CONFIG_VER) || (h.sz < 4) || (h.sz > 2048))
             return -1;
-        if (ok) {
-            auto d = p + sizeof(hdr_t);
-            cks_t c1 = { 0 };
-            c1.add(const_cast<uint8_t *>(reinterpret_cast<__IO uint8_t *>(d)), h.sz);
-            cks_t c2 = *const_cast<cks_t *>(reinterpret_cast<__IO cks_t *>(d + h.sz));
-            return c1 == c2 ? p - beg : -1;
-        }
+        if (ok)
+            return iflash::validcks(p + sizeof(hdr_t), h.sz) ? p - beg : -1;
         else
             p += _FLASH_WBLK_ALIGN(sizeof(hdr_t) + h.sz + sizeof(cks_t));
     }
@@ -144,32 +115,21 @@ static bool esave(int p, const Config::data_t &data) {
     
     // подготавливаем данные под сохранение,
     // их надо выровнять до _FLASH_WBLK_SIZE
-    uint8_t d[_FLASH_WBLK_ALIGN( sizeof(hdr_t) + sizeof(Config::data_t) + sizeof(cks_t) )] = { 0 };
-    hdr_t h = {
-        .id     = CONFIG_HDR,
-        .ver    = CONFIG_VER,
-        .sz     = sizeof(Config::data_t)
+    struct __attribute__((__packed__)) {
+        hdr_t h;
+        Config::data_t d;
+    } d = {
+        .h = {
+            .id     = CONFIG_HDR,
+            .ver    = CONFIG_VER,
+            .sz     = sizeof(Config::data_t)
+        },
+        .d = data
     };
-    memcpy(d, &h, sizeof(hdr_t));
-    memcpy(d + sizeof(hdr_t), &data, sizeof(Config::data_t));
-    cks_t c = { 0 };
-    c.add(reinterpret_cast<const uint8_t *>(&data), sizeof(Config::data_t));
-    memcpy(d + sizeof(hdr_t) + sizeof(Config::data_t), &c, sizeof(cks_t));
 
     // пишем подготовленные данные
-    CONSOLE("config saving to: 0x%04x", p-CONFIG_ADDR);
-    auto sz = sizeof(d);
-    auto dd = d;
-    for (; sz >= _FLASH_WBLK_SIZE; p += _FLASH_WBLK_SIZE, dd += _FLASH_WBLK_SIZE, sz -= _FLASH_WBLK_SIZE) {
-        auto st = HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, p, *reinterpret_cast<uint64_t *>(dd));
-        CONSOLE("HAL_FLASH_Program: %d, errno: %d", st, st == HAL_OK ? 0 : HAL_FLASH_GetError());
-        if (st != HAL_OK)
-            return false;
-    }
-
-    CONSOLE("saved OK on: 0x%04x", p-CONFIG_ADDR);
-
-    return true;
+    CONSOLE("config saving to: 0x%06x (0x%04x)", p-_FLASH_WBLK_SIZE, p-CONFIG_ADDR);
+    return iflash::writecks(p, d, sizeof(hdr_t));
 }
 
 bool Config::save() {
