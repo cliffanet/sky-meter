@@ -40,6 +40,8 @@ namespace LogBook {
 
     void end();
 
+    uint32_t findprv(uint32_t addr, item_t &item);
+
 } // namespace LogBook
 
 #endif // USE_LOGBOOK

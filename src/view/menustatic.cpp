@@ -8,11 +8,12 @@
 
 #include "menumodal.h"
 #include "text.h"
-#include "../sys/log.h"
+#include "btn.h"
+#include "dspl.h"
+#include "menulogbook.h"
 
+#include "../sys/log.h"
 #include "../sys/maincfg.h"
-#include "../view/btn.h"
-#include "../view/dspl.h"
 
 #include "../jump/proc.h"
 #include "../sys/clock.h"
@@ -385,6 +386,10 @@ static const MenuStatic::el_t _main[] = {
         .name   = TXT_MAIN_JMPCNT,
         .enter  = [] { new MenuValInt(cfg->jmpcnt, [] (int v) { (*cfg)->jmpcnt = v; }, 0, 99999); },
         .showval= [] (char *v) { vnum(v, cfg->jmpcnt); }
+    },
+    {
+        .name   = TXT_MAIN_LOGBOOK,
+        .enter  = [] { new MenuLogBook(); },
     },
     {
         .name   = TXT_MAIN_FLIP180,

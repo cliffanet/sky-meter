@@ -27,6 +27,24 @@ void _keygen() {
         _cur.key = tmRand();
 }
 
+bool _read(uint32_t addr, LogBook::item_t &item) {
+    if (*reinterpret_cast<__IO uint8_t *>(addr) != LOGBOOK_HDR)
+        return false;
+    
+    auto sz = *reinterpret_cast<__IO uint8_t *>(addr+1);
+    if (!iflash::validcks(addr+2, sz))
+        return false;
+    
+    uint8_t sz1 = sizeof(LogBook::item_t);
+    if (sz1 > sz) {
+        bzero(&item, sz1);
+        sz1 = sz;
+    }
+    memcpy(&item, const_cast<uint8_t *>(reinterpret_cast<__IO uint8_t *>(addr+2)), sz1);
+
+    return true;
+}
+
 bool _save() {
     uint32_t p = cfg->lbaddr;
     if ((p == 0) || (p < LOGBOOK_ADDR) || ((p+LOGBOOK_ITSZ) > LOGBOOK_AEND))
@@ -104,6 +122,42 @@ namespace LogBook {
             _save();
         bzero(&_cur, sizeof(_cur));
         _ms = 0;
+    }
+
+    uint32_t findprv(uint32_t addr, item_t &item) {
+        // если в cfg->lbaddr у нас ещё ничего нет,
+        // значит логбук пока пустой.
+        if (cfg->lbaddr == 0)
+            return 0;
+        
+        // стартовый адрес поиска
+        auto a = addr - (LOGBOOK_ITSZ / 2);
+        // Логбук у нас работает по принципу кольцевого буфера,
+        // где cfg->lbaddr - это указатель на текущее положение
+        // в этом буфере.
+        // При поиске в обратную сторону нам надо понять, где находится
+        // стартовый адрес - до этого курсора или после. Это означает,
+        // выполнили ли мы уже переход от начала участка хранения
+        // в его конец, или еще нет.
+        bool roll = addr > cfg->lbaddr;
+
+        for (int i = 0; i < 10; i++) {
+            if (roll && (a < cfg->lbaddr))
+                // окончание кольцевого буфера
+                break;
+            if (a < LOGBOOK_ADDR) {
+                if (roll)
+                    break;
+                a = LOGBOOK_AEND - (LOGBOOK_ITSZ / 2);
+            }
+
+            if (_read(a, item))
+                return a;
+            
+            a -= _FLASH_WBLK_SIZE;
+        }
+
+        return 0;
     }
 
 } // namespace LogBook 

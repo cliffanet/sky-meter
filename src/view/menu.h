@@ -42,12 +42,14 @@ class Menu {
         Menu(exit_t _exit = EXIT_TOP);
         ~Menu();
 
+        int16_t ipos(int16_t i);
+
         void close();
 
-        void draw(DSPL_ARG);
-        void smplup();
-        void smpldn();
-        void smplsel();
+        virtual void draw(DSPL_ARG);
+        virtual void smplup();
+        virtual void smpldn();
+        virtual void smplsel();
 
         static Menu *prev(uint8_t n);
         static bool prevstr(line_t &s, uint8_t n);

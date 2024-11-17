@@ -97,6 +97,27 @@ Menu::~Menu() {
         clear();
 }
 
+int16_t Menu::ipos(int16_t i) {
+    switch (_exit) {
+        case EXIT_NONE:
+            return
+                (i >= 0) && (i < static_cast<int16_t>(sz())) ?
+                    i : -2;
+        case EXIT_TOP:
+            i--;
+            return (i >= -1) && (i < static_cast<int16_t>(sz())) ? i : -2;
+
+        case EXIT_BOTTOM:
+            return
+                (i >= 0) && (i < static_cast<int16_t>(sz())) ?
+                    i :
+                (i == static_cast<int16_t>(sz())) ?
+                    -1 : -2;
+    }
+
+    return -2;
+}
+
 void Menu::close() {
     delete this;
 }
@@ -120,9 +141,8 @@ void Menu::draw(DSPL_ARG) {
     
     // Выводим видимую часть меню, n - это индекс строки на экране
     for (uint8_t n = 0; n<MENU_STR_COUNT; n++) {
-        uint8_t i = n + _itop;          // i - индекс отрисовываемого пункта меню
-        if (i >= _sz) break;            // для меню, которые полностью отрисовались и осталось ещё место, не выходим за список меню
-        //DSPL_COLOR(_isel == i ? 0 : 1); // Выделенный пункт рисуем прозрачным, остальные обычным
+        auto i = ipos(_itop + n);    // i - индекс отрисовываемого пункта меню
+        if (i < -1) break;              // для меню, которые полностью отрисовались и осталось ещё место, не выходим за список меню
         int8_t y = (n+1)*10-1+14;       // координата y для отрисовки текста (в нескольких местах используется)
         
         // Получение текстовых данных текущей строки
@@ -133,14 +153,13 @@ void Menu::draw(DSPL_ARG) {
         // их получение минимальны, при этом очень много гемора,
         // связанного с обновлением кеша
         line_t m = { 0 };
-        bool isexit = ((_exit == EXIT_TOP) && (i == 0)) || ((_exit == EXIT_BOTTOM) && (i+1 >= _sz));
-        if (isexit) {
+        if (i < 0) {
             strncpy(m.name, TXT_MENU_EXIT, sizeof(m.name));
             m.name[sizeof(m.name)-1] = '\0';
             m.val[0] = '\0';
         }
         else {
-            str(m, _exit == EXIT_TOP ? i-1 : i);
+            str(m, i);
             m.name[sizeof(m.name)-1] = '\0';
             m.val[sizeof(m.val)-1] = '\0';
         }
@@ -181,11 +200,11 @@ void Menu::smpldn() {
 }
 
 void Menu::smplsel() {
-    bool isexit = ((_exit == EXIT_TOP) && (_isel == 0)) || ((_exit == EXIT_BOTTOM) && (_isel+1 >= _sz));
-    if (isexit)
+    auto i = ipos(_isel);
+    if (i < 0)
         close();
     else
-        onsel(_exit == EXIT_TOP ? _isel-1 : _isel);
+        onsel(i);
 }
 
 Menu *Menu::prev(uint8_t n) {

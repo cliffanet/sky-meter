@@ -23,6 +23,7 @@ extern const uint8_t u8g2_font_robotobd_08_tx[] U8G2_FONT_SECTION("u8g2_font_rob
 #define TXT_MENU_FAIL               "ошибка"
 
 #define TXT_MAIN_JMPCNT             "Кол-во прыжков"
+#define TXT_MAIN_LOGBOOK            "LogBook"
 #define TXT_MAIN_FLIP180            "Развернуть на 180"
 #define TXT_MAIN_CONTRAST           "Контраст"
 #define TXT_MAIN_ALT                "Высотомер"
@@ -49,5 +50,13 @@ extern const uint8_t u8g2_font_robotobd_08_tx[] U8G2_FONT_SECTION("u8g2_font_rob
 #define TXT_TEST_PRESSVAL           "(%0.0f Па) %s"
 #define TXT_TEST_LIGHT              "Подсветка"
 #define TXT_TEST_SDCARD             "SD карта"
+
+#define TXT_LOGBOOK_JUMPNUM         "Прыжок # %d"
+#define TXT_LOGBOOK_ALTEXIT         "Отделение"
+#define TXT_LOGBOOK_ALTCNP          "Раскрытие"
+#define TXT_LOGBOOK_TIMETOFF        "Длит. взлёта"
+#define TXT_LOGBOOK_TIMEFF          "Длит. своб.п."
+#define TXT_LOGBOOK_TIMESEC         "%d с"
+#define TXT_LOGBOOK_TIMECNP         "Длит. пилотир"
 
 #endif // _view_text_lang_H

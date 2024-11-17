@@ -17,6 +17,7 @@
 #define TXT_MENU_FAIL               "fail"
 
 #define TXT_MAIN_JMPCNT             "Jump count"
+#define TXT_MAIN_LOGBOOK            "LogBook"
 #define TXT_MAIN_FLIP180            "Flipped 180"
 #define TXT_MAIN_CONTRAST           "Contrast"
 #define TXT_MAIN_ALT                "Altimeter"
@@ -43,5 +44,13 @@
 #define TXT_TEST_PRESSVAL           "(%0.0f Pa) %s"
 #define TXT_TEST_LIGHT              "Light test"
 #define TXT_TEST_SDCARD             "SD-card"
+
+#define TXT_LOGBOOK_JUMPNUM         "Jump # %d"
+#define TXT_LOGBOOK_ALTEXIT         "Alt"
+#define TXT_LOGBOOK_ALTCNP          "Deploy"
+#define TXT_LOGBOOK_TIMETOFF        "Takeoff"
+#define TXT_LOGBOOK_TIMEFF          "FF time"
+#define TXT_LOGBOOK_TIMESEC         "%d s"
+#define TXT_LOGBOOK_TIMECNP         "CNP time"
 
 #endif // _view_text_lang_H
