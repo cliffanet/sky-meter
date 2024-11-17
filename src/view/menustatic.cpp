@@ -322,6 +322,8 @@ class MenuTimeEdit : public MenuModal {
 };
 
 #include "../jump/logbook.h"
+extern "C"
+void Error_Handler(void);
 
 static const MenuStatic::el_t _system[] = {
     {
@@ -378,6 +380,18 @@ static const MenuStatic::el_t _system[] = {
         .name   = "chg hi",
         .enter  = [] { HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_15); },
         .showval= [] (char *v) { vyesno(v, HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_15)); }
+    },
+    {
+        .name   = "test fatal",
+        .enter  = [] { new MenuConfirm(Error_Handler); },
+    },
+    {
+        .name   = "test devide zero",
+        .enter  = [] { new MenuConfirm([] () { volatile int n = 0; volatile int t = 5 / n; CONSOLE("n: %d", t); }); },
+    },
+    {
+        .name   = "test memory fail",
+        .enter  = [] { new MenuConfirm([] () { char s[] = ""; CONSOLE("s: %s", s+20); free(s); }); },
     }
 };
 

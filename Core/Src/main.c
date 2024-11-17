@@ -464,6 +464,14 @@ void Error_Handler(void)
   __disable_irq();
   while (1)
   {
+        HAL_GPIO_WritePin(GPIOA, led_red_Pin, GPIO_PIN_RESET);
+        for (int i =0; i < 4; i++) {
+            for (int n = 0; n < 3000000; n++)
+                asm("");
+            HAL_GPIO_TogglePin(GPIOA, led_red_Pin);
+        }
+            for (int n = 0; n < 30000000; n++)
+                asm("");
   }
   /* USER CODE END Error_Handler_Debug */
 }

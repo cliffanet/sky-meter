@@ -55,5 +55,6 @@
 
 #define USE_MENU
 #define USE_JMPTRACE
+#define USE_LOGBOOK
 
 #endif // _def_H
