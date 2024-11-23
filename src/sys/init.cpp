@@ -7,6 +7,9 @@
 #include "../view/btn.h"
 #include "../jump/proc.h"
 
+#include "stm32drv.h"
+#include "main.h"
+
 #define __MONTH(d) (\
     d[2] == 'n' ? (d[1] == 'a' ? 1 : 6) \
     : d[2] == 'b' ? 2 \
@@ -51,4 +54,26 @@ void init_full() {
     Btn::init(); // д.б. перед Dspl::init, т.к. Dspl::init выбирает страницу и присваивает хендлеры
     Dspl::init();
     jmp::init();
+}
+
+extern "C"
+void HardFault_Handler(void) {
+    while (1) {
+        for (int n = 0; n < 3000000; n++)
+            asm("");
+        HAL_GPIO_TogglePin(GPIOA, led_red_Pin);
+    }
+}
+
+extern "C"
+void MemManage_Handler(void) {
+    while (1) {
+        for (int i =0; i < 10; i++) {
+            for (int n = 0; n < 3000000; n++)
+                asm("");
+            HAL_GPIO_TogglePin(GPIOA, led_red_Pin);
+        }
+        for (int n = 0; n < 30000000; n++)
+            asm("");
+    }
 }
