@@ -90,6 +90,10 @@ void set(draw_t draw, tick_t tick) {
 
 void on() {
     pwr::hwen(true);
+    HAL_GPIO_WritePin(DSPL_PIN_RST,  GPIO_PIN_RESET);
+    HAL_Delay(10);
+    HAL_GPIO_WritePin(DSPL_PIN_RST,  GPIO_PIN_SET);
+    HAL_GPIO_WritePin(DSPL_PIN_CS,   GPIO_PIN_SET);
     u8g2_InitDisplay(&u8g2);
     u8g2_SetPowerSave(&u8g2, 0);
 
@@ -104,8 +108,10 @@ void on() {
 void off() {
     u8g2_SetPowerSave(&u8g2, 1);
     HAL_GPIO_WritePin(DSPL_PIN_LGHT, GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(DSPL_PIN_DC,   GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(DSPL_PIN_RST,  GPIO_PIN_RESET);
+    // попытка прибить пины к земле при выключении
+    // добавляет потребление 50 мкА
+    //HAL_GPIO_WritePin(DSPL_PIN_DC,   GPIO_PIN_RESET);
+    //HAL_GPIO_WritePin(DSPL_PIN_RST,  GPIO_PIN_RESET);
     pwr::hwen(false);
 }
 

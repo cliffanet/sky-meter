@@ -12,7 +12,7 @@
 #endif
 
 
-#ifdef FWVER_DEBUG
+#ifdef USE_CONSOLE
 
 const char * __extrfname(const char * path);
 #define LOG_FMT(s)        "[%s:%u] %s(): " s, __extrfname(__FILE__), __LINE__, __FUNCTION__
@@ -20,11 +20,11 @@ const char * __extrfname(const char * path);
 void conslog(const char *s, ...);
 #define CONSOLE(txt, ...) conslog(LOG_FMT(txt), ##__VA_ARGS__)
 
-#else // FWVER_DEBUG
+#else // USE_CONSOLE
 
 #define CONSOLE(txt, ...)
 
-#endif // FWVER_DEBUG
+#endif // USE_CONSOLE
 
 #ifdef __cplusplus
 }

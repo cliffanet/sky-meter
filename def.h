@@ -53,6 +53,7 @@
 
 #endif
 
+#define USE_CONSOLE
 #define USE_MENU
 #define USE_JMPTRACE
 #define USE_LOGBOOK

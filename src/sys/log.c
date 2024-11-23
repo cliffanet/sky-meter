@@ -1,7 +1,7 @@
 
 #include "log.h"
 
-#ifdef FWVER_DEBUG
+#ifdef USE_CONSOLE
 
 //#include "navi/proc.h"
 //#include "clock.h"
@@ -68,4 +68,4 @@ void conslog(const char *s, ...) {
     va_end (ap);
 }
 
-#endif // FWVER_DEBUG
+#endif // USE_CONSOLE

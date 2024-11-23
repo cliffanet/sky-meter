@@ -108,7 +108,9 @@ int main(void)
   MX_GPIO_Init();
   MX_SPI1_Init();
   MX_RTC_Init();
+#ifdef USE_CONSOLE
   MX_USB_Device_Init();
+#endif // USE_CONSOLE
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
 

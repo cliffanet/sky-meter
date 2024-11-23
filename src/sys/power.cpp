@@ -12,6 +12,7 @@
 #include "../view/dspl.h"
 #include "../view/menu.h"
 
+
 /* ------  RTC timer  --------- */
 extern RTC_HandleTypeDef hrtc;
 extern "C" void SystemClock_Config(void);
@@ -35,7 +36,97 @@ static void _tmr_set(uint32_t ms) {
     HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, ms*2048/1000-1, RTC_WAKEUPCLOCK_RTCCLK_DIV16);
 }
 
-/* ------  power mode  --------- */
+/* ------  spi on/off  --------- */
+// нам надо отдельно вкл/выкл spi во сне,
+// чтобы проверять барометр
+
+extern SPI_HandleTypeDef hspi1;
+
+static void _spi_off() {
+    // spi даёт 0.22 mA
+    HAL_SPI_DeInit(&hspi1);
+    // Почему-то, до отключения spi подключение/отключение
+    // дисплея (весь шлейф) добавляло около 0.1 мА.
+    // Но после отключения spi отключение шлейфа дисплея
+    // наоборот увеличивает потребление с 0.2 мА до 0.5 мА
+}
+
+static void _spi_on() {
+    HAL_SPI_Init(&hspi1);
+}
+
+/* ------  power on/off  --------- */
+
+//extern "C" void Error_Handler(void);
+//extern ADC_HandleTypeDef hadc1;
+
+//#include "usbd_cdc_if.h"
+//extern USBD_HandleTypeDef hUsbDeviceFS;
+
+// Замеры:
+// В passive режиме цикл работы: 7 мс из 100
+// В sleep режиме: 10 мс из 5000.
+// Для sleep режима добавляется время вкл/выкл spi
+
+// По потреблению
+/*
+    - существенно потребление снижает отключение spi (примерно -250 мкА)
+    - отключение adc снижает на 10-15 мкА
+    - отключение usb так же снижает на 10-15 мкА
+
+    Если отключать только spi, потребление ~ 150-160 мкА (это g475, для g431 - 125-130 мкА).
+    Отключение usb/adc даст ещё -30мкА (потребление ~ 125-130 мкА), но
+    там уже небольшой гемор обратно инициировать.
+
+    Попытка перед уходом в сон положить пины дисплея на землю только добавляют 30-50 мкА
+    потребления, т.е. делают хуже.
+
+    _____________________________________________
+    Ещё пока по непонятной причине, любое взаимодействие по jtag (даже если просто
+    перезагрузить девайс) что-то включает, и потребление увеличивается на 1.5 мА
+    во всех режимах, в т.ч. и во сне.
+    И сбросить это не помогает ничего - ни уход в сон, ни перезагрузка.
+    Только передёргивание аккума помогает.
+
+    _____________________________________________
+    Потребление в активе: 30-32 мА.
+
+    sd-карта потребляет 1-2 мА.
+    _____________________________________________
+    Переход в shutdown режим снижает потребление до 80мкА.
+    Отключение spi/adc/usb перед уходом в shitdown ни на что не влияет.
+*/
+
+static void _off() {
+    while (Btn::ispushed())
+        asm("");
+    
+    _tmr = 0;
+
+#ifdef USE_MENU
+    Menu::clear();
+#endif // USE_MENU
+    
+    Dspl::off();
+    jmp::sleep();
+    Btn::sleep();
+
+
+    // отключение usb и adc даёт не более 20 мкА
+    //HAL_ADC_DeInit(&hadc1);
+    //USBD_Stop(&hUsbDeviceFS);
+    //USBD_DeInit(&hUsbDeviceFS);
+}
+
+static void _on() {
+    //HAL_ADC_Init(&hadc1);
+
+    CONSOLE("init");
+    pwr::init();
+    Dspl::on();
+    Btn::init();
+    jmp::init();
+}
 
 typedef enum {
     PWR_OFF = 0,
@@ -75,78 +166,6 @@ static void _stop() {
     HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_STOPENTRY_WFI);
     HAL_ResumeTick();
     SystemClock_Config();
-}
-
-static void _sleep_beg() {
-    CONSOLE("sleep beg");
-    Dspl::off();
-    jmp::sleep();
-    _tmr_set(5000);
-    Btn::sleep();
-}
-
-static void _sleep_tick() {
-    CONSOLE("sleep tick");
-    while (Btn::ispushed())
-        asm("");
-    
-    _tmr = 0;
-    
-    _stop();
-    CONSOLE("sleep resume: _tmr=%d", _tmr);
-    
-    if (_tmr > 0) {
-        // проверка высотомера, не на до ли просыпаться
-        bool toff = jmp::sleep2toff(_tmr);
-        _tmr = 0;
-        if (!toff) {
-            batt::tick(true);
-            return;
-        }
-    }
-
-    CONSOLE("sleep end");
-    while (Btn::ispushed())
-        asm("");
-    pwr::init();
-    Dspl::on();
-    Btn::init();
-}
-
-static void _poweroff() {
-    CONSOLE("power off");
-    while (Btn::ispushed())
-        asm("");
-    
-    _tmr = 0;
-
-#ifdef USE_MENU
-    Menu::clear();
-#endif // USE_MENU
-
-    Dspl::off();
-    jmp::sleep();
-    _tmr_stop();
-    
-    _stop();
-    CONSOLE("power resume: _tmr=%d", _tmr);
-
-    uint32_t beg = HAL_GetTick();
-    bool ok = false;
-    while (Btn::ispushed())
-        if (!ok && ((HAL_GetTick() - beg) > 2000)) {
-            CONSOLE("power on: _tmr=%d", _tmr);
-            ok = true;
-        }
-    
-    if (!ok)
-        return;
-
-    CONSOLE("init");
-    pwr::init();
-    Dspl::on();
-    Btn::init();
-    jmp::init();
 }
 
 /* ------  -------  --------- */
@@ -200,7 +219,8 @@ void pwr_tick() {
             _m = m;
 
             if (_m == PWR_SLEEP) {
-                _sleep_beg();
+                CONSOLE("sleep beg");
+                _tmr_set(5000);
                 return;
             }
         }
@@ -208,11 +228,64 @@ void pwr_tick() {
     
     switch (_m) {
         case PWR_OFF:
-            _poweroff();
+            CONSOLE("power off");
+            _off();
+            _spi_off();
+            _tmr_stop();
+
+            _stop();
+
+            //HAL_ADC_DeInit(&hadc1);
+            //USBD_Stop(&hUsbDeviceFS);
+            //USBD_DeInit(&hUsbDeviceFS);
+            //HAL_SuspendTick();
+            //HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_STOPENTRY_WFI);
+            //HAL_PWREx_EnterSHUTDOWNMode();
+            CONSOLE("power resume: _tmr=%d", _tmr);
+
+            {
+                uint32_t beg = HAL_GetTick();
+                bool ok = false;
+                while (Btn::ispushed())
+                    if (!ok && ((HAL_GetTick() - beg) > 2000)) {
+                        CONSOLE("power on: _tmr=%d", _tmr);
+                        ok = true;
+                    }
+            
+                if (!ok)
+                    return;
+            }
+            
+            _spi_on();
+            _on();
             return;
+
         case PWR_SLEEP:
-            _sleep_tick();
+            CONSOLE("sleep");
+            _off();
+            _spi_off();
+
+            _stop();
+            CONSOLE("sleep resume: _tmr=%d", _tmr);
+            
+            _spi_on();
+
+            if (_tmr > 0) {
+                // проверка высотомера, не на до ли просыпаться
+                bool toff = jmp::sleep2toff(_tmr);
+                _tmr = 0;
+                if (!toff) {
+                    batt::tick(true);
+                    return;
+                }
+            }
+
+            //CONSOLE("sleep end");
+            while (Btn::ispushed())
+                asm("");
+            _on();
             return;
+        
         case PWR_PASSIVE:
             _stop();
             return;
