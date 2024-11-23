@@ -372,7 +372,7 @@ static const MenuStatic::el_t _system[] = {
         .name   = "logbook test",
         .enter  = [] {
             LogBook::beg_cnp(15500, 1000);
-            LogBook::end();
+            LogBook::end(0);
         },
         //.showval= [] (char *v) { vyesno(v, HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_6)); }
     },

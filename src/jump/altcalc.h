@@ -252,6 +252,7 @@ public:
 
     const uint32_t  newtm() const { return _c_tm; }
     const uint32_t  newcnt() const { return _c_cnt; }
+    void resetnew();
 
 private:
     mode_t _mode = INIT;

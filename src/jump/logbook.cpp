@@ -14,10 +14,11 @@ static uint16_t _incms(uint32_t ms) {
     _ms += ms;
     if (_ms < 1000)
         return 0;
+    
     auto sec = _ms / 1000;
     _ms %= 1000;
 
-    return 0;
+    return sec;
 }
 
 void _keygen() {
@@ -92,7 +93,12 @@ namespace LogBook {
     void beg_ff(uint32_t ms, int16_t alt) {
         _keygen();
         _cur.begalt = alt;
-        _cur.ffsec += ms / 1000;
+        
+        auto sec = ms / 1000;
+        _cur.ffsec += sec;
+        if (_cur.toffsec >= sec)
+            _cur.toffsec -= sec;
+        
         _ms = ms % 1000;
     }
 
@@ -101,7 +107,12 @@ namespace LogBook {
         if (_cur.begalt == 0)
             _cur.begalt = alt;
         _cur.cnpalt = alt;
-        _cur.cnpsec += ms / 1000;
+
+        auto sec = ms / 1000;
+        _cur.cnpsec += sec;
+        if (_cur.ffsec >= sec)
+            _cur.ffsec -= sec;
+        
         _ms = ms % 1000;
     }
 
@@ -117,9 +128,14 @@ namespace LogBook {
         _cur.cnpsec += _incms(ms);
     }
 
-    void end() {
-        if (_cur.key > 0)
+    void end(uint32_t ms) {
+        if (_cur.key > 0) {
+            auto sec = ms / 1000;
+            if (_cur.cnpsec >= sec)
+                _cur.cnpsec -= sec;
+            
             _save();
+        }
         bzero(&_cur, sizeof(_cur));
         _ms = 0;
     }

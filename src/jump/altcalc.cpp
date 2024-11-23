@@ -452,8 +452,12 @@ void AltJmp::tick(const AltCalc &ac) {
         _mode   = m;
         _cnt    = _c_cnt;
         _tm     = _c_tm;
-        _c_cnt  = 0;
-        _c_tm   = 0;
+        // _c_cnt и _c_tm нельзя сбрасывать при изменении _mode,
+        //  т.к. именно сразу после изменения _mode нам нужны эти значения.
+        // Если хочется надёжности сброса этих счётчиков, то лучше это сделать
+        // отдельным методом.
+        //_c_cnt  = 0;
+        //_c_tm   = 0;
     }
 }
 
@@ -461,6 +465,10 @@ void AltJmp::reset(mode_t m) {
     _mode   = m;
     _cnt    = 0;
     _tm     = 0;
+    resetnew();
+}
+
+void AltJmp::resetnew() {
     _c_cnt  = 0;
     _c_tm   = 0;
 }

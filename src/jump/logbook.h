@@ -38,7 +38,7 @@ namespace LogBook {
     void tick_ff(uint16_t ms);
     void tick_cnp(uint16_t ms);
 
-    void end();
+    void end(uint32_t ms);
 
     uint32_t findprv(uint32_t addr, item_t &item);
 

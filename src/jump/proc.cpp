@@ -231,7 +231,7 @@ namespace jmp {
     }
 
     bool isgnd() {
-        return _jmp.mode() == AltJmp::GROUND;
+        return (_jmp.mode() == AltJmp::GROUND) && (_jmp.tm() > 60000);
     }
 
 
@@ -289,7 +289,7 @@ namespace jmp {
         if (chgmode)
             switch (_jmp.mode()) {
                 case AltJmp::GROUND:
-                    LogBook::end();
+                    LogBook::end(_jmp.newtm());
                     break;
                 case AltJmp::TAKEOFF:
                     LogBook::beg_toff();
@@ -309,6 +309,7 @@ namespace jmp {
 #endif //USE_JMPTRACE
                     break;
             }
+        
         switch (_jmp.mode()) {
             case AltJmp::TAKEOFF:
                 LogBook::tick_toff(ms);
@@ -320,6 +321,7 @@ namespace jmp {
                 LogBook::tick_cnp(ms);
                 break;
         }
+
 #else // USE_LOGBOOK
 
         if ((m > AltJmp::GROUND) && (_jmp.mode() == AltJmp::GROUND)) {
@@ -356,7 +358,10 @@ namespace jmp {
         // -------------------
 #endif // USE_JMPTRACE
 
-        m = _jmp.mode();
+        if (chgmode) {
+            m = _jmp.mode();
+            _jmp.resetnew();
+        }
     }
 
 } // namespace jmp 
