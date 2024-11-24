@@ -6,6 +6,7 @@
 #include "../sys/trwire.h"
 #include "../sys/stm32drv.h"
 #include "../sys/maincfg.h"
+#include "../sys/power.h"
 #include "../sys/log.h"
 #include "../view/page.h"
 
@@ -278,7 +279,7 @@ namespace jmp {
 
     void tick(uint32_t ms) {
         _ac.tick(_bmp.press(), ms);
-        auto m = _jmp.mode();
+        static auto m = _jmp.mode();
         _jmp.tick(_ac);
         const bool chgmode = m != _jmp.mode();
 #ifdef USE_JMPINFO
@@ -296,6 +297,18 @@ namespace jmp {
             _jmp.reset();
             CONSOLE("auto GND reseted");
         }
+
+        // синий светодиод
+        if (_jmp.mode() > AltJmp::TAKEOFF) {
+            static uint8_t d = 0;
+            d++;
+            if (((_jmp.mode() == AltJmp::FREEFALL) && ((d % 2) == 0)) ||
+                ((d % 8) == 0))
+                HAL_GPIO_TogglePin(LED_PIN_BLUE);
+        }
+        else
+        if (chgmode)
+            HAL_GPIO_WritePin(LED_PIN_BLUE, _jmp.mode() > AltJmp::GROUND ? GPIO_PIN_SET : GPIO_PIN_RESET);
 
         // логбук
 #ifdef USE_LOGBOOK

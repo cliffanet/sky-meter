@@ -36,6 +36,7 @@
 #define TXT_SYSTEM_CFGDEFAULT       "Factory default"
 #define TXT_SYSTEM_HWTEST           "Hardware test"
 
+#define TXT_TEST_SERIAL             "s/n"
 #define TXT_TEST_CLOCK              "Clock"
 #define TXT_TEST_BATTERY            "Battery"
 #define TXT_TEST_BATTCHARGE         "Batt charge"

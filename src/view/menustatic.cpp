@@ -104,6 +104,16 @@ static const MenuStatic::el_t _alt[] = {
 
 static const MenuStatic::el_t _hwtest[] {
     {
+        .name = TXT_TEST_SERIAL,
+        .enter = NULL,
+        .showval = [] (char *txt) {
+            auto s1 = *reinterpret_cast<uint32_t *>(UID_BASE);
+            auto s2 = *reinterpret_cast<uint32_t *>(UID_BASE + 4);
+            auto s3 = *reinterpret_cast<uint32_t *>(UID_BASE + 8);
+            snprintf(txt, MENUSZ_VAL, "%08x:%08x:%08x", s1, s2, s3);
+        },
+    },
+    {
         .name = TXT_TEST_CLOCK,
         .enter = NULL,
         .showval = [] (char *txt) {

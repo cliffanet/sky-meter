@@ -98,6 +98,10 @@ static void _spi_on() {
     Отключение spi/adc/usb перед уходом в shitdown ни на что не влияет.
 */
 
+#include "usbd_cdc_if.h"
+extern USBD_HandleTypeDef hUsbDeviceFS;
+extern "C" void MX_USB_Device_Init(void);
+
 static void _off() {
     while (Btn::ispushed())
         asm("");
@@ -111,15 +115,15 @@ static void _off() {
     Dspl::off();
     Btn::sleep();
 
-
     // отключение usb и adc даёт не более 20 мкА
     //HAL_ADC_DeInit(&hadc1);
-    //USBD_Stop(&hUsbDeviceFS);
-    //USBD_DeInit(&hUsbDeviceFS);
+    USBD_Stop(&hUsbDeviceFS);
+    USBD_DeInit(&hUsbDeviceFS);
 }
 
 static void _on() {
     //HAL_ADC_Init(&hadc1);
+    MX_USB_Device_Init();
 
     CONSOLE("init");
     pwr::init();
