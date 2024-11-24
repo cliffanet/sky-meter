@@ -301,12 +301,11 @@ class AltSleep {
     float _pressgnd = 0, _altlast = 0;
     int8_t _toffcnt = 0;
     bool _istoff = false;
-    int64_t _gndtm = 0;
 public:
     const bool  istoff()    const { return _istoff; }
     const float pressgnd()  const { return _pressgnd; }
 
-    void tick(float press, uint64_t tm); // tm = ms - текущее время
+    void tick(float press);
     void clear();
 };
 

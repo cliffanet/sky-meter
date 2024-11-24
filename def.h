@@ -54,7 +54,9 @@
 #endif
 
 #define USE_CONSOLE
+#define USE_DEVMENU
 #define USE_MENU
+#define USE_JMPINFO
 #define USE_JMPTRACE
 #define USE_LOGBOOK
 

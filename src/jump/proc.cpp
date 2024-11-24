@@ -17,8 +17,11 @@ static BMP280 _bmp(_spi);
 
 static AltCalc _ac;
 static AltJmp _jmp(true);
+
+#ifdef USE_JMPINFO
 static AltSqBig _sq;
 static AltStrict _jstr;
+#endif // USE_JMPINFO
 
 static uint8_t page = 0;
 
@@ -99,6 +102,7 @@ static int _lmin = 0, _lmax = 0;
         sprn("%s (%s)", modestr(m, _jmp.mode()), strtm(t, _jmp.tm()));
         DSPL_STR(0, y, s);
 
+#ifdef USE_JMPINFO
         y += DSPL_S_HEIGHT+2;
         if (_jmp.newtm() > 0) {
             sprn("new: %s (%d)", strtm(t, _jmp.newtm()), _jmp.newcnt());
@@ -117,6 +121,7 @@ static int _lmin = 0, _lmax = 0;
 
         sprn("s[%d]:%s(%s)", _jstr.prof().num(), modestr(m, _jstr.mode()), strtm(t, _jstr.tm()));
         DSPL_STR(DSPL_S_RIGHT(s)-15, DSPL_DHEIGHT-1, s);
+#endif // USE_JMPINFO
         
         switch (page) {
             case 0: {
@@ -214,8 +219,10 @@ namespace jmp {
 
     void resetmode() {
         _jmp.reset();
+#ifdef USE_JMPINFO
         _sq.reset();
         _jstr.reset();
+#endif // USE_JMPINFO
     }
 
     uint8_t chipid() {
@@ -237,8 +244,8 @@ namespace jmp {
 
     void sleep() {
         _slp.clear();
-        _slp.tick(_ac.pressgnd(), 100);
-        _slp.tick(_ac.press(), 1);
+        _slp.tick(_ac.pressgnd());
+        _slp.tick(_ac.press());
         _bmp.setctrl(BMP280::MODE_SLEEP, BMP280::SAMPLING_NONE, BMP280::SAMPLING_NONE);
         CONSOLE("saved");
     }
@@ -249,7 +256,9 @@ namespace jmp {
             return false;
         }
         
-        _slp.tick(_bmp.press(), ms);
+        auto press = _bmp.press();
+        _slp.tick(press);
+        _ac.tick(press, ms);
         _ac.gndset(_slp.pressgnd());
         if (!_slp.istoff()) {
             _bmp.setctrl(BMP280::MODE_SLEEP, BMP280::SAMPLING_NONE, BMP280::SAMPLING_NONE);
@@ -258,8 +267,10 @@ namespace jmp {
 
         CONSOLE("TAKEOFF _pressgnd: %0.2f", _slp.pressgnd());
         _jmp.reset(AltJmp::TAKEOFF);
+#ifdef USE_JMPINFO
         _sq.reset();
         _jstr.reset();
+#endif // USE_JMPINFO
         _slp.clear();
 
         return true;
@@ -270,8 +281,10 @@ namespace jmp {
         auto m = _jmp.mode();
         _jmp.tick(_ac);
         const bool chgmode = m != _jmp.mode();
+#ifdef USE_JMPINFO
         _sq.tick(_ac);
         _jstr.tick(_ac);
+#endif // USE_JMPINFO
 
         // gndreset
         if (

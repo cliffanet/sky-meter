@@ -358,6 +358,8 @@ static const MenuStatic::el_t _system[] = {
         .name   = TXT_SYSTEM_HWTEST,
         .enter  = [] { MENU_STATIC(_hwtest); }
     },
+
+#ifdef USE_DEVMENU
     {
         .name   = "led red",
         .enter  = [] { HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_3); },
@@ -393,6 +395,7 @@ static const MenuStatic::el_t _system[] = {
         .name   = "test memory fail",
         .enter  = [] { new MenuConfirm([] () { char s[] = ""; CONSOLE("s: %s", s+20); free(s); }); },
     }
+#endif // USE_DEVMENU
 };
 
 static const MenuStatic::el_t _main[] = {

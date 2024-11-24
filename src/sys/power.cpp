@@ -25,11 +25,12 @@ void HAL_RTCEx_WakeUpTimerEventCallback(RTC_HandleTypeDef *hrtc) {
 }
 
 static void _tmr_stop() {
+    HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 0, RTC_WAKEUPCLOCK_RTCCLK_DIV16);
     HAL_RTCEx_DeactivateWakeUpTimer(&hrtc);
 }
 
 static void _tmr_set(uint32_t ms) {
-    HAL_RTCEx_DeactivateWakeUpTimer(&hrtc);
+    _tmr_stop();
     // div16 делит частоту 32.768 кГц на 16,
     // получаем 2048 тик в секунду,
     // длительность 1 ms = 2048/1000
@@ -108,7 +109,6 @@ static void _off() {
 #endif // USE_MENU
     
     Dspl::off();
-    jmp::sleep();
     Btn::sleep();
 
 
@@ -220,7 +220,8 @@ void pwr_tick() {
 
             if (_m == PWR_SLEEP) {
                 CONSOLE("sleep beg");
-                _tmr_set(5000);
+                jmp::sleep();
+                _tmr_set(2000);
                 return;
             }
         }

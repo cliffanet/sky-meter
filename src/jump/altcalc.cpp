@@ -571,16 +571,15 @@ void AltStrict::reset() {
  *******************************/
 
 #include "../sys/log.h"
-void AltSleep::tick(float press, uint64_t tm) {
-    if (_istoff || (_pressgnd == 0) || (_gndtm == 0)) {
+void AltSleep::tick(float press) {
+    if (_istoff || (_pressgnd == 0)) {
         clear();
         _pressgnd = press;
-        _gndtm = tm;
         return;
     }
 
     float alt = press2alt(_pressgnd, press);
-    CONSOLE("_pressgnd: %.2f, press: %.2f, alt: %.2f, _altlast: %.2f, _toffcnt: %d; tdiff: %lld", _pressgnd, press, alt, _altlast, _toffcnt, tm-_gndtm);
+    CONSOLE("_pressgnd: %.2f, press: %.2f, alt: %.2f, _altlast: %.2f, _toffcnt: %d", _pressgnd, press, alt, _altlast, _toffcnt);
 
     if (alt > 100) {
         _toffcnt = 0;
@@ -606,7 +605,6 @@ void AltSleep::tick(float press, uint64_t tm) {
             CONSOLE("gnd reset");
             _pressgnd = press;
             _toffcnt = 0;
-            _gndtm = tm;
         }
     }
     
@@ -618,5 +616,4 @@ void AltSleep::clear() {
     _altlast = 0;
     _toffcnt = 0;
     _istoff = false;
-    _gndtm = 0;
 }
