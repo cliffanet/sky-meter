@@ -22,10 +22,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "usbd_cdc_if.h"
-#include "init.h"
-#include "sys/power.h"
-#include "view/btn.h" // btn_byexti
+#include "../../src/sys/init.h"
+#include "../../src/sys/power.h"
+#include "../../src/view/btn.h" // btn_byexti
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
