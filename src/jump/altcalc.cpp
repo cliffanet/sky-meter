@@ -590,7 +590,7 @@ void AltSleep::tick(float press) {
         if (_toffcnt < 0)
             _toffcnt = 0;
         _toffcnt ++;
-        if (_toffcnt >= 5) {
+        if (((_toffcnt >= 5) && (alt > 80)) || (_toffcnt >= 150)) {
             CONSOLE("is toff");
             _toffcnt = 0;
             _istoff = true;

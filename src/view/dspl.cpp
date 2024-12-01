@@ -138,7 +138,7 @@ void flip180(bool flip) {
 
 uint8_t _blink = 0;
 bool isblink() {
-    return (_blink & 0x04) == 0;
+    return (_blink & 0x08) == 0;
 }
 
 void prnstr(u8g2_t *u8g2, int x, int y, const char *s, ...) {
