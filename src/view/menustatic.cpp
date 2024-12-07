@@ -394,6 +394,11 @@ static const MenuStatic::el_t _system[] = {
         .showval= [] (char *v) { vyesno(v, HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_15)); }
     },
     {
+        .name   = "hwen",
+        .enter  = [] { HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6); },
+        .showval= [] (char *v) { vyesno(v, HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_6)); }
+    },
+    {
         .name   = "test fatal",
         .enter  = [] { new MenuConfirm(Error_Handler); },
     },

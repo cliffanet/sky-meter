@@ -385,13 +385,13 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOA, led_red_Pin|led_blue_Pin|display_light_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOC, sdcard_cs_Pin|hwen_Pin, GPIO_PIN_SET);
+
+  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, bmp280_cs_Pin|display_cs_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, display_rst_Pin|display_rs_dc_Pin|chg_hi_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(hwen_GPIO_Port, hwen_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pins : btn_dn_Pin btn_sel_Pin btn_up_Pin */
   GPIO_InitStruct.Pin = btn_dn_Pin|btn_sel_Pin|btn_up_Pin;
@@ -405,6 +405,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : sdcard_cs_Pin hwen_Pin */
+  GPIO_InitStruct.Pin = sdcard_cs_Pin|hwen_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pins : bmp280_cs_Pin display_rst_Pin display_rs_dc_Pin display_cs_Pin
                            chg_hi_Pin */
@@ -420,13 +427,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(chg_ind_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : hwen_Pin */
-  GPIO_InitStruct.Pin = hwen_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(hwen_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PB4 PB6 */
   GPIO_InitStruct.Pin = GPIO_PIN_4|GPIO_PIN_6;

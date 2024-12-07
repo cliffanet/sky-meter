@@ -90,6 +90,16 @@ void set(draw_t draw, tick_t tick) {
 
 void on() {
     pwr::hwen(true);
+
+    /*
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+    GPIO_InitStruct.Pin = GPIO_PIN_1|GPIO_PIN_2;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+    */
+
     HAL_GPIO_WritePin(DSPL_PIN_RST,  GPIO_PIN_RESET);
     HAL_Delay(10);
     HAL_GPIO_WritePin(DSPL_PIN_RST,  GPIO_PIN_SET);
@@ -110,6 +120,13 @@ void off() {
     HAL_GPIO_WritePin(DSPL_PIN_LGHT, GPIO_PIN_RESET);
     // попытка прибить пины к земле при выключении
     // добавляет потребление 50 мкА
+    /*
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+    GPIO_InitStruct.Pin = GPIO_PIN_1|GPIO_PIN_2;
+    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+    */
     //HAL_GPIO_WritePin(DSPL_PIN_DC,   GPIO_PIN_RESET);
     //HAL_GPIO_WritePin(DSPL_PIN_RST,  GPIO_PIN_RESET);
     pwr::hwen(false);
