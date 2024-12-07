@@ -128,8 +128,8 @@ static const MenuStatic::el_t _hwtest[] {
         .showval = [] (char *txt) {
             char ok[32] = {0};
             auto bval = batt::raw();
-            vok(ok, (bval > 3300) && (bval < 3900));
-            float v = vmap(static_cast<float>(bval), 3360, 3850, 3.6, 4.2);
+            vok(ok, (bval > 3000) && (bval < 3900));
+            float v = vmap(static_cast<float>(bval), 3105, 3945, 3.4, 4.3);
             snprintf(txt, MENUSZ_VAL, "(%d = %0.1fv) %s", bval, v, ok);
         },
     },
