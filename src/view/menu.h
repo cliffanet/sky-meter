@@ -27,6 +27,7 @@ class MenuModal;
 
 class Menu {
     Menu *_prv = NULL, *_nxt = NULL;
+    bool _toen;
     public:
         typedef struct {
             char name[MENUSZ_NAME] = { '\0' };
@@ -39,11 +40,12 @@ class Menu {
             EXIT_BOTTOM,
         } exit_t;
 
-        Menu(exit_t _exit = EXIT_TOP);
+        Menu(exit_t _exit = EXIT_TOP, bool _toen = true);
         ~Menu();
 
         int16_t ipos(int16_t i);
 
+        void upd();
         void close();
 
         virtual void draw(DSPL_ARG);

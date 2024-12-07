@@ -66,8 +66,9 @@ static void _tick() {
     }
 }
 
-Menu::Menu(exit_t _exit) : 
-    _exit(_exit)
+Menu::Menu(exit_t _exit, bool _toen) : 
+    _exit(_exit),
+    _toen(_toen)
 {
     CONSOLE("new 0x%08x", this);
 
@@ -75,7 +76,7 @@ Menu::Menu(exit_t _exit) :
     if (_menu != NULL)
         _menu->_nxt = this;
     _menu = this;
-    _tout = MENU_TIMEOUT;
+    upd();
 
     Dspl::set(_draw, _tick);
     Btn::set(Btn::UP,   _smplup);
@@ -95,6 +96,8 @@ Menu::~Menu() {
     
     if (_menu == NULL)
         clear();
+    else
+        _menu->upd();
 }
 
 int16_t Menu::ipos(int16_t i) {
@@ -116,6 +119,10 @@ int16_t Menu::ipos(int16_t i) {
     }
 
     return -2;
+}
+
+void Menu::upd() {
+    _tout = _toen ? MENU_TIMEOUT : 0;
 }
 
 void Menu::close() {

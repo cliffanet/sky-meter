@@ -46,7 +46,8 @@ void MenuStatic::onsel(int16_t i) {
         m.enter();
 }
 
-MenuStatic::MenuStatic(const el_t *m, int16_t sz) :
+MenuStatic::MenuStatic(const el_t *m, int16_t sz, bool tout) :
+    Menu(EXIT_TOP, tout),
     _m(m),
     _sz(sz)
 {
@@ -366,7 +367,7 @@ static const MenuStatic::el_t _system[] = {
     },
     {
         .name   = TXT_SYSTEM_HWTEST,
-        .enter  = [] { MENU_STATIC(_hwtest); }
+        .enter  = [] { MENU_STATIC(_hwtest, false); }
     },
 
 #ifdef USE_DEVMENU

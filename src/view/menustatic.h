@@ -9,7 +9,7 @@
 
 #ifdef USE_MENU
 
-#define MENU_STATIC(v)  (new MenuStatic(v, sizeof(v)/sizeof(MenuStatic::el_t)))
+#define MENU_STATIC(v, ...)  (new MenuStatic(v, sizeof(v)/sizeof(MenuStatic::el_t), ##__VA_ARGS__))
 
 class MenuStatic : public Menu {
     size_t sz() { return _sz; }
@@ -26,7 +26,7 @@ class MenuStatic : public Menu {
             val_t       showval;    // как отображать значение, если требуется
         } el_t;
 
-        MenuStatic(const el_t *m, int16_t sz);
+        MenuStatic(const el_t *m, int16_t sz, bool tout = true);
         ~MenuStatic();
 
         static void main();
