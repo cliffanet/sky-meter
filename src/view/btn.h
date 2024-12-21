@@ -33,9 +33,9 @@ namespace Btn {
 
     typedef void (*hnd_t)();
 
-
     void init();
     void set(code_t code, hnd_t hndsmpl, hnd_t hndlong = NULL);
+    void hold(hnd_t hnd);
     void sleep();
 
     bool isactive(uint32_t tickcnt = BTN_ACTIVE_SHORT);

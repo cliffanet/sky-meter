@@ -418,7 +418,7 @@ static const MenuStatic::el_t _system[] = {
 static const MenuStatic::el_t _main[] = {
     {
         .name   = TXT_MAIN_JMPCNT,
-        .enter  = [] { new MenuValInt(cfg->jmpcnt, [] (int v) { (*cfg)->jmpcnt = v; }, 0, 99999); },
+        .enter  = [] { new MenuValInt(cfg->jmpcnt, [] (int v) { (*cfg)->jmpcnt = v; }, 0, 99999, 10); },
         .showval= [] (char *v) { vnum(v, cfg->jmpcnt); }
     },
     {

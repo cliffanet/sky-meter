@@ -60,12 +60,18 @@ class MenuValBool : public MenuModal {
 class MenuValInt : public MenuModal {
     public:
         typedef void (*hnd_t)(int v);
-        MenuValInt(int v, hnd_t ok, int min = 0, int max = 10);
+        MenuValInt(int v, hnd_t ok, int min = 0, int max = 10, uint16_t hold = 0);
         void str(char *s, uint8_t n);
         void smplup();
         void smpldn();
     private:
-        int _val, _min, _max;
+        void _chg(int _v);
+        void _updhold(int _v);
+        static void _onhld();
+
+        int _val, _min, _max, _hldval;
+        uint16_t _hold;
+        uint8_t _hldpau;
         hnd_t _ok;
 };
 

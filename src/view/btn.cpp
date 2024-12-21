@@ -19,6 +19,9 @@ namespace Btn {
     static bool     _sleep = false;         // в sleep-режиме в прерываниях мы не делаем обработку
                                             // на нажатия. Прерывание тут нужно только для пробуждения.
     static uint32_t _tickact = 0;           // кол-во тиков после крайней активности
+    static hnd_t    _hold = NULL;           // обработчик зажатой кнопки
+                                            // его нужно устанавливать при обычном onclick
+                                            // при любом другом push/release он будет сброшен
 
     typedef struct {
         code_t          code;               // Код кнопки
@@ -60,6 +63,7 @@ namespace Btn {
         auto tm = HAL_GetTick();
 
         if (chg) {
+            _hold = NULL;
             _tickact = 0;
             if (pushed && ((tm-b.tmrls) > BTN_FILTER_TIME)) {
                 // отфильтрованное нажатие
@@ -109,6 +113,12 @@ namespace Btn {
             }
     }
 
+    void hold(hnd_t hnd) {
+        if (!ispushed())
+            return;
+        _hold = hnd;
+    }
+
     void sleep() {
         _sleep = true;
     }
@@ -149,7 +159,11 @@ namespace Btn {
     }
 
     void tick() {
-        _tickact ++;
+        if (_hold != NULL)
+            _hold();
+        else
+            _tickact ++;
+        
         for (auto &b: btnall) {
             _read(b);
 

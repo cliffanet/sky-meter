@@ -8,6 +8,7 @@
 
 #include "menu.h"
 #include "../sys/log.h"
+#include "../view/btn.h"
 #include <string.h>
 
 MenuModal::MenuModal(uint8_t lncnt) :
@@ -143,12 +144,13 @@ void MenuValBool::smpldn() {
     ValInt
 */
 
-MenuValInt::MenuValInt(int v, hnd_t ok, int min, int max) :
+MenuValInt::MenuValInt(int v, hnd_t ok, int min, int max, uint16_t hold) :
     MenuModal(1),
     _val(v),
     _ok(ok),
     _min(min),
-    _max(max)
+    _max(max),
+    _hold(hold)
 { }
 
 void MenuValInt::str(char *s, uint8_t n) {
@@ -157,19 +159,42 @@ void MenuValInt::str(char *s, uint8_t n) {
 }
 
 void MenuValInt::smplup() {
-    if (_val >= _max)
+    _updhold(+1);
+    _chg(+1);
+}
+
+void MenuValInt::smpldn() {
+    _updhold(-1);
+    _chg(-1);
+}
+
+void MenuValInt::_chg(int _v) {
+    _v += _val;
+    if ((_v < _min) || (_v > _max))
         return;
-    _val ++;
+    _val = _v;
     if (_ok != NULL)
         _ok(_val);
 }
 
-void MenuValInt::smpldn() {
-    if (_val <= _min)
+static MenuValInt *_valInt = NULL;
+void MenuValInt::_updhold(int _v) {
+    if (_hold == 0)
         return;
-    _val --;
-    if (_ok != NULL)
-        _ok(_val);
+    
+    _valInt = this;
+    _hldval = _v * _hold;
+    _hldpau = 5;
+    Btn::hold(_onhld);
+}
+
+void MenuValInt::_onhld() {
+    if (_valInt == NULL)
+        return;
+    if (_valInt->_hldpau > 0)
+        _valInt->_hldpau --;
+    else
+        _valInt->_chg(_valInt->_hldval);
 }
 
 #endif // USE_MENU
