@@ -106,9 +106,19 @@ void MenuLogBook::MenuLogBookInfo::draw(DSPL_ARG) {
 }
 
 void MenuLogBook::MenuLogBookInfo::smplup() {
+    _s.smplup();
+    int i = _s.ipos(_s._isel);
+    if ((i < 0) || (i >= MENU_LOGBOOK_SIZE))
+        _s.smplup(); // попали на exit, кликнем ещё
+    updinf();
 }
 
 void MenuLogBook::MenuLogBookInfo::smpldn() {
+    _s.smpldn();
+    int i = _s.ipos(_s._isel);
+    if ((i < 0) || (i >= MENU_LOGBOOK_SIZE))
+        _s.smpldn(); // попали на exit, кликнем ещё
+    updinf();
 }
 
 void MenuLogBook::MenuLogBookInfo::smplsel() {
