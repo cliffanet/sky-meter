@@ -16,6 +16,7 @@ class MenuStatic : public Menu {
     void title(char *s);
     void str(line_t &s, int16_t i);
     void onsel(int16_t i);
+    uint32_t timeout() const { return _tout ? Menu::timeout() : 0; }
 
     public:
         typedef void (*hnd_t)();
@@ -35,6 +36,7 @@ class MenuStatic : public Menu {
         char *_title;
         const el_t *_m;
         int16_t _sz;
+        bool _tout;
 };
 
 #endif // USE_MENU

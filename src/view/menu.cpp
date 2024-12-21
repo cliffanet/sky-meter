@@ -19,11 +19,7 @@
 static Menu *_menu = NULL;
 static MenuModal *_modal = NULL;
 
-static uint32_t _tout = MENU_TIMEOUT;
-static void _toutupd() {
-    if (_tout > 0)
-        _tout = MENU_TIMEOUT;
-}
+static uint32_t _tout = 0;
 
 static void _draw(DSPL_ARG) {
     if (_menu != NULL)
@@ -32,7 +28,6 @@ static void _draw(DSPL_ARG) {
         _modal->draw(u8g2);
 }
 static void _smplup() {
-    _toutupd();
     if (_modal != NULL)
         _modal->smplup();
     else
@@ -40,7 +35,6 @@ static void _smplup() {
         _menu->smplup();
 }
 static void _smpldn() {
-    _toutupd();
     if (_modal != NULL)
         _modal->smpldn();
     else
@@ -48,7 +42,6 @@ static void _smpldn() {
         _menu->smpldn();
 }
 static void _smplsel() {
-    _toutupd();
     if (_modal != NULL)
         _modal->smplsel();
     else
@@ -57,7 +50,7 @@ static void _smplsel() {
 }
 
 static void _tick() {
-    if (_tout > 0) {
+    if ((_tout > 0) && (_modal == NULL)) {
         _tout--;
         if (_tout == 0) {
             CONSOLE("timeout");
@@ -66,9 +59,8 @@ static void _tick() {
     }
 }
 
-Menu::Menu(exit_t _exit, bool _toen) : 
-    _exit(_exit),
-    _toen(_toen)
+Menu::Menu(exit_t _exit) : 
+    _exit(_exit)
 {
     CONSOLE("new 0x%08x", this);
 
@@ -76,7 +68,7 @@ Menu::Menu(exit_t _exit, bool _toen) :
     if (_menu != NULL)
         _menu->_nxt = this;
     _menu = this;
-    upd();
+    _tout = timeout();
 
     Dspl::set(_draw, _tick);
     Btn::set(Btn::UP,   _smplup);
@@ -97,7 +89,7 @@ Menu::~Menu() {
     if (_menu == NULL)
         clear();
     else
-        _menu->upd();
+        _tout = _menu->timeout();
 }
 
 int16_t Menu::ipos(int16_t i) {
@@ -119,10 +111,6 @@ int16_t Menu::ipos(int16_t i) {
     }
 
     return -2;
-}
-
-void Menu::upd() {
-    _tout = _toen ? MENU_TIMEOUT : 0;
 }
 
 void Menu::close() {
@@ -179,6 +167,8 @@ void Menu::draw(DSPL_ARG) {
 }
 
 void Menu::smplup() {
+    _tout = _menu->timeout();
+
     _isel --;
     if (_isel >= 0) {
         if (_itop > _isel)  // если вылезли вверх за видимую область,
@@ -192,6 +182,8 @@ void Menu::smplup() {
 }
 
 void Menu::smpldn() {
+    _tout = _menu->timeout();
+    
     _isel ++;
     if (_isel < _sz) {
         // если вылезли вниз за видимую область,
@@ -207,6 +199,8 @@ void Menu::smpldn() {
 }
 
 void Menu::smplsel() {
+    _tout = _menu->timeout();
+    
     auto i = ipos(_isel);
     if (i < 0)
         close();

@@ -47,9 +47,10 @@ void MenuStatic::onsel(int16_t i) {
 }
 
 MenuStatic::MenuStatic(const el_t *m, int16_t sz, bool tout) :
-    Menu(EXIT_TOP, tout),
+    Menu(EXIT_TOP),
     _m(m),
-    _sz(sz)
+    _sz(sz),
+    _tout(tout)
 {
     line_t l;
     _title =
