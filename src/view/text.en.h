@@ -52,6 +52,7 @@
 #define TXT_LOGBOOK_TIMETOFF        "Takeoff"
 #define TXT_LOGBOOK_TIMEFF          "FF time"
 #define TXT_LOGBOOK_TIMESEC         "%d s"
+#define TXT_LOGBOOK_MINSEC          "%d:%02d"
 #define TXT_LOGBOOK_TIMECNP         "CNP time"
 
 #endif // _view_text_lang_H

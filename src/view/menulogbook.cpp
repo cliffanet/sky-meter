@@ -91,7 +91,7 @@ void MenuLogBook::MenuLogBookInfo::draw(DSPL_ARG) {
 
     y += 10;
     DSPL_STRU(0, y, TXT_LOGBOOK_TIMETOFF);
-    snprintf(s, sizeof(s), "%d:%02d", _l.toffsec / 60, _l.toffsec % 60);
+    snprintf(s, sizeof(s), TXT_LOGBOOK_MINSEC, _l.toffsec / 60, _l.toffsec % 60);
     DSPL_STRU(DSPL_S_RIGHT(s), y, s);
 
     y += 10;
@@ -101,7 +101,7 @@ void MenuLogBook::MenuLogBookInfo::draw(DSPL_ARG) {
 
     y += 10;
     DSPL_STRU(0, y, TXT_LOGBOOK_TIMECNP);
-    snprintf(s, sizeof(s), TXT_LOGBOOK_TIMESEC, _l.cnpsec);
+    snprintf(s, sizeof(s), TXT_LOGBOOK_MINSEC, _l.cnpsec / 60, _l.cnpsec % 60);
     DSPL_STRU(DSPL_S_RIGHT(s), y, s);
 }
 
