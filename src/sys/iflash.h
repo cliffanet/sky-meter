@@ -17,7 +17,12 @@
 //      - запись по 8 байт
 #define _FLASH_BASE         0x08000000
 #define _FLASH_PAGE_SIZE    2048
+
+#if defined(STM32G473xx)
+#define _FLASH_PAGE_ALL     256
+#elif defined(STM32G431xx)
 #define _FLASH_PAGE_ALL     64
+#endif
 
 #define _FLASH_PAGE_ISBEG(addr)     ((((addr) - _FLASH_BASE) % _FLASH_PAGE_SIZE) == 0)
 

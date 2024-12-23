@@ -43,6 +43,7 @@ extern const uint8_t u8g2_font_robotobd_08_tx[] U8G2_FONT_SECTION("u8g2_font_rob
 #define TXT_SYSTEM_HWTEST           "Тестирование аппарат."
 
 #define TXT_TEST_SERIAL             "с/н"
+#define TXT_TEST_FLASHSZ            "Размер flash"
 #define TXT_TEST_CLOCK              "Часы"
 #define TXT_TEST_BATTERY            "Батарея"
 #define TXT_TEST_BATTCHARGE         "Подкл. зарядка"

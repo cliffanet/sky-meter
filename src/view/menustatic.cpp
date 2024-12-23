@@ -116,6 +116,14 @@ static const MenuStatic::el_t _hwtest[] {
         },
     },
     {
+        .name = TXT_TEST_FLASHSZ,
+        .enter = NULL,
+        .showval = [] (char *txt) {
+            double sz = FLASH_SIZE;
+            snprintf(txt, MENUSZ_VAL, "%.1f kB", sz / 1024);
+        },
+    },
+    {
         .name = TXT_TEST_CLOCK,
         .enter = NULL,
         .showval = [] (char *txt) {
@@ -334,6 +342,7 @@ class MenuTimeEdit : public MenuModal {
 };
 
 #include "../jump/logbook.h"
+#include "../sdcard/saver.h"
 extern "C"
 void Error_Handler(void);
 
@@ -411,6 +420,10 @@ static const MenuStatic::el_t _system[] = {
     {
         .name   = "test memory fail",
         .enter  = [] { new MenuConfirm([] () { char s[] = ""; CONSOLE("s: %s", s+20); free(s); }); },
+    },
+    {
+        .name   = "sdcard",
+        .enter  = [] { sdcard_save(); },
     }
 #endif // USE_DEVMENU
 };
