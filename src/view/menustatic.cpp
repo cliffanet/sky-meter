@@ -21,6 +21,8 @@
 #include "../sys/batt.h"
 #include "../sys/stm32drv.h"
 
+#include "../sdcard/fshnd.h"
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -174,51 +176,52 @@ static const MenuStatic::el_t _hwtest[] {
         },
         .showval = [] (char *txt) { vonoff(txt, Dspl::light()); },
     },
-/*
     {
         .name = TXT_TEST_SDCARD,
         .enter = NULL,
         .showval = [] (char *txt) {
-            CONSOLE("sdcard test beg");
-            fileExtInit();
-            
-            char t[15];
-            auto type = SD.cardType();
-            switch (type) {
-                case CARD_NONE:     strcpy_P(t, PSTR("none"));  break;
-                case CARD_MMC:      strcpy_P(t, PSTR("MMC"));   break;
-                case CARD_SD:       strcpy_P(t, PSTR("SD"));    break;
-                case CARD_SDHC:     strcpy_P(t, PSTR("SDHC"));  break;
-                case CARD_UNKNOWN:  strcpy_P(t, PSTR("UNK"));   break;
-                default:            sprintf_P(t, PSTR("[%d]"), type);
+            static uint32_t _t = 0, t1;
+            static uint8_t ct = 0;
+            static double csz = 0;
+            if ((t1 = HAL_GetTick()) > _t) {
+                _t = t1+2000;
+
+                FSMount fs("");
+                if (fs) {
+                    ct = fs.ctype();
+                    csz = static_cast<double>((fs->n_fatent - 2) * fs->csize) / 2000;
+                }
+                else
+                    ct = 0;
             }
             
-            if (type != CARD_NONE) {
-                double sz = static_cast<double>(SD.cardSize());
-                char s = 'b';
-                if (sz > 1024) {
-                    sz = sz / 1024;
-                    s = 'k';
-                    if (sz > 1024) {
-                        sz = sz / 1024;
-                        s = 'M';
-                    }
-                    if (sz > 1024) {
-                        sz = sz / 1024;
-                        s = 'G';
-                    }
-                }
-
-                sprintf_P(txt, PSTR("%s / %0.1f %c"), t, sz, s);
+            const char *t =
+                ct == FSMount::CT_UNKNOWN   ? "unknown" :
+                ct == FSMount::CT_NONE      ? "-" :
+                ct == FSMount::CT_MMC3      ? "MMC3" :
+                ct == FSMount::CT_MMC4      ? "MMC4" :
+                ct == FSMount::CT_MMC       ? "MMC" :
+                ct == FSMount::CT_SDC1      ? "SDC1" :
+                ct == FSMount::CT_SDC2      ? "SDC2" :
+                ct == FSMount::CT_SDC       ? "SDC" :
+                ct == FSMount::CT_BLOCK     ? "BLOCK" :
+                ct == FSMount::CT_SDC2BL    ? "SDC2BL" : "";
+            
+            if (ct == FSMount::CT_NONE) {
+                strcpy(txt, "-");
             }
             else {
-                strcpy_P(txt, "none");
+                auto sz = csz;
+                char s = 'M';
+                if (sz > 1000) {
+                    sz = sz / 1000;
+                    s = 'G';
+                }
+
+                sprintf(txt, "%s / %0.1f %c", t, sz, s);
             }
-            fileExtStop();
-            CONSOLE("sdcard test end");
         },
     },
-*/
 };
 
 class MenuTimeEdit : public MenuModal {
