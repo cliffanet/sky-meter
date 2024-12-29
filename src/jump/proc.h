@@ -2,6 +2,8 @@
 #define _jump_proc_H
 
 #include <stdint.h>
+#include "logbook.h"
+#include "ringsimple.h"
 
 // Шаг отображения высоты
 #define ALT_STEP                5
@@ -10,6 +12,7 @@
 
 // Интервал обнуления высоты (ms)
 #define ALT_AUTOGND_INTERVAL    600000
+
 
 namespace jmp {
     void init();
@@ -20,6 +23,25 @@ namespace jmp {
     uint8_t chipid();
     float press();
     bool isgnd();
+    const LogBook::item_t &last();
+
+
+#ifdef USE_JMPTRACE
+
+#if defined(STM32G473xx)
+    #define JMP_TRACE_SEC       (5*60)
+#else
+    #define JMP_TRACE_SEC       (3*60)
+#endif
+
+    typedef struct {
+        int alt;
+        char mclc;
+        char mchg;
+    } log_t;
+    typedef ring<log_t, JMP_TRACE_SEC * 10> log_ring_t;
+    const log_ring_t & trace();
+#endif // USE_JMPTRACE
 
     void sleep();
     bool sleep2toff(uint32_t ms);

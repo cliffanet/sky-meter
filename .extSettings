@@ -6,5 +6,6 @@ HeaderPath=src;
 # кто-то из них дублирует .o файлы из Src/ и src/
 # при итоговой линковке
 u8g2=Src/u8g2/*.c;
+ff=Src/ff/*.c;
 src=Src/*/*.cpp;
 [Others]

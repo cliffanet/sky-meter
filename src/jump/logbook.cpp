@@ -128,7 +128,7 @@ namespace LogBook {
         _cur.cnpsec += _incms(ms);
     }
 
-    void end(uint32_t ms) {
+    LogBook::item_t end(uint32_t ms) {
         if (_cur.key > 0) {
             auto sec = ms / 1000;
             if (_cur.cnpsec >= sec)
@@ -136,8 +136,10 @@ namespace LogBook {
             
             _save();
         }
+        auto _last = _cur;
         bzero(&_cur, sizeof(_cur));
         _ms = 0;
+        return _last;
     }
 
     uint32_t findprv(uint32_t addr, item_t &item) {

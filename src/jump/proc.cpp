@@ -8,6 +8,7 @@
 #include "../sys/maincfg.h"
 #include "../sys/power.h"
 #include "../sys/log.h"
+#include "../sdcard/saver.h"
 #include "../view/page.h"
 
 #include <cmath>
@@ -24,15 +25,12 @@ static AltSqBig _sq;
 static AltStrict _jstr;
 #endif // USE_JMPINFO
 
+static LogBook::item_t _last = { 0 };
+
 static uint8_t page = 0;
 
 #ifdef USE_JMPTRACE
-typedef struct {
-    int alt;
-    bool ismode;
-    bool mchg;
-} log_t;
-static ring<log_t, 3*60*10> _log;
+static jmp::log_ring_t _log;
 static int _lmin = 0, _lmax = 0;
 #endif // USE_JMPTRACE
 
@@ -169,7 +167,7 @@ static int _lmin = 0, _lmax = 0;
                         DSPL_PIXEL(x, y);
                     
                         // высчитанное место изменения режима
-                        if (l.ismode)
+                        if (l.mclc)
                             DSPL_DISC(x, y, 2);
                     }
                     
@@ -242,6 +240,13 @@ namespace jmp {
         return (_jmp.mode() == AltJmp::GROUND) && (_jmp.tm() > 60000);
     }
 
+    const LogBook::item_t &last() {
+        return _last;
+    }
+
+    const log_ring_t &trace() {
+        return _log;
+    }
 
     void sleep() {
         _slp.clear();
@@ -315,7 +320,10 @@ namespace jmp {
         if (chgmode)
             switch (_jmp.mode()) {
                 case AltJmp::GROUND:
-                    LogBook::end(_jmp.newtm());
+                    if (m > AltJmp::GROUND) {
+                        _last = LogBook::end(_jmp.newtm());
+                        sdcard_save();
+                    }
                     break;
                 case AltJmp::TAKEOFF:
                     LogBook::beg_toff();
@@ -362,9 +370,16 @@ namespace jmp {
 
 #ifdef USE_JMPTRACE
         // добавление в _log
-        _log.push({ static_cast<int>(_ac.alt()), false, chgmode });
+        char mchg =
+            !chgmode                        ? 0 :
+            _jmp.mode() == AltJmp::INIT     ? 'i' :
+            _jmp.mode() == AltJmp::GROUND   ? 'g' :
+            _jmp.mode() == AltJmp::TAKEOFF  ? 't' :
+            _jmp.mode() == AltJmp::FREEFALL ? 'f' :
+            _jmp.mode() == AltJmp::CANOPY   ? 'c' : '-';
+        _log.push({ static_cast<int>(_ac.alt()), 0, mchg });
         if (chgmode && (_jmp.cnt() < _log.size()))
-            _log[_jmp.cnt()].ismode = true;
+            _log[_jmp.cnt()].mclc = mchg;
 
         _lmin = _log[0].alt;
         _lmax = _log[0].alt;
