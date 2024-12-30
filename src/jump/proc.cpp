@@ -377,7 +377,7 @@ namespace jmp {
             _jmp.mode() == AltJmp::TAKEOFF  ? 't' :
             _jmp.mode() == AltJmp::FREEFALL ? 'f' :
             _jmp.mode() == AltJmp::CANOPY   ? 'c' : '-';
-        _log.push({ static_cast<int>(_ac.alt()), 0, mchg });
+        _log.push({ static_cast<int>(_ac.buf().alt()), 0, mchg });
         if (chgmode && (_jmp.cnt() < _log.size()))
             _log[_jmp.cnt()].mclc = mchg;
 

@@ -5,48 +5,85 @@
 #include "altcalc.h"
 #include <math.h>
 
-float press2alt(float pressgnd, float pressure) {
-  return 44330 * (1.0 - pow(pressure / pressgnd, 0.1903));
+/*******************************
+ *          AltBuf: базовые методы
+ *******************************/
+
+void AltBuf::tick(float alt, uint16_t ms) {
+    if (_buf.empty())
+        _alt0 = 0;
+    else
+    if (_buf.full())
+        _alt0   = _buf.frst().alt;
+
+    _buf.push({
+        ms,
+        alt
+    });
 }
 
-AltCalc::VAvg::VAvg() :
+const uint32_t AltBuf::interval() const {
+    uint32_t interval = 0;
+    for (const auto &d: _buf)
+        interval += d.ms;
+    return interval;
+}
+
+const double AltBuf::sqdiff() const {
+    auto s = avg().speed();
+    uint32_t x = 0;
+    double sq = 0;
+    for (const auto &d: _buf) {
+        x += d.ms;
+        double altd = s * x / 1000 + _alt0 - d.alt;
+        sq += altd * altd;
+    }
+
+    return sqrt(sq / _buf.size());
+}
+
+/*******************************
+ *          AltBuf: субклассы
+ *******************************/
+
+AltBuf::VAvg::VAvg() :
     _interval(0),
     _alt(0),
     _speed(0)
 { }
 
-AltCalc::VAvg::VAvg(float alt0, const src_t &src) :
+AltBuf::VAvg::VAvg(const AltBuf &ab):
     VAvg()
 {
     // самый первый _interval в массиве - не должен входить в суммарный интервал при определении скорости
-    double alt = alt0;
-    for (const auto &d: src) {
-        _interval += d.interval;
+    double alt = ab._alt0;
+    for (const auto &d: ab._buf) {
+        _interval += d.ms;
         alt += d.alt;
     }
-    _alt = alt / (src.size()+1);
+    _alt = alt / (ab._buf.size()+1);
     _speed = (_interval > 0) ?
         // _interval м.б. равен нулю, даже при src.size()!=0,
         // но при _interval!=0 массив не может оказаться пустым
-        (src.last().alt - alt0) * 1000 / _interval :
+        (ab._buf.last().alt - ab._alt0) * 1000 / _interval :
         0;
 }
 
-AltCalc::VApp::VApp(float alt0, const src_t &src) :
+AltBuf::VApp::VApp(const AltBuf &ab) :
     VAvg()
 {
     // считаем коэффициенты линейной аппроксимации
     // sy - единственный ненулевой элемент в нулевой точке - равен _alt0
-    double sy = alt0, sxy = 0, sx = 0, sx2 = 0;
+    double sy = ab._alt0, sxy = 0, sx = 0, sx2 = 0;
     // количество элементов на один больше, чем src.size(),
     // т.к. нулевой элемент находится не в src, а в alt0
-    uint32_t x = 0, n = src.size() + 1;
+    uint32_t x = 0, n = ab._buf.size() + 1;
     
-    for (const auto &d: src) {
-        if (d.interval == 0)
+    for (const auto &d: ab._buf) {
+        if (d.ms == 0)
             continue;
         
-        x   += d.interval;
+        x   += d.ms;
         sx  += x;
         sx2 += x*x;
         sy  += d.alt;
@@ -62,114 +99,88 @@ AltCalc::VApp::VApp(float alt0, const src_t &src) :
     _speed      = a * 1000;
 }
 
-AltCalc::VSavg::VSavg(const src_t &src, uint8_t sz) :
+AltBuf::VSavg::VSavg(const AltBuf &ab, uint8_t sz) :
     VAvg()
 {
     // самый первый _interval в массиве - не должен входить в суммарный интервал при определении скорости
-    if (sz >= src.size())
-        sz = src.size()-1;
+    if (sz >= ab._buf.size())
+        sz = ab._buf.size()-1;
     double alt = 0;
     uint8_t n = 0;
-    for (const auto &d: src) {
+    for (const auto &d: ab._buf) {
         alt += d.alt;
         n++;
         if (n > sz) break;
-        _interval += d.interval;
+        _interval += d.ms;
     }
     _alt = alt / n;
     _speed = (_interval > 0) ?
         // _interval м.б. равен нулю, даже при src.size()!=0,
         // но при _interval!=0 массив не может оказаться пустым
-        (src.last().alt - src[sz].alt) * 1000 / _interval :
+        (ab._buf.last().alt - ab._buf[sz].alt) * 1000 / _interval :
         0;
 }
 
-const uint32_t AltCalc::interval() const {
-    uint32_t interval = 0;
-    for (const auto &d: _data)
-        interval += d.interval;
-    return interval;
+float press2alt(float pressgnd, float pressure) {
+  return 44330 * (1.0 - pow(pressure / pressgnd, 0.1903));
 }
 
-const double AltCalc::sqdiff() const {
-    auto s = avg().speed();
-    uint32_t x = 0;
-    double sq = 0;
-    for (const auto &d: _data) {
-        x += d.interval;
-        double altd = s * x / 1000 + _alt0 - d.alt;
-        sq += altd * altd;
-    }
-
-    return sqrt(sq / _data.size());
-}
-
-void AltCalc::tick(float press, uint16_t tinterval) {
-    bool full = _data.full();
-    if (_data.empty()) {
-        _pressgnd   = press;
-        _press0     = press;
-    }
-    else
-    if (full) {
-        _press0 = _data.frst().press;
-        _alt0   = _data.frst().alt;
-    }
-
-    _data.push({
-        tinterval,
-        press,
-        press2alt(_pressgnd, press)
-    });
-
-    if (!full && _data.full())
+void AltCalc::tick(float press, uint16_t ms) {
+    bool full = _b->full();
+    _press.push(press);
+    
+    if (!full)
         gndreset();
+
+    _b.tick(press2alt(_pressgnd, press), ms);
 }
 
 void AltCalc::gndreset() {
     // пересчёт _pressgnd
     double pr = 0;
-    for (auto &d: _data)
-        pr += d.press;
-    _pressgnd = pr / _data.size();
-    
-    for (auto &d: _data) // т.к. мы пересчитали _pressgnd, то пересчитаем и alt
-        d.alt = press2alt(_pressgnd, d.press);
-    _alt0 = press2alt(_pressgnd, _press0);
+    for (auto &p: _press)
+        pr += p;
+    _pressgnd = pr / _press.size();
 }
 
-void AltCalc::gndset(float press, uint16_t tinterval) {
+void AltCalc::gndset(float press, uint16_t ms) {
     _pressgnd = press;
     // если мы делаем gndset ещё до полной инициализации,
     // забиваем массив данных текущим давлением, 
     // тем самым мы принудительно завершаем инициализацию
-    while (!_data.full())
-        _data.push({ tinterval, press, 0 });
+    while (!_press.full())
+        _press.push(press);
+    while (!_b->full())
+        _b.tick(press, ms);
 }
 
 /*******************************
  *          AltDirect
  *******************************/
 
-void AltDirect::tick(const AltCalc &ac) {
+void AltDirect::tick(const AltBuf &ab) {
     dir_t dir =
-        ac.isinit() ?
+        !ab.full() ?
             INIT :
-        ac.app().speed() > AC_SPEED_FLAT ?
+        ab.app().speed() > AC_SPEED_FLAT ?
             UP :
-        ac.app().speed() < -AC_SPEED_FLAT ?
+        ab.app().speed() < -AC_SPEED_FLAT ?
             DOWN :
             FLAT;
     
     if (_mode == dir) {
         _cnt ++;
-        _tm += ac.tm();
+        _tm += ab.tm();
     }
     else {
         _mode = dir;
         _cnt = 0;
         _tm = 0;
     }
+}
+
+void AltDirect::tick(const AltCalc &ac) {
+    tick(ac.buf());
 }
 
 void AltDirect::reset() {
@@ -181,45 +192,49 @@ void AltDirect::reset() {
  *          AltState
  *******************************/
 
-void AltState::tick(const AltCalc &ac) {
+void AltState::tick(const AltBuf & ab) {
     st_t st =
-        ac.isinit() ?
+        !ab.full() ?
             INIT :
-        ac.app().speed() > AC_SPEED_FLAT ?
+        ab.app().speed() > AC_SPEED_FLAT ?
             (
-                ac.app().alt() < 40 ?
+                ab.app().alt() < 40 ?
                     TAKEOFF40 :
                     TAKEOFF
             ) :
         
-        (ac.app().alt() < 50) && 
-        (ac.avg().speed() < 0.5) &&
-        (ac.avg().speed() > -0.5) ?
+        (ab.app().alt() < 50) && 
+        (ab.avg().speed() < 0.5) &&
+        (ab.avg().speed() > -0.5) ?
             GROUND :
         
-        (ac.app().speed() < -AC_SPEED_FLAT) &&
-        (ac.app().alt() < 100) ?
+        (ab.app().speed() < -AC_SPEED_FLAT) &&
+        (ab.app().alt() < 100) ?
             LANDING :
         
-        (ac.app().speed() < -AC_SPEED_FREEFALL_I) || 
-        ((_mode == FREEFALL) && (ac.app().speed() < -AC_SPEED_FREEFALL_O)) ?
+        (ab.app().speed() < -AC_SPEED_FREEFALL_I) || 
+        ((_mode == FREEFALL) && (ab.app().speed() < -AC_SPEED_FREEFALL_O)) ?
             FREEFALL :
         
-        (ac.app().speed() < -AC_SPEED_CANOPY_I) ||
-        ((_mode == CANOPY) && (ac.app().speed() < -AC_SPEED_FLAT)) ?
+        (ab.app().speed() < -AC_SPEED_CANOPY_I) ||
+        ((_mode == CANOPY) && (ab.app().speed() < -AC_SPEED_FLAT)) ?
             CANOPY :
 
             _mode;
     
     if (_mode == st) {
         _cnt ++;
-        _tm += ac.tm();
+        _tm += ab.tm();
     }
     else {
         _mode = st;
         _cnt = 0;
         _tm = 0;
     }
+}
+
+void AltState::tick(const AltCalc &ac) {
+    tick(ac.buf());
 }
 
 void AltState::reset() {
@@ -231,8 +246,8 @@ void AltState::reset() {
  *          AltSqBig
  *******************************/
 
-void AltSqBig::tick(const AltCalc &ac) {
-    _val = ac.sqdiff();
+void AltSqBig::tick(const AltBuf &ab) {
+    _val = ab.sqdiff();
     // большая турбуленция (высокое среднеквадратическое отклонение)
     if (!_big && (_val >= AC_SQBIG_THRESH)) {
         _big = true;
@@ -247,8 +262,12 @@ void AltSqBig::tick(const AltCalc &ac) {
     }
     else {
         _cnt ++;
-        _tm += ac.tm();
+        _tm += ab.tm();
     }
+}
+
+void AltSqBig::tick(const AltCalc &ac) {
+    tick(ac.buf());
 }
 
 void AltSqBig::reset() {
@@ -272,7 +291,7 @@ AltProfile::AltProfile(const prof_t *profile, uint8_t sz, uint8_t icnt) :
     _icnt(icnt)
 { }
 
-void AltProfile::tick(const AltCalc::VAvg &avg, uint32_t tm) {
+void AltProfile::tick(const AltBuf::VAvg &avg, uint32_t tm) {
     if ((_prof == NULL) || (_sz == 0))
         return;
     
@@ -343,17 +362,17 @@ void AltProfile::clear() {
  *          AltJmp
  *******************************/
 
-void AltJmp::tick(const AltCalc &ac) {
+void AltJmp::tick(const AltBuf &ab) {
     auto m = _mode;
-    auto tm = ac.tm();
-    auto avg = ac.avg();
+    auto tm = ab.tm();
+    auto avg = ab.avg();
 
     if ((_mode != TAKEOFF) && !_ff.empty())
         _ff.clear();
 
     switch (_mode) {
         case INIT:
-            if (!ac.isinit()) {
+            if (ab.full()) {
                 m = GROUND;
                 _c_cnt= 0;
                 _c_tm = 0;
@@ -393,7 +412,7 @@ void AltJmp::tick(const AltCalc &ac) {
                         AltProfile(profstr, 3) :
                         AltProfile(profile, 6);
                 
-                _ff.tick(ac.sav() /* avg */, tm);
+                _ff.tick(ab.sav() /* avg */, tm);
                 if (_ff.full()) {
                     // профиль закончился, принимаем окончательное решение
                     m = !_strict && (avg.speed() >= -AC_JMP_CNP_SPEED) ? CANOPY : FREEFALL;
@@ -461,6 +480,10 @@ void AltJmp::tick(const AltCalc &ac) {
     }
 }
 
+void AltJmp::tick(const AltCalc &ac) {
+    tick(ac.buf());
+}
+
 void AltJmp::reset(mode_t m) {
     _mode   = m;
     _cnt    = 0;
@@ -477,18 +500,18 @@ void AltJmp::resetnew() {
  *          AltStrict
  *******************************/
 
-void AltStrict::tick(const AltCalc &ac) {
-    auto tm = ac.tm();
-    _prof.tick(ac.sav(5), tm);
-    _dir.tick(ac);
+void AltStrict::tick(const AltBuf &ab) {
+    auto tm = ab.tm();
+    _prof.tick(ab.sav(5), tm);
+    _dir.tick(ab);
 
     bool chg =
         _mode == AltJmp::INIT ?
-            !ac.isinit() :
+            ab.full() :
             _prof.full();
     
     if (!chg && (_mode > AltJmp::GROUND)) {
-        auto avg = ac.avg();
+        auto avg = ab.avg();
         chg = 
             (avg.alt() < 50) && 
             (_dir.mode() == AltDirect::FLAT) &&
@@ -558,6 +581,10 @@ void AltStrict::tick(const AltCalc &ac) {
                 _nxt    = AltJmp::GROUND;
         }
     }
+}
+
+void AltStrict::tick(const AltCalc &ac) {
+    tick(ac.buf());
 }
 
 void AltStrict::reset() {

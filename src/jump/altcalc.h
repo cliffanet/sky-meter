@@ -10,6 +10,64 @@
 
 #define AC_DATA_COUNT           20
 
+class AltBuf {
+    float _alt0 = 0;
+    public:
+        typedef struct {
+            uint16_t ms;
+            float alt;
+        } item_t;
+    typedef ring<item_t, AC_DATA_COUNT> buf_t;
+    
+    const buf_t & operator&() const { return _buf; }
+    const buf_t * operator->() const { return &_buf; }
+
+    bool full() const { return _buf.full(); }
+
+    // очередное полученное значение давления и интервал в ms после предыдущего вычисления
+    void tick(float alt, uint16_t ms);
+
+    // суммарный интервал времени, за которое собраны данные
+    const uint32_t  interval()  const;
+    // Текущая высота
+    const float     alt()       const { return _buf.size() > 0 ? _buf.last().alt : 0; }
+    // Интервал времени с предыдущего измерения
+    const float     tm()        const { return _buf.size() > 0 ? _buf.last().ms : 0; }
+
+    // среднеквадратическое отклонение прямой скорости
+    const double    sqdiff()    const;
+
+    // средне-арифметические: высота и скорость
+    class VAvg {
+    public:
+        VAvg();
+        VAvg(const AltBuf &ab);
+        const float     alt()       const { return _alt; }
+        const float     speed()     const { return _speed; }
+        const uint32_t  interval()  const { return _interval; }
+    protected:
+        float _alt, _speed, _interval;
+    };
+    const VAvg      avg()       const { return VAvg(*this); }
+
+    // по аппроксимации: высота и скорость
+    class VApp : public VAvg {
+    public:
+        VApp(const AltBuf &ab);
+    };
+    const VApp      app()       const { return VApp(*this); }
+
+    // средне-арифметическое укороченное
+    class VSavg : public VAvg {
+    public:
+        VSavg(const AltBuf &ab, uint8_t sz);
+    };
+    const VSavg     sav(uint8_t sz = 5) const { return VSavg(*this, sz); }
+    
+    private:
+        buf_t _buf;
+};
+
 // ************************************************
 //  Параметры для определения direct и state
 //
@@ -20,65 +78,27 @@
 float press2alt(float pressgnd, float pressure);
 
 class AltCalc {
-    typedef struct {
-        uint16_t interval;
-        float press;
-        float alt;
-    } data_t;
-    typedef ring<data_t, AC_DATA_COUNT> src_t;
-    src_t _data;
-    float _pressgnd = 101325, _alt0 = 0, _press0 = 0;
+    AltBuf _b;
+    ring<float, AC_DATA_COUNT> _press;
+    float _pressgnd = 101325;
 
 public:
-
-    class VAvg {
-    public:
-        VAvg();
-        VAvg(float alt0, const src_t &src);
-        const float     alt()       const { return _alt; }
-        const float     speed()     const { return _speed; }
-        const uint32_t  interval()  const { return _interval; }
-    protected:
-        float _alt, _speed, _interval;
-    };
-
-    class VApp : public VAvg {
-    public:
-        VApp(float alt0, const src_t &src);
-    };
-
-    class VSavg : public VAvg {
-    public:
-        VSavg(const src_t &src, uint8_t sz);
-    };
+    const AltBuf &      buf()   const { return _b; }
+    const AltBuf::VAvg  avg()   const { return _b.avg(); }
+    const AltBuf::VApp  app()   const { return _b.app(); }
 
     // Текущее давление у земли
     const float     pressgnd()  const { return _pressgnd; }
-    const bool      isinit()    const { return !_data.full(); }
+    const bool      isinit()    const { return !_b->full(); }
     // Текущее давление
-    const float     press()     const { return _data.size() > 0 ? _data.last().press : 0; }
-    // Текущая высота
-    const float     alt()       const { return _data.size() > 0 ? _data.last().alt : 0; }
-    // Интервал времени с предыдущего измерения
-    const float     tm()        const { return _data.size() > 0 ? _data.last().interval : 0; }
-    // суммарный интервал времени, за которое собраны данные
-    const uint32_t  interval()  const;
-
-    // средне-арифметические: высота и скорость
-    const VAvg      avg()       const { return VAvg(_alt0, _data); }
-    // по аппроксимации: высота и скорость
-    const VApp      app()       const { return VApp(_alt0, _data); }
-    // средне-арифметическое укороченное
-    const VSavg     sav(uint8_t sz = 5) const { return VSavg(_data, sz); }
-    // среднеквадратическое отклонение прямой скорости
-    const double    sqdiff()    const;
+    const float     press()     const { return _press.size() > 0 ? _press.last() : 0; }
         
     // очередное полученное значение давления и интервал в ms после предыдущего вычисления
-    void tick(float press, uint16_t interval);
+    void tick(float press, uint16_t ms);
     // обновляет текущее состояние, вычисленное по коэфициентам
     // сбрасывает "ноль" высоты в текущие показания и обнуляет все состояния
     void gndreset();
-    void gndset(float press, uint16_t interval = 100);
+    void gndset(float press, uint16_t ms = 100);
 };
 
 /**************************************************************************/
@@ -94,6 +114,7 @@ public:
         DOWN
     } dir_t;
 
+    void tick(const AltBuf &ab);
     void tick(const AltCalc &ac);
 
     // Текущий режим высоты
@@ -134,6 +155,7 @@ public:
         LANDING
     } st_t;
 
+    void tick(const AltBuf &ab);
     void tick(const AltCalc &ac);
 
     // Текущий режим высоты
@@ -162,6 +184,7 @@ class AltSqBig {
     uint32_t _cnt = 0, _tm = 0;
 
 public:
+    void tick(const AltBuf &ab);
     void tick(const AltCalc &ac);
 
     // Текущее численное значение
@@ -187,7 +210,7 @@ public:
 
     AltProfile();
     AltProfile(const prof_t *profile, uint8_t sz, uint8_t icnt = 10);
-    void tick(const AltCalc::VAvg &avg, uint32_t tm);
+    void tick(const AltBuf::VAvg &avg, uint32_t tm);
 
     const bool  empty()     const { return (_prof == NULL) || (_sz == 0); }
     const bool  active()    const { return _c > 0; }
@@ -240,6 +263,7 @@ public:
     AltJmp() : _strict(false) {}
     AltJmp(bool strict) : _strict(strict) {}
 
+    void tick(const AltBuf &ab);
     void tick(const AltCalc &ac);
 
     // Текущий режим
@@ -274,7 +298,7 @@ private:
 
 class AltStrict {
 public:
-
+    void tick(const AltBuf &ab);
     void tick(const AltCalc &ac);
 
     // Текущий режим
