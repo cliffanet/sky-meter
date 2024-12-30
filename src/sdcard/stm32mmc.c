@@ -13,6 +13,7 @@
 
 #include "../sys/stm32drv.h"
 #include "../sys/log.h"
+#include <string.h>
 
 extern SPI_HandleTypeDef hspi1;
 extern RTC_HandleTypeDef hrtc;
@@ -139,9 +140,14 @@ static int wait_ready (	/* 1:Ready, 0:Timeout */
 	do {
 		d = xchg_spi(0xFF);
 		/* This loop takes a time. Insert rot_rdq() here for multitask envilonment. */
-	} while (d != 0xFF && TMROK);	/* Wait for card goes ready or timeout */
+	//} while (d != 0xFF && TMROK);	/* Wait for card goes ready or timeout */
+    } while (d == 0x00 && TMROK); // esp-32 version
 
-	return (d == 0xFF) ? 1 : 0;
+    if (!d)
+        CONSOLE("wait_ready(%u) fail", wt);
+
+	//return (d == 0xFF) ? 1 : 0;
+    return (d > 0x00) ? 1 : 0; // esp-32 version
 }
 
 
@@ -404,16 +410,19 @@ DSTATUS disk_initialize (
             // без отключения CRC не работает ACMD41 для карт sandisk, помеченных как SDHC(3).
             // При этом нет ошибок CRC, а карту всё-таки можно запустить, если в debug-режиме
             // выполнять команды пошагово
-            if (send_cmd_(CMD59, 0) != 1)
-                CONSOLE("CRC off fail");
+            BYTE r = send_cmd(CMD59, 0);
+            if (r != 1)
+                CONSOLE("CRC on fail: %d", r);
 
-            while (send_cmd(ACMD41, 1UL << 30) && TMROK) ;	/* Wait for end of initialization with ACMD41(HCS) */
+            while (((r = send_cmd(ACMD41, 0x40100000)) == 1) && TMROK) ; //1UL << 30) && TMROK) ;	/* Wait for end of initialization with ACMD41(HCS) */
+            if (r)
+                CONSOLE("APP_OP_COND failed: %u", r);
 
-            if (TMROK && send_cmd_recv(CMD58, 0, ocr, 4) == 0) {		/* Check CCS bit in the OCR */
+            if (send_cmd_recv(CMD58, 0, ocr, 4) == 0) {		/* Check CCS bit in the OCR */
                 CardType = (ocr[0] & 0x40) ? CT_SDC2 | CT_BLOCK : CT_SDC2;	/* Card id SDv2 */
             }
 
-            while (TMROK && send_cmd(CMD1, 0)) ;	/* Wait for end of initialization */
+            while (send_cmd(CMD1, 0) && TMROK) ;	/* Wait for end of initialization */
         }
     }
     else {	/* Not SDv2 card */
