@@ -59,16 +59,16 @@ static void _save_logbook() {
     unsigned int sz;
     if (!ex) {
         sz = snprintf(s, sizeof(s), 
-            "\"Date/time\", \"Jump number\", \"Takeoff time\", "
-            "\"Begin alt\", \"FreeFall time\", \"Canopy alt\", \"Canopy time\"\n");
+            "\"Date/time\",\"Jump number\",\"Takeoff time\","
+            "\"Begin alt\",\"FreeFall time\",\"Canopy alt\",\"Canopy time\"\n");
         if (!fh.write(s, sz))
             return;
     }
 
     const auto &tm = _l.tm;
     sz = snprintf(s, sizeof(s), 
-            "\"%2u.%02u.%04u %2u:%02u:%02u\", %lu, \"" TXT_LOGBOOK_MINSEC "\", "
-            "%u, %u, %u, \"" TXT_LOGBOOK_MINSEC "\"\n",
+            "\"%2u.%02u.%04u %2u:%02u:%02u\",%lu,\"" TXT_LOGBOOK_MINSEC "\","
+            "%u,%u,%u,\"" TXT_LOGBOOK_MINSEC "\"\n",
             tm.day, tm.mon, tm.year, tm.h, tm.m, tm.s,
             _l.num,
             _l.toffsec / 60, _l.toffsec % 60,
@@ -97,7 +97,7 @@ static void _save_trace() {
     unsigned int sz, szf = 0, cnt = 0;
     
     sz = snprintf(s, sizeof(s), 
-        "\"alt\", \"calculated change\", \"factical mode\"\n");
+        "\"alt\",\"calculated change\",\"factical mode\"\n");
     if (!fh.write(s, sz))
         return;
     szf += sz;
@@ -105,12 +105,18 @@ static void _save_trace() {
     auto &_log = jmp::trace();
     for (int i = _log.size()-1; i >= 0; i--) {
         auto &l = _log[i];
-        sz = snprintf(s, sizeof(s),
-            "%d, \"%c\", \"%c\"\n",
-            l.alt,
-            l.mclc ? l.mclc : ' ',
-            l.mchg ? l.mchg : ' '
-        );
+        
+        char mclc[10], mchg[10];
+        if (l.mclc)
+            snprintf(mclc, sizeof(mclc), "\"%c\"", l.mclc);
+        else
+            mclc[0] = '\0';
+        if (l.mchg)
+            snprintf(mchg, sizeof(mchg), "\"%c\"", l.mchg);
+        else
+            mchg[0] = '\0';
+        
+        sz = snprintf(s, sizeof(s), "%d,%s,%s\n", l.alt, mclc, mchg);
         if (!fh.write(s, sz))
             return;
         szf += sz;
