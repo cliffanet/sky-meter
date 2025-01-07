@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 import 'trace.dart';
 
 class PageMain extends StatelessWidget {
@@ -19,10 +20,20 @@ class PageMain extends StatelessWidget {
                             ElevatedButton(
                                 style: st,
                                 child: Text('Трассировка из файла'),
-                                onPressed: () => Navigator.push(
-                                    context,
-                                    MaterialPageRoute(builder: (context) => PageTrace()),
-                                ),
+                                onPressed: () async {
+                                    final r = await FilePicker.platform.pickFiles(
+                                        dialogTitle: 'Открыть файл трейса',
+                                        type: FileType.custom,
+                                        allowedExtensions: ['csv']
+                                    );
+                                    if ((r == null) || (r.count != 1))
+                                        return;
+                                    final fname = r.paths[0] ?? '';
+                                    Navigator.push(
+                                        context,
+                                        MaterialPageRoute(builder: (context) => PageTrace.byFile(fname: fname)),
+                                    );
+                                },
                             ),
                             ElevatedButton(
                                 style: st,
