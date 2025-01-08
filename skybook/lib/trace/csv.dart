@@ -12,7 +12,10 @@ class CsvParser {
     int operator[](int index) => at(index);
     bool get isNotEmpty => _s.isNotEmpty;
 
-    void cut(int count) => _s = _s.substring(count);
+    void cut(int count) {
+        _s = _s.substring(count);
+        _skip += count;
+    }
 
     bool _isSpace(int i) {
         final f = at(i);

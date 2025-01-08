@@ -1,27 +1,15 @@
 import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'item.dart';
-
-int _maxalt(Iterable<TraceItem> data) {
-    if (data.isEmpty)
-        return 0;
-    int m = data.first.alt;
-    data.forEach((t) { if (m < t.alt) m = t.alt; });
-    return m;
-}
+import 'viewdata.dart';
 
 class TracePaint extends CustomPainter {
-    final Iterable<TraceItem> _data;
-    int _maxv;
-    int _maxc;
+    final TraceViewData _data;
 
-    TracePaint(Iterable<TraceItem> data) :
-        _data = data,
-        _maxv = (_maxalt(data) / 100).ceil() * 100,
-        _maxc = (data.length / 100).ceil() * 100;
+    TracePaint(TraceViewData data) :
+        _data = data;
 
-    void _scale(int min, int max, int width, Function(int val, int x) item) {
+    static void _scale(int min, int max, int width, Function(int val, int x) item) {
         double dx = 40;
         if (width < dx/2)
             return;
@@ -39,7 +27,7 @@ class TracePaint extends CustomPainter {
         item(max, width-1);
     }
     
-    void _dashedLine(
+    static void _dashedLine(
         Canvas canvas,
         Offset p1,
         Offset p2,
@@ -64,76 +52,72 @@ class TracePaint extends CustomPainter {
 
     @override
     void paint(Canvas canvas, Size size) {
+        final a = _data.area(size);
         canvas.save();
 
         final paint = Paint()
             ..color = Colors.black
             ..strokeWidth = 1;
-        canvas.drawLine(Offset(10, size.height-10.0), Offset(10, 10), paint);
-        final y = (int alt) => size.height - 10 - (size.height-20) * alt / _maxv;
-        _scale(
-            0, _maxv, (size.height-20).round(),
-            (v, y) {
-                canvas.drawLine(Offset(0, size.height-y-10.0), Offset(10, size.height-y-10.0), paint);
-                if (y <= 0) return;
-                final text = TextPainter(
-                    text: TextSpan(
-                        text: v.toString(),
-                        style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 14,
-                        ),
+        
+        canvas.drawLine(a.lbot, a.rbot, paint);
+        for ( final e in a.axisx) {
+            canvas.drawLine(Offset(e.point, a.ymax), Offset(e.point, size.height), paint);
+            final text =  TextPainter(
+                text: TextSpan(
+                    text:
+                            (e.value < 0 ? '-' : '') +
+                            (e.value/600).abs().floor().toString() +
+                            ':' +
+                            ((e.value.abs() % 600) /10).floor().toString().padLeft(2,'0'),
+                    style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 14,
                     ),
-                    textDirection: TextDirection.ltr,
-                );
-                text.layout();
-                text.paint(canvas, Offset(15, size.height-y-20));
-            }
-        );
+                ),
+                textDirection: TextDirection.ltr,
+            );
+            text.layout();
+            canvas.translate(e.point-20, a.ymax-5);
+            canvas.rotate(-pi/2);
+            text.paint(canvas, Offset(0, 10));
+            canvas.rotate(pi/2);
+            canvas.translate(-1*(e.point-20), -1*(a.ymax-5));
+        }
 
-
-        canvas.drawLine(Offset(10, size.height-10.0), Offset(size.width-10, size.height-10.0), paint);
-        final x = (int n) => (size.width-20) * n / _maxc;
-        _scale(
-            0, _maxc, (size.width-20).round(),
-            (v, x) {
-                canvas.drawLine(Offset(x+10.0, size.height-10.0), Offset(x+10.0, size.height), paint);
-                if (x <= 0) return;
-                final text =  TextPainter(
-                    text: TextSpan(
-                        text: (v/600).floor().toString() + ':' + ((v % 600) /10).floor().toString().padLeft(2,'0'),
-                        style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 14,
-                        ),
+        canvas.drawLine(a.ltop, a.lbot, paint);
+        for (final e in a.axisy) {
+            canvas.drawLine(Offset(0, e.point), Offset(a.xmin, e.point), paint);
+            final text = TextPainter(
+                text: TextSpan(
+                    text: e.value.toString(),
+                    style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 14,
                     ),
-                    textDirection: TextDirection.ltr,
-                );
-                text.layout();
-                canvas.translate(x-10, size.height-15);
-                canvas.rotate(-pi/2);
-                text.paint(canvas, Offset(0, 10));
-                canvas.rotate(pi/2);
-                canvas.translate(-1*(x-10), -1*(size.height-15));
-            }
-        );
+                ),
+                textDirection: TextDirection.ltr,
+            );
+            text.layout();
+            text.paint(canvas, Offset(15, e.point-10));
+        }
 
         paint.color = Colors.deepOrangeAccent;
         paint.strokeWidth = 1;
         final pchg = Paint.from(paint);
         pchg.color = Colors.grey;
-        for (int n = 1; n < _data.length; n++) {
-            final el = _data.elementAt(n);
-            final xn = x(n);
-            final yn = y(el.alt);
-            canvas.drawLine(
-                Offset(x(n-1), y(_data.elementAt(n-1).alt)),
-                Offset(xn, yn),
-                paint
-            );
+        for (int n = 1; n < _data.count; n++) {
+            final el = _data[n];
+            final l = a.point(n-1, _data[n-1].alt);
+            if (!a.isin(l.dx, l.dy))
+                continue;
+            final p = a.point(n, el.alt);
+            if (!a.isin(p.dx, p.dy))
+                continue;
+            
+            canvas.drawLine(l, p, paint);
             if (((el.clc ?? 0) > 0) || ((el.chg ?? 0) > 0)) {
-                _dashedLine(canvas, Offset(xn, y(0)), Offset(xn, yn), [2, 5], pchg);
-                _dashedLine(canvas, Offset(x(0), yn), Offset(xn, yn), [2, 5], pchg);
+                _dashedLine(canvas, Offset(p.dx, a.ymax), p, [2, 5], pchg);
+                _dashedLine(canvas, Offset(a.xmin, p.dy), p, [2, 5], pchg);
             }
         }
 

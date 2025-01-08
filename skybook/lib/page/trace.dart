@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import '../trace/paint.dart';
 import '../trace/csv.dart';
 import '../trace/item.dart';
+import '../trace/viewdata.dart';
 
 class PageTrace extends StatelessWidget {
     final String _name;
-    final _data = <TraceItem>[];
-    final _notify = ValueNotifier(0);
+    final _data = TraceViewData();
 
     PageTrace.byFile({ super.key, required String fname }) :
         _name = File(fname).uri.pathSegments.last
@@ -17,11 +17,10 @@ class PageTrace extends StatelessWidget {
 
     void loadfile(String fname) async {
         _data.clear();
-        _notify.value ++;
         final lnall = await File(fname).readAsLines();
         lnall.removeAt(0); // заголовок
 
-        lnall.forEach((l) {
+        for (final l in lnall) {
             final r = bycsv(l);
             try {
                 _data.add(TraceItem(
@@ -29,10 +28,9 @@ class PageTrace extends StatelessWidget {
                     clc: (r.length > 1) && r[1].isNotEmpty ? r[1].codeUnitAt(0) : 0,
                     chg: (r.length > 2) && r[2].isNotEmpty ? r[2].codeUnitAt(0) : 0,
                 ));
-                _notify.value ++;
             }
-            catch(ex) {};
-        });
+            catch(ex) {}
+        }
     }
 
     @override
@@ -47,14 +45,18 @@ class PageTrace extends StatelessWidget {
                         ) : null,
                     title: Text('Трассировка: $_name'),
                 ),
-            body: ValueListenableBuilder(
-                valueListenable: _notify,
-                builder: (BuildContext context, _, Widget? child) {
-                    return CustomPaint(
-                        painter: TracePaint(_data),
-                        size: Size.infinite
-                    );
-                }
+            body: GestureDetector(
+                onScaleStart:   _data.scaleStart,
+                onScaleUpdate:  _data.scaleUpdate,
+                child: ValueListenableBuilder(
+                    valueListenable: _data.notify,
+                    builder: (BuildContext context, _, Widget? child) {
+                        return CustomPaint(
+                            painter: TracePaint(_data),
+                            size: Size.infinite
+                        );
+                    }
+                )
             )
         );
     }
