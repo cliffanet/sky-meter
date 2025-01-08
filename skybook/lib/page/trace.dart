@@ -1,5 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
+
 import '../trace/paint.dart';
 import '../trace/csv.dart';
 import '../trace/item.dart';
@@ -51,9 +53,17 @@ class PageTrace extends StatelessWidget {
                 child: ValueListenableBuilder(
                     valueListenable: _data.notify,
                     builder: (BuildContext context, _, Widget? child) {
-                        return CustomPaint(
-                            painter: TracePaint(_data),
-                            size: Size.infinite
+                        return Listener(
+                            onPointerSignal: (pointerSignal) {
+                                //pointerSignal.
+                                if (pointerSignal is PointerScrollEvent) {
+                                    _data.scaleScroll(pointerSignal.scrollDelta.dy);
+                                }
+                            },
+                            child: CustomPaint(
+                                painter: TracePaint(_data),
+                                size: Size.infinite
+                            )
                         );
                     }
                 )

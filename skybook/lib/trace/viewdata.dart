@@ -54,8 +54,8 @@ class TraceViewArea {
     double by(int alt)  => _ymax - height * alt / _rmaxalt;
     Offset base(int n, int alt)     => Offset(bx(n), by(alt));
 
-    double x(int n)     => bx(n)    + _trans.point.dx;
-    double y(int alt)   => by(alt)  + _trans.point.dy;
+    double x(int n)     => bx(n)    * _trans.scale + _trans.point.dx;
+    double y(int alt)   => by(alt)  * _trans.scale + _trans.point.dy;
     Offset point(int n, int alt)    => Offset(x(n), y(alt));
 
     List<AxisItem> get axisx {
@@ -154,9 +154,20 @@ class TraceViewData {
     void scaleStart(ScaleStartDetails details) {
         _tprv += _tupd - _tbeg;
         _tbeg = ViewTransform(details.focalPoint, 1);
+        _tupd = ViewTransform.zero;
     }
     void scaleUpdate(ScaleUpdateDetails details) {
         _tupd = ViewTransform(details.focalPoint, details.scale);
+        _notify.value ++;
+    }
+    void scaleScroll(double scroll) {
+        _tprv += _tupd - _tbeg;
+        _tbeg = ViewTransform.zero;
+        _tupd = ViewTransform.zero;
+
+        final scale = 1 / (scroll > 0 ? (100 + scroll) / 100 : -3.5 / scroll);
+        _tprv += ViewTransform(Offset.zero, scale);
+
         _notify.value ++;
     }
     ViewTransform get transform => _tprv + (_tupd - _tbeg);

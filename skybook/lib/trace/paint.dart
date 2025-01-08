@@ -62,7 +62,7 @@ class TracePaint extends CustomPainter {
         canvas.drawLine(a.lbot, a.rbot, paint);
         for ( final e in a.axisx) {
             canvas.drawLine(Offset(e.point, a.ymax), Offset(e.point, size.height), paint);
-            final text =  TextPainter(
+            final text = TextPainter(
                 text: TextSpan(
                     text:
                             (e.value < 0 ? '-' : '') +
