@@ -1,0 +1,7 @@
+(fp_lib_table
+  (version 7)
+  (lib (name "TYPE-C-31-M-12")(type "KiCad")(uri "${KIPRJMOD}/sym/TYPE-C-31-M-12")(options "")(descr ""))
+  (lib (name "TSX-3225_16.0000MF18X-AC3")(type "KiCad")(uri "${KIPRJMOD}/sym/TSX-3225_16.0000MF18X-AC3")(options "")(descr ""))
+  (lib (name "NX3215SA-32.768K-STD-MUA-14")(type "KiCad")(uri "${KIPRJMOD}/sym/NX3215SA-32.768K-STD-MUA-14")(options "")(descr ""))
+  (lib (name "my")(type "KiCad")(uri "${KIPRJMOD}/sym/my")(options "")(descr ""))
+)
