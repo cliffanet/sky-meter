@@ -1,12 +1,11 @@
 #include "saver.h"
-#include "../def.h"
+#include "../../def.h"
 #include "fshnd.h"
 #include "../sys/log.h"
 #include "../jump/proc.h"
 #include "../jump/altcalc.h"
 #include "../view/text.h"
 
-#include "ff.h"
 #include <string>
 #include <string.h>
 

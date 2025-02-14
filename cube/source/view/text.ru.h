@@ -7,7 +7,7 @@
 
 #include "../../def.h"
 #include <stdint.h>
-#include <../u8g2/u8g2.h>
+#include "../u8g2/u8g2.h"
 extern const uint8_t u8g2_font_robotobd_08_tx[] U8G2_FONT_SECTION("u8g2_font_robotobd_08_tx");
 
 //#define menuFont        u8g2_font_6x12_t_cyrillic

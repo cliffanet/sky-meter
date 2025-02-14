@@ -47,9 +47,9 @@ const double AltBuf::sqdiff() const {
  *******************************/
 
 AltBuf::VAvg::VAvg() :
-    _interval(0),
     _alt(0),
-    _speed(0)
+    _speed(0),
+    _interval(0)
 { }
 
 AltBuf::VAvg::VAvg(const AltBuf &ab):

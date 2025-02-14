@@ -1,9 +1,9 @@
 #include "fshnd.h"
-#include "sys/log.h"
+#include "../sys/log.h"
 
 #include <string.h>
 
-#include "diskio.h"
+#include "../ff/diskio.h"
 
 FSMount::FSMount(const char *path) {
     strncpy(_path, path, sizeof(_path));

@@ -1,7 +1,7 @@
 #ifndef _sdcard_fshnd_H
 #define _sdcard_fshnd_H
 
-#include "ff.h"
+#include "../ff/ff.h"
 
 #define FR(func, fail)      { CONSOLE(TOSTRING(func)); auto st = func; if (st != FR_OK) { CONSOLE(TOSTRING(func) "failed: %d", st); fail; } }
 #define F(func)            FR(func, ;)
