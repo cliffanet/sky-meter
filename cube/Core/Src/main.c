@@ -22,9 +22,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "../../src/sys/init.h"
-#include "../../src/sys/power.h"
-#include "../../src/view/btn.h" // btn_byexti
+#include "../../source/sys/init.h"
+#include "../../source/sys/power.h"
+#include "../../source/view/btn.h" // btn_byexti
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
