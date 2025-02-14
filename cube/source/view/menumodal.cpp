@@ -147,10 +147,10 @@ void MenuValBool::smpldn() {
 MenuValInt::MenuValInt(int v, hnd_t ok, int min, int max, uint16_t hold) :
     MenuModal(1),
     _val(v),
-    _ok(ok),
     _min(min),
     _max(max),
-    _hold(hold)
+    _hold(hold),
+    _ok(ok)
 { }
 
 void MenuValInt::str(char *s, uint8_t n) {

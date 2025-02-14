@@ -5,7 +5,7 @@
 #ifndef _sys_batt_H
 #define _sys_batt_H
 
-#include "../../def.h"
+#include "../def.h"
 #include <stdint.h>
 
 

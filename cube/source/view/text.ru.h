@@ -5,7 +5,7 @@
 #ifndef _view_text_lang_H
 #define _view_text_lang_H
 
-#include "../../def.h"
+#include "../def.h"
 #include <stdint.h>
 #include "../u8g2/u8g2.h"
 extern const uint8_t u8g2_font_robotobd_08_tx[] U8G2_FONT_SECTION("u8g2_font_robotobd_08_tx");
@@ -53,7 +53,7 @@ extern const uint8_t u8g2_font_robotobd_08_tx[] U8G2_FONT_SECTION("u8g2_font_rob
 #define TXT_TEST_LIGHT              "Подсветка"
 #define TXT_TEST_SDCARD             "SD карта"
 
-#define TXT_LOGBOOK_JUMPNUM         "Прыжок # %d"
+#define TXT_LOGBOOK_JUMPNUM         "Прыжок # %ld"
 #define TXT_LOGBOOK_ALTEXIT         "Отделение"
 #define TXT_LOGBOOK_ALTCNP          "Раскрытие"
 #define TXT_LOGBOOK_TIMETOFF        "Длит. взлёта"

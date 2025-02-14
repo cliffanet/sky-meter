@@ -580,6 +580,9 @@ void AltStrict::tick(const AltBuf &ab) {
                 _prof.clear();
                 _nxt    = AltJmp::GROUND;
         }
+        
+        default:
+            break;
     }
 }
 

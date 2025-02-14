@@ -5,7 +5,7 @@
 #ifndef _view_btn_H
 #define _view_btn_H
 
-#include "../../def.h"
+#include "../def.h"
 #include <stdint.h>
 #include <stddef.h>
 

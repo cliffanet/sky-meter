@@ -56,7 +56,7 @@ bool TransSPI::write8(uint8_t reg, uint8_t val) {
 
 bool TransSPI::read(uint8_t reg, uint8_t *d, size_t sz) {
     transbeg();
-    uint8_t txr = reg | 0x80, rxr;
+    uint8_t /*txr = reg | 0x80,*/ rxr;
     auto r = HAL_SPI_TransmitReceive(&hspi1, &reg, &rxr, 1, 10);
     if (r == HAL_OK) {
         uint8_t tx[sz];

@@ -47,7 +47,7 @@
 #define TXT_TEST_LIGHT              "Light test"
 #define TXT_TEST_SDCARD             "SD-card"
 
-#define TXT_LOGBOOK_JUMPNUM         "Jump # %d"
+#define TXT_LOGBOOK_JUMPNUM         "Jump # %ld"
 #define TXT_LOGBOOK_ALTEXIT         "Alt"
 #define TXT_LOGBOOK_ALTCNP          "Deploy"
 #define TXT_LOGBOOK_TIMETOFF        "Takeoff"

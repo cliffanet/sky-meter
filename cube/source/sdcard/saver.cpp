@@ -1,5 +1,5 @@
 #include "saver.h"
-#include "../../def.h"
+#include "../def.h"
 #include "fshnd.h"
 #include "../sys/log.h"
 #include "../jump/proc.h"
@@ -86,7 +86,7 @@ static void _save_trace() {
     const auto &tm = _l.tm;
 
     char fname[64];
-    snprintf(fname, sizeof(fname), "jump_%u_%u-%02u-%04u_%u-%02u.csv", _l.num, tm.day, tm.mon, tm.year, tm.h, tm.m);
+    snprintf(fname, sizeof(fname), "jump_%lu_%u-%02u-%04u_%u-%02u.csv", _l.num, tm.day, tm.mon, tm.year, tm.h, tm.m);
 
     FSFile fh(fname, FA_CREATE_ALWAYS | FA_WRITE);
     if (!fh)

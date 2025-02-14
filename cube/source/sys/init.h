@@ -5,7 +5,7 @@
 #ifndef _sys_init_H
 #define _sys_init_H
 
-#include "../../def.h"
+#include "../def.h"
 
 #ifdef __cplusplus
  extern "C" {

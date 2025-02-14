@@ -51,7 +51,7 @@ static int _lmin = 0, _lmax = 0;
 
     static const char *strtm(char *s, uint32_t tm) {
         tm /= 1000;
-        auto sec = tm % 60;
+        int sec = tm % 60;
         tm -= sec;
 
         if (tm <= 0) {
@@ -60,7 +60,7 @@ static int _lmin = 0, _lmax = 0;
         }
 
         tm /= 60;
-        auto min = tm % 60;
+        int min = tm % 60;
         tm -= min;
 
         if (tm <= 0) {
@@ -68,7 +68,7 @@ static int _lmin = 0, _lmax = 0;
             return s;
         }
 
-        sprn("%d:%02d:%02d", tm/60, min, sec);
+        sprn("%ld:%02d:%02d", tm/60, min, sec);
         return s;
     }
 
@@ -104,7 +104,7 @@ static int _lmin = 0, _lmax = 0;
 #ifdef USE_JMPINFO
         y += DSPL_S_HEIGHT+2;
         if (_jmp.newtm() > 0) {
-            sprn("new: %s (%d)", strtm(t, _jmp.newtm()), _jmp.newcnt());
+            sprn("new: %s (%ld)", strtm(t, _jmp.newtm()), _jmp.newcnt());
             DSPL_STR(0, y, s);
         }
 
@@ -342,6 +342,8 @@ namespace jmp {
                     LogBook::beg_cnp(_jmp.newtm(), _ac.alt()+100);
 #endif //USE_JMPTRACE
                     break;
+                default:
+                    break;
             }
         
         switch (_jmp.mode()) {
@@ -353,6 +355,8 @@ namespace jmp {
                 break;
             case AltJmp::CANOPY:
                 LogBook::tick_cnp(ms);
+                break;
+            default:
                 break;
         }
 

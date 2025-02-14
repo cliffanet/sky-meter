@@ -1,7 +1,7 @@
 #ifndef _jump_logbook_H
 #define _jump_logbook_H
 
-#include "../../def.h"
+#include "../def.h"
 #include "../sys/iflash.h"
 #include "../sys/clock.h"
 

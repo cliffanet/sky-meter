@@ -38,6 +38,7 @@ class Menu {
         } exit_t;
 
         Menu(exit_t _exit = EXIT_TOP);
+        virtual
         ~Menu();
 
         int16_t ipos(int16_t i);

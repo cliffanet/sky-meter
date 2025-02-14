@@ -5,7 +5,7 @@
 #ifndef _view_text_l_H
 #define _view_text_l_H
 
-#include "../../def.h"
+#include "../def.h"
 
 #if defined(FWVER_LANG) && (FWVER_LANG == 'R')
 #include "text.ru.h"

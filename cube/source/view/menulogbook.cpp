@@ -21,7 +21,7 @@ void MenuLogBook::str(line_t &s, int16_t i) {
     auto &tm = l.tm;
     snprintf(s.name, sizeof(s.name), "%2d.%02d.%02d %2d:%02d",
                     tm.day, tm.mon, tm.year % 100, tm.h, tm.m);
-    snprintf(s.val, sizeof(s.val), "%d", l.num);
+    snprintf(s.val, sizeof(s.val), "%ld", l.num);
 }
 
 void MenuLogBook::onsel(int16_t i) {
@@ -29,9 +29,9 @@ void MenuLogBook::onsel(int16_t i) {
 }
 
 MenuLogBook::MenuLogBook() :
+    _sz(0),
     _prv(0),
-    _nxt(0),
-    _sz(0)
+    _nxt(0)
 {
     if (cfg->lbaddr > 0) {
         auto addr = cfg->lbaddr;

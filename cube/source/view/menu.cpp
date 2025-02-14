@@ -185,7 +185,7 @@ void Menu::smpldn() {
     _tout = _menu->timeout();
     
     _isel ++;
-    if (_isel < _sz) {
+    if (_isel < static_cast<int16_t>(_sz)) {
         // если вылезли вниз за видимую область,
         // поднимаем список выше, чтобы отобразился выделенный пункт
         if ((_isel > _itop) && ((_isel-_itop) >= MENU_STR_COUNT))

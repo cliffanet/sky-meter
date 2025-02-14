@@ -5,7 +5,7 @@
 #ifndef _sys_power_H
 #define _sys_power_H
 
-#include "../../def.h"
+#include "../def.h"
 #include <stdint.h>
 
 #define LED_PIN_RED         GPIOA, GPIO_PIN_3

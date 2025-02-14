@@ -5,7 +5,7 @@
 #ifndef _view_display_H
 #define _view_display_H
 
-#include "../../def.h"
+#include "../def.h"
 #include "../u8g2/u8g2.h"
 #include <stdio.h>
 
