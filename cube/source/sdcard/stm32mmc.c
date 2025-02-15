@@ -48,7 +48,7 @@ static void cs_lo() {
 }
 #else
 static void clk_fast() {
-    clk_chg(SPI_BAUDRATEPRESCALER_2);
+    clk_chg(SPI_BAUDRATEPRESCALER_4);
 }
 
 static void sdcard_on() {

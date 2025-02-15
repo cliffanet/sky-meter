@@ -56,16 +56,13 @@ int32_t BMP280::tempfine() {
 bool BMP280::init() {
     if (!_dev.init())
         return false;
-    
-    auto chid = chipid();
-    if (chid != BMP280_CHIPID)
-        return false;
 
     calib();
 
     return
         setctrl() &&
-        setconf();
+        setconf() &&
+        (chipid() == BMP280_CHIPID);
 }
 
 uint8_t BMP280::chipid() {
