@@ -68,16 +68,16 @@ MenuStatic::~MenuStatic() {
 }
 
 static void vnum(char *s, int v) {
-    snprintf(s, MENUSZ_VAL, "%d", v);
+    sprintf(s, "%d", v);
 }
 static void vyesno(char *s, bool v) {
-    strncpy(s, v ? TXT_MENU_YES : TXT_MENU_NO, MENUSZ_VAL);
+    strcpy(s, v ? TXT_MENU_YES : TXT_MENU_NO);
 }
 static void vonoff(char *s, bool v) {
-    strncpy(s, v ? TXT_MENU_YES : TXT_MENU_NO, MENUSZ_VAL);
+    strcpy(s, v ? TXT_MENU_YES : TXT_MENU_NO);
 }
 static void vok(char *s, bool v) {    // ok/fail
-    strncpy(s, v ? TXT_MENU_OK : TXT_MENU_FAIL, MENUSZ_VAL);
+    strcpy(s, v ? TXT_MENU_OK : TXT_MENU_FAIL);
 }
 
 static const MenuStatic::el_t _alt[] = {
@@ -107,6 +107,7 @@ static const MenuStatic::el_t _alt[] = {
 };
 
 static const MenuStatic::el_t _hwtest[] {
+#ifdef UID_BASE
     {
         .name = TXT_TEST_SERIAL,
         .enter = NULL,
@@ -117,6 +118,8 @@ static const MenuStatic::el_t _hwtest[] {
             snprintf(txt, MENUSZ_VAL, "%08lx:%08lx:%08lx", s1, s2, s3);
         },
     },
+#endif // UID_BASE
+#ifdef FLASH_SIZE
     {
         .name = TXT_TEST_FLASHSZ,
         .enter = NULL,
@@ -125,6 +128,7 @@ static const MenuStatic::el_t _hwtest[] {
             snprintf(txt, MENUSZ_VAL, "%.1f kB", sz / 1024);
         },
     },
+#endif // FLASH_SIZE
     {
         .name = TXT_TEST_CLOCK,
         .enter = NULL,
@@ -137,11 +141,11 @@ static const MenuStatic::el_t _hwtest[] {
         .name = TXT_TEST_BATTERY,
         .enter = NULL,
         .showval = [] (char *txt) {
-            char ok[16] = {0};
+            char ok[16];
             auto bval = batt::raw();
             vok(ok, (bval > 3000) && (bval < 3900));
             float v = vmap(static_cast<float>(bval), 3105, 3945, 3.4, 4.3);
-            snprintf(txt, MENUSZ_VAL, "(%d = %0.1fv) %s", bval, v, ok);
+            snprintf(txt, MENUSZ_VAL, "(%u = %0.1fv) %s", bval, v, ok);
         },
     },
     {

@@ -29,13 +29,25 @@ namespace iflash {
             return false;
 
         FLASH_EraseInitTypeDef e = { 0 };
+#if HWVER < 2
         e.TypeErase = FLASH_TYPEERASE_PAGES;
 	    e.Banks     = 1;
         e.Page      = ea / _FLASH_PAGE_SIZE;
         e.NbPages   = 1;
+#else
+        e.TypeErase = FLASH_TYPEERASE_SECTORS;
+        e.Banks     = 1;
+        e.Sector    = ea / _FLASH_PAGE_SIZE;
+        e.NbSectors = 1;
+        e.VoltageRange = FLASH_VOLTAGE_RANGE_3;
+#endif // HWVER
         uint32_t err = 0;
         auto st = HAL_FLASHEx_Erase(&e, &err);
+#if HWVER < 2
         CONSOLE("HAL_FLASHEx_Erase[0x%06x, page: %d]: %d", ea, e.Page, st);
+#else
+        CONSOLE("HAL_FLASHEx_Erase[0x%06x, page: %d]: %d", ea, e.Sector, st);
+#endif // HWVER
         
         return st == HAL_OK;
     }

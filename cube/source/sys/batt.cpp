@@ -7,10 +7,17 @@
 #include "power.h"
 
 
+#if HWVER < 2
 #define BATT_PIN_INFO       GPIOB, GPIO_PIN_12
 #define BATT_PIN_CHRG_CUR   GPIOB, GPIO_PIN_13
 #define BATT_PIN_CHRG_IND   GPIOB, GPIO_PIN_14
 #define BATT_PIN_CHRG_HI    GPIOB, GPIO_PIN_15
+#else
+#define BATT_PIN_INFO       GPIOB, GPIO_PIN_1
+#define BATT_PIN_CHRG_CUR   GPIOB, GPIO_PIN_0
+#define BATT_PIN_CHRG_IND   GPIOB, GPIO_PIN_12
+#define BATT_PIN_CHRG_HI    GPIOB, GPIO_PIN_13
+#endif // HWVER
 
 extern ADC_HandleTypeDef hadc1;
 

@@ -56,12 +56,19 @@ void init_full() {
     jmp::init();
 }
 
+
+extern "C"
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+    btn_byexti(GPIO_Pin);
+}
+
 extern "C"
 void HardFault_Handler(void) {
     while (1) {
         for (int n = 0; n < 3000000; n++)
             asm("");
-        HAL_GPIO_TogglePin(GPIOA, led_red_Pin);
+        HAL_GPIO_TogglePin(LED_PIN_RED);
     }
 }
 
@@ -71,7 +78,7 @@ void MemManage_Handler(void) {
         for (int i =0; i < 10; i++) {
             for (int n = 0; n < 3000000; n++)
                 asm("");
-            HAL_GPIO_TogglePin(GPIOA, led_red_Pin);
+            HAL_GPIO_TogglePin(LED_PIN_RED);
         }
         for (int n = 0; n < 30000000; n++)
             asm("");

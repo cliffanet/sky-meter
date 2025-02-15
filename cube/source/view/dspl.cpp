@@ -9,10 +9,18 @@
 #include "../sys/power.h"
 #include "../sys/log.h"
 
+#if HWVER < 2
 #define DSPL_PIN_DC     GPIOB, GPIO_PIN_2
 #define DSPL_PIN_RST    GPIOB, GPIO_PIN_1
 #define DSPL_PIN_CS     GPIOB, GPIO_PIN_11
 #define DSPL_PIN_LGHT   GPIOA, GPIO_PIN_10
+#else
+#define DSPL_PIN_EN     GPIOB, GPIO_PIN_15
+#define DSPL_PIN_DC     GPIOA, GPIO_PIN_9
+#define DSPL_PIN_RST    GPIOA, GPIO_PIN_10
+#define DSPL_PIN_CS     GPIOA, GPIO_PIN_8
+#define DSPL_PIN_LGHT   GPIOA, GPIO_PIN_15
+#endif // HWVER
 
 static bool _lght = false;
 static void _lghtUpd() {

@@ -6,10 +6,15 @@
 #include "../sys/stm32drv.h"
 #include "../sys/maincfg.h"
 
-
+#if HWVER < 2
 #define BTN_PIN_UP      GPIOA, GPIO_PIN_2
 #define BTN_PIN_SEL     GPIOA, GPIO_PIN_1
 #define BTN_PIN_DN      GPIOA, GPIO_PIN_0
+#else
+#define BTN_PIN_UP      GPIOB, GPIO_PIN_9
+#define BTN_PIN_SEL     GPIOB, GPIO_PIN_8
+#define BTN_PIN_DN      GPIOB, GPIO_PIN_7
+#endif // HWVER
 
 #define BSTATE(btn)     HAL_GPIO_ReadPin(btn.gpiox, btn.pin)
 #define PUSHED(state)   ((state) == GPIO_PIN_RESET)

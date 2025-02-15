@@ -50,11 +50,16 @@ static void _spi_off() {
     // дисплея (весь шлейф) добавляло около 0.1 мА.
     // Но после отключения spi отключение шлейфа дисплея
     // наоборот увеличивает потребление с 0.2 мА до 0.5 мА
+#if HWVER < 2
+    // SPI
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_RESET);
+    // bmp280 cs
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
+    // display cs
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_11, GPIO_PIN_RESET);
+    // sdcard cs
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_4, GPIO_PIN_RESET);
     GPIO_InitTypeDef GPIO_InitStruct = {0};
     GPIO_InitStruct.Pin = GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7;
@@ -66,11 +71,35 @@ static void _spi_off() {
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
     GPIO_InitStruct.Pin = GPIO_PIN_4;
     HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+#else
+    // SPI
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_RESET);
+    // bmp280 cs
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_RESET);
+    // display cs
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_RESET);
+    // sdcard cs
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+    GPIO_InitStruct.Pin = GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_4;
+    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+    GPIO_InitStruct.Pin = GPIO_PIN_10;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+#endif // HWVER
 }
 
 static void _spi_on() {
+#if HWVER < 2
+    // bmp280 cs
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
+    // display cs
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_11, GPIO_PIN_SET);
+    // sdcard cs
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_4, GPIO_PIN_SET);
     GPIO_InitTypeDef GPIO_InitStruct = {0};
     GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_11;
@@ -80,6 +109,23 @@ static void _spi_on() {
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
     GPIO_InitStruct.Pin = GPIO_PIN_4;
     HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+#else
+    // bmp280 cs
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET);
+    // display cs
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_SET);
+    // sdcard cs
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+    GPIO_InitStruct.Pin = GPIO_PIN_8|GPIO_PIN_4;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+    GPIO_InitStruct.Pin = GPIO_PIN_10;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+#endif // HWVER
+
     HAL_SPI_Init(&hspi1);
 }
 
@@ -147,9 +193,18 @@ static void _spi_on() {
     Отключение spi/adc/usb перед уходом в shutdown ни на что не влияет.
 */
 
+/*
 #include "usbd_cdc_if.h"
 extern USBD_HandleTypeDef hUsbDeviceFS;
+
+#if HWVER < 2
 extern "C" void MX_USB_Device_Init(void);
+#define usb_init()      MX_USB_Device_Init()
+#else
+extern "C" void MX_USB_DEVICE_Init(void);
+#define usb_init()      MX_USB_DEVICE_Init()
+#endif
+*/
 
 static void _off() {
     while (Btn::ispushed())
@@ -166,13 +221,13 @@ static void _off() {
 
     // отключение usb и adc даёт не более 20 мкА
     //HAL_ADC_DeInit(&hadc1);
-    USBD_Stop(&hUsbDeviceFS);
-    USBD_DeInit(&hUsbDeviceFS);
+    //USBD_Stop(&hUsbDeviceFS);
+    //USBD_DeInit(&hUsbDeviceFS);
 }
 
 static void _on() {
     //HAL_ADC_Init(&hadc1);
-    MX_USB_Device_Init();
+    //usb_init();
 
     CONSOLE("init");
     pwr::init();

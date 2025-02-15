@@ -18,7 +18,7 @@
 #define _FLASH_BASE         0x08000000
 #define _FLASH_PAGE_SIZE    2048
 
-#if defined(STM32G473xx)
+#if defined(STM32G473xx) || defined(STM32F411xE)
 #define _FLASH_PAGE_ALL     256
 #elif defined(STM32G431xx)
 #define _FLASH_PAGE_ALL     64

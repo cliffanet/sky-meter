@@ -15,6 +15,10 @@
 #include "../sys/log.h"
 #include <string.h>
 
+#if HWVER >= 2
+#define SDCARD_PIN_CD	GPIOA, GPIO_PIN_3
+#endif // HWVER
+
 extern SPI_HandleTypeDef hspi1;
 extern RTC_HandleTypeDef hrtc;
 
@@ -27,9 +31,14 @@ static void clk_chg(uint32_t BaudRatePrescaler) {
 static void clk_slow() {
     clk_chg(SPI_BAUDRATEPRESCALER_256);
 }
+
+#if HWVER < 2
 static void clk_fast() {
     clk_chg(SPI_BAUDRATEPRESCALER_8);
 }
+
+#define sdcard_on()
+#define sdcard_off()
 
 static void cs_hi() {
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_4, GPIO_PIN_SET);
@@ -37,6 +46,25 @@ static void cs_hi() {
 static void cs_lo() {
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_4, GPIO_PIN_RESET);
 }
+#else
+static void clk_fast() {
+    clk_chg(SPI_BAUDRATEPRESCALER_2);
+}
+
+static void sdcard_on() {
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, GPIO_PIN_SET);
+}
+static void sdcard_off() {
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, GPIO_PIN_RESET);
+}
+
+static void cs_hi() {
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
+}
+static void cs_lo() {
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
+}
+#endif // HWVER
 
 #define TMR(wait)   uint32_t _tmr = HAL_GetTick() + wait;
 #define TMROK       (_tmr > HAL_GetTick())
@@ -374,6 +402,8 @@ DSTATUS disk_initialize (
 
 	if (Stat & STA_NODISK) return Stat;	/* Is card existing in the soket? */
 
+	sdcard_on();
+
 	clk_slow();
     
     cs_hi();
@@ -443,6 +473,10 @@ DSTATUS disk_initialize (
     clk_fast();			/* Set fast clock */
 
 	return Stat;
+}
+
+void disk_poweroff() {
+	sdcard_off();
 }
 
 

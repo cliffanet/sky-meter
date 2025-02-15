@@ -13,7 +13,7 @@
                             (low2 + (value - low1) * (high2 - low2) / (high1 - low1))
 
 #ifndef HWVER
-#define HWVER               1
+#define HWVER               2
 #endif
 
 #if !defined(FWVER_NUM1) && !defined(FWVER_NUM2) && !defined(FWVER_NUM3)

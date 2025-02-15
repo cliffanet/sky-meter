@@ -5,6 +5,9 @@
 
 #include "../ff/diskio.h"
 
+extern "C"
+void disk_poweroff();
+
 FSMount::FSMount(const char *path) {
     strncpy(_path, path, sizeof(_path));
     _path[sizeof(_path)-1] = '\0';
@@ -19,7 +22,9 @@ FSMount::FSMount(const char *path) {
 
 FSMount::~FSMount() {
     FRESULT r = f_mount(NULL, _path, 0);
-    if (r != FR_OK)
+    if (r == FR_OK)
+        disk_poweroff();
+    else
         CONSOLE("Unmount failed, res = %d", r);
     
     CONSOLE("unmount: %d", r);

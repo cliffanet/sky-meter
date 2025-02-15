@@ -14,7 +14,11 @@
 #include <cmath>
 #include "string.h"
 
+#if HWVER < 2
 static TransSPI _spi(GPIOB, GPIO_PIN_0);
+#else
+static TransSPI _spi(GPIOB, GPIO_PIN_10);
+#endif
 static BMP280 _bmp(_spi);
 
 static AltCalc _ac;

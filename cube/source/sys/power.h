@@ -8,8 +8,13 @@
 #include "../def.h"
 #include <stdint.h>
 
+#if HWVER < 2
 #define LED_PIN_RED         GPIOA, GPIO_PIN_3
 #define LED_PIN_BLUE        GPIOA, GPIO_PIN_4
+#else
+#define LED_PIN_RED         GPIOA, GPIO_PIN_0
+#define LED_PIN_BLUE        GPIOA, GPIO_PIN_1
+#endif // HWVER
 
 #ifdef __cplusplus
 namespace pwr {
