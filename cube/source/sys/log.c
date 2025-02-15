@@ -6,9 +6,11 @@
 //#include "navi/proc.h"
 //#include "clock.h"
 #include "usbd_cdc_if.h"
+#include "stm32drv.h"
 
 #include <stdio.h>
 #include <stdarg.h>
+#include <string.h>
 
 extern USBD_HandleTypeDef hUsbDeviceFS;
 
