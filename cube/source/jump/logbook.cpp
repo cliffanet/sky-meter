@@ -5,6 +5,8 @@
 
 #include "../sys/stm32drv.h"
 #include "../sys/maincfg.h"
+#include "../sys/iflash.h"
+#include "../sys/log.h"
 
 #include <memory.h>
 
@@ -21,14 +23,16 @@ static uint16_t _incms(uint32_t ms) {
     return sec;
 }
 
-void _keygen() {
+static void _keygen() {
     _cur.num = cfg->jmpcnt + 1;
     _cur.tm = tmNow();
     if (_cur.key == 0)
         _cur.key = tmRand();
 }
 
-bool _read(uint32_t addr, LogBook::item_t &item) {
+#if HWVER < 2
+
+static bool _read(uint32_t addr, LogBook::item_t &item) {
     if (*reinterpret_cast<__IO uint8_t *>(addr) != LOGBOOK_HDR)
         return false;
     
@@ -46,7 +50,7 @@ bool _read(uint32_t addr, LogBook::item_t &item) {
     return true;
 }
 
-bool _save() {
+static bool _save() {
     uint32_t p = cfg->lbaddr;
     if ((p == 0) || (p < LOGBOOK_ADDR) || ((p+LOGBOOK_ITSZ) > LOGBOOK_AEND))
         p = LOGBOOK_ADDR;
@@ -82,6 +86,24 @@ bool _save() {
 
     return cfg.save();
 }
+
+#else // if HWVER < 2
+
+static bool _save() {
+    auto r = iflash::save(_FLASH_TYPE_LOGBOOK, _cur);
+    if (r) {
+        CONSOLE("logbook saving to: page=0x%06x, addr=0x%04x", r.page().num(), r.a());
+    }
+    else {
+        CONSOLE("logbook saving FAIL");
+        return false;
+    }
+
+    (*cfg)->jmpcnt = _cur.num;
+
+    return cfg.save();
+}
+#endif // if HWVER < 2
 
 namespace LogBook {
     void beg_toff() {
@@ -142,6 +164,8 @@ namespace LogBook {
         return _last;
     }
 
+#if HWVER < 2
+
     uint32_t findprv(uint32_t addr, item_t &item) {
         // если в cfg->lbaddr у нас ещё ничего нет,
         // значит логбук пока пустой.
@@ -177,6 +201,8 @@ namespace LogBook {
 
         return 0;
     }
+
+#endif // if HWVER < 2
 
 } // namespace LogBook 
 

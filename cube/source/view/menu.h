@@ -67,6 +67,7 @@ class Menu {
 
     protected:
         virtual uint32_t timeout() const { return 250; }
+        void updtout();
         
         int16_t _itop = 0, _isel = 0;
         exit_t _exit;

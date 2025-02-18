@@ -16,7 +16,11 @@ void MenuLogBook::title(char *s) {
 void MenuLogBook::str(line_t &s, int16_t i) {
     LogBook::item_t l = { 0 };
     if ((i >= 0) && (i < MENU_LOGBOOK_SIZE))
+#if HWVER < 2
         l = _d[i];
+#else
+        l = _d[i].l;
+#endif
     
     auto &tm = l.tm;
     snprintf(s.name, sizeof(s.name), "%2d.%02d.%02d %2d:%02d",
@@ -29,10 +33,10 @@ void MenuLogBook::onsel(int16_t i) {
 }
 
 MenuLogBook::MenuLogBook() :
-    _sz(0),
-    _prv(0),
-    _nxt(0)
+    _sz(0)
 {
+#if HWVER < 2
+
     if (cfg->lbaddr > 0) {
         auto addr = cfg->lbaddr;
         while (
@@ -41,19 +45,76 @@ MenuLogBook::MenuLogBook() :
             )
             _sz++;
     }
+
+#else // if HWVER < 2
+
+    for (auto r = iflash::last(iflash::TYPE_LOGBOOK); r && (_sz < MENU_LOGBOOK_SIZE); r = r.prevme()) {
+        _d[_sz].r = r;
+        r.read(_d[_sz].l);
+        _sz++;
+    }
+
+#endif // if HWVER < 2
 }
 
+#if HWVER >= 2
+
+void MenuLogBook::smplup() {
+    updtout();
+
+    if (ipos(_isel) > 0)
+        Menu::smplup();
+    else
+    if (_sz > 0) {
+        auto &fst = _d[0];
+        auto r = fst.r.nextme();
+        if (r) {
+            for (auto i=MENU_LOGBOOK_SIZE-1; i > 0; i--)
+                _d[i] = _d[i-1];
+            fst.r = r;
+            r.read(fst.l);
+        }
+        else
+        if (_isel > 0)
+            Menu::smplup();
+    }
+}
+
+void MenuLogBook::smpldn() {
+    updtout();
+    
+    if (ipos(_isel) < static_cast<int>(_sz)-1)
+        Menu::smpldn();
+    else
+    if (_sz >= MENU_LOGBOOK_SIZE) {
+        auto &lst = _d[_sz-1];
+        auto r = lst.r.prevme();
+        if (r) {
+            for (auto i=1; i < MENU_LOGBOOK_SIZE; i++)
+                _d[i-1] = _d[i];
+            lst.r = r;
+            r.read(lst.l);
+        }
+    }
+}
+
+#endif // if HWVER >= 2
 
 
 void MenuLogBook::MenuLogBookInfo::updinf() {
     int i = _s.ipos(_s._isel);
     _l =
         (i >= 0) && (i < MENU_LOGBOOK_SIZE) ?
+#if HWVER < 2
             _s._d[i] :
+#else
+            _s._d[i].l :
+#endif
             LogBook::item_t();
 }
 
-MenuLogBook::MenuLogBookInfo::MenuLogBookInfo(MenuLogBook &s) : _s(s)
+MenuLogBook::MenuLogBookInfo::MenuLogBookInfo(MenuLogBook &s) :
+    _s(s)
 {
     updinf();
 }
@@ -109,7 +170,7 @@ void MenuLogBook::MenuLogBookInfo::smplup() {
     _s.smplup();
     int i = _s.ipos(_s._isel);
     if ((i < 0) || (i >= MENU_LOGBOOK_SIZE))
-        _s.smplup(); // попали на exit, кликнем ещё
+        _s.smpldn(); // попали на exit, вернём обратно
     updinf();
 }
 
@@ -117,7 +178,7 @@ void MenuLogBook::MenuLogBookInfo::smpldn() {
     _s.smpldn();
     int i = _s.ipos(_s._isel);
     if ((i < 0) || (i >= MENU_LOGBOOK_SIZE))
-        _s.smpldn(); // попали на exit, кликнем ещё
+        _s.smplup(); // попали на exit, вернём обратно
     updinf();
 }
 

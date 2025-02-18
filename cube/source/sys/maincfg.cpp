@@ -12,6 +12,8 @@
     
 Config cfg;
 
+#if HWVER < 2
+
 typedef struct __attribute__((__packed__)) {
     uint8_t id;
     uint8_t ver;
@@ -53,7 +55,12 @@ static int efind(hdr_t &h) {
     return -1;
 }
 
+#endif // if HWVER < 2
+
 void Config::init() {
+
+#if HWVER < 2
+
     hdr_t h;
     // ищем валидный блок с данными
     auto p = efind(h);
@@ -63,9 +70,23 @@ void Config::init() {
         uint16_t sz = h.sz < sizeof(data_t) ? h.sz : sizeof(data_t);
         memcpy(&d, const_cast<uint8_t *>(reinterpret_cast<__IO uint8_t *>(CONFIG_ADDR + p + sizeof(hdr_t))), sz);
     }
+
+#else // if HWVER < 2
+
+    data_t d;
+
+    auto r = iflash::last(iflash::TYPE_CONFIG);
+    if (r.read(d)) {
+        CONSOLE("config found on: 0x%06x", r.addr()-_FLASH_BASE);
+    }
+
+#endif
+
     cfg._d      = d;
     cfg._chg    = false;
 }
+
+#if HWVER < 2
 
 static bool esave(int p, const Config::data_t &data) {
     if (p > 0) {
@@ -123,10 +144,14 @@ static bool esave(int p, const Config::data_t &data) {
     return iflash::writecks(p, d, sizeof(hdr_t));
 }
 
+#endif // HWVER < 2
+
 bool Config::save() {
     if (!_chg)
         return true;
-    
+
+#if HWVER < 2
+
     hdr_t h;
     // ищем валидный блок с данными
     auto p = efind(h);
@@ -141,6 +166,19 @@ bool Config::save() {
 
     if (!_l || !esave(p, _d))
         return false;
+
+#else // if HWVER < 2
+
+    auto r = iflash::save(_FLASH_TYPE_CONFIG, _d);
+    if (r) {
+        CONSOLE("config saving to: page=0x%06x, addr=0x%04x", r.page().num(), r.a());
+    }
+    else {
+        CONSOLE("config saving FAIL");
+        return false;
+    }
+
+#endif // if HWVER < 2
     
     _chg = false;
     return true;

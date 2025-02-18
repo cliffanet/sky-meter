@@ -350,6 +350,7 @@ class MenuTimeEdit : public MenuModal {
 
 #include "../jump/logbook.h"
 #include "../sdcard/saver.h"
+#include "../sys/iflash.h"
 extern "C"
 void Error_Handler(void);
 
@@ -401,11 +402,14 @@ static const MenuStatic::el_t _system[] = {
     {
         .name   = "logbook test",
         .enter  = [] {
-            LogBook::beg_cnp(15500, 1000);
-            LogBook::end(0);
+            new MenuConfirm([] () {
+                LogBook::beg_cnp(15500, 1200 + (((tmRand()/1000)%16) * 100));
+                LogBook::end(0);
+            });
         },
         //.showval= [] (char *v) { vyesno(v, HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_6)); }
     },
+#if HWVER < 2
     {
         .name   = "chg hi",
         .enter  = [] { HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_15); },
@@ -416,6 +420,13 @@ static const MenuStatic::el_t _system[] = {
         .enter  = [] { HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6); },
         .showval= [] (char *v) { vyesno(v, HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_6)); }
     },
+#else // if HWVER < 2
+    {
+        .name   = "chg hi",
+        .enter  = [] { HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_13); },
+        .showval= [] (char *v) { vyesno(v, HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_13)); }
+    },
+#endif // if HWVER < 2
     {
         .name   = "test fatal",
         .enter  = [] { new MenuConfirm(Error_Handler); },
@@ -428,6 +439,26 @@ static const MenuStatic::el_t _system[] = {
         .name   = "test memory fail",
         .enter  = [] { new MenuConfirm([] () { char s[] = ""; CONSOLE("s: %s", s+20); free(s); }); },
     },
+/*
+    {
+        .name   = "flash fill",
+        .enter  = [] { new MenuConfirm([] () { 
+            uint32_t n = 0;
+            while (auto r = iflash::last(iflash::TYPE_ANY)) {
+                if (r.ispgend())
+                    break;
+                auto a = r.addr() - r.page().addr(0);
+                if (a >= _FLASH_PAGE_SIZE - 50)
+                    break;
+                (*cfg)->jmpcnt ++;
+                cfg.save();
+                n++;
+                if (n>=500)
+                    break;
+            }
+        }); },
+    },
+*/
     {
         .name   = "sdcard",
         .enter  = [] { sdcard_save(); },

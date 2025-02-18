@@ -89,7 +89,7 @@ Menu::~Menu() {
     if (_menu == NULL)
         clear();
     else
-        _tout = _menu->timeout();
+        updtout();
 }
 
 int16_t Menu::ipos(int16_t i) {
@@ -167,7 +167,7 @@ void Menu::draw(DSPL_ARG) {
 }
 
 void Menu::smplup() {
-    _tout = _menu->timeout();
+    updtout();
 
     _isel --;
     if (_isel >= 0) {
@@ -182,7 +182,7 @@ void Menu::smplup() {
 }
 
 void Menu::smpldn() {
-    _tout = _menu->timeout();
+    updtout();
     
     _isel ++;
     if (_isel < static_cast<int16_t>(_sz)) {
@@ -199,7 +199,7 @@ void Menu::smpldn() {
 }
 
 void Menu::smplsel() {
-    _tout = _menu->timeout();
+    updtout();
     
     auto i = ipos(_isel);
     if (i < 0)
@@ -248,6 +248,10 @@ void Menu::modalset(MenuModal *m) {
 void Menu::modaldel(MenuModal *m) {
     if (_modal == m)
         _modal = NULL;
+}
+
+void Menu::updtout() {
+    _tout = _menu->timeout();
 }
 
 #endif // USE_MENU

@@ -7,21 +7,30 @@
 
 #include "menu.h"
 #include "../jump/logbook.h"
+#if HWVER >= 2
+#include "../sys/iflash.h"
+#endif
 
 #if defined(USE_MENU) && defined(USE_LOGBOOK)
 
-#define MENU_LOGBOOK_SIZE   10
+#define MENU_LOGBOOK_SIZE   MENU_STR_COUNT
 #define MENU_LOGBOOK_NEXT   (MENU_LOGBOOK_SIZE / 2)
 
 class MenuLogBook : public Menu {
-    size_t sz() { return _sz + (_prv > 0 ? 1 : 0) + (_nxt > 0 ? 1 : 0); }
+    size_t sz() { return _sz; }
     void title(char *s);
     void str(line_t &s, int16_t i);
     void onsel(int16_t i);
 
     size_t _sz;
+#if HWVER < 2
     LogBook::item_t _d[MENU_LOGBOOK_SIZE];
-    uint32_t _prv, _nxt;
+#else
+    struct {
+        iflash::Rec     r;
+        LogBook::item_t l;
+    } _d[MENU_LOGBOOK_SIZE];
+#endif
 
     class MenuLogBookInfo : public Menu {
         MenuLogBook &_s;
@@ -38,6 +47,10 @@ class MenuLogBook : public Menu {
 
     public:
         MenuLogBook();
+#if HWVER >= 2
+        void smplup();
+        void smpldn();
+#endif
 };
 
 #endif // defined(USE_MENU) && defined(USE_LOGBOOK)

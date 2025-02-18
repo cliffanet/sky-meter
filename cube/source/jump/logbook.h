@@ -2,10 +2,14 @@
 #define _jump_logbook_H
 
 #include "../def.h"
+#if HWVER < 2
 #include "../sys/iflash.h"
+#endif
 #include "../sys/clock.h"
 
 #ifdef USE_LOGBOOK
+
+#if HWVER < 2
 
 #define LOGBOOK_JUMPCOUNT   100
 #define LOGBOOK_ITSZ        _FLASH_WBLK_ALIGN(sizeof(LogBook::item_t) + 4)
@@ -14,6 +18,8 @@
 #define LOGBOOK_ADDR        (LOGBOOK_AEND - LOGBOOK_SIZE)
 
 #define LOGBOOK_HDR         '@'
+
+#endif // if HWVER < 2
 
 namespace LogBook {
     typedef struct __attribute__((__packed__)) {
@@ -40,7 +46,9 @@ namespace LogBook {
 
     LogBook::item_t end(uint32_t ms);
 
+    #if HWVER < 2
     uint32_t findprv(uint32_t addr, item_t &item);
+    #endif
 
 } // namespace LogBook
 
