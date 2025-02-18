@@ -323,7 +323,7 @@ private:
 
 class AltSleep {
     float _pressgnd = 0, _altlast = 0;
-    uint8_t _toffcnt = 0;
+    int16_t _toffcnt = 0;
     bool _istoff = false;
 public:
     const bool  istoff()    const { return _istoff; }
