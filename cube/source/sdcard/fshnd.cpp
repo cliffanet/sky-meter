@@ -8,7 +8,19 @@
 extern "C"
 void disk_poweroff();
 
+#if HWVER >= 2
+#include "../sys/stm32drv.h"
+extern "C" {
+    //void sdcard_on();
+    //void sdcard_off();
+}
+#endif
+
 FSMount::FSMount(const char *path) {
+#if HWVER >= 2
+    //sdcard_on();
+    //HAL_Delay(200);
+#endif
     strncpy(_path, path, sizeof(_path));
     _path[sizeof(_path)-1] = '\0';
 
@@ -22,12 +34,13 @@ FSMount::FSMount(const char *path) {
 
 FSMount::~FSMount() {
     FRESULT r = f_mount(NULL, _path, 0);
-    if (r == FR_OK)
-        disk_poweroff();
-    else
+    if (r != FR_OK)
         CONSOLE("Unmount failed, res = %d", r);
     
     CONSOLE("unmount: %d", r);
+#if HWVER >= 2
+    //sdcard_off();
+#endif
 }
 
 FSMount::ctype_t FSMount::ctype() {

@@ -97,7 +97,9 @@ void set(draw_t draw, tick_t tick) {
 }
 
 void on() {
+#if HWVER < 2
     pwr::hwen(true);
+#endif
 
     /*
     GPIO_InitTypeDef GPIO_InitStruct = {0};
@@ -137,7 +139,9 @@ void off() {
     */
     //HAL_GPIO_WritePin(DSPL_PIN_DC,   GPIO_PIN_RESET);
     //HAL_GPIO_WritePin(DSPL_PIN_RST,  GPIO_PIN_RESET);
+#if HWVER < 2
     pwr::hwen(false);
+#endif
 }
 
 void lightTgl() {

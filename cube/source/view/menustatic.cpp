@@ -389,6 +389,7 @@ static const MenuStatic::el_t _system[] = {
     },
 
 #ifdef USE_DEVMENU
+#if HWVER < 2
     {
         .name   = "led red",
         .enter  = [] { HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_3); },
@@ -399,6 +400,18 @@ static const MenuStatic::el_t _system[] = {
         .enter  = [] { HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_4); },
         .showval= [] (char *v) { vyesno(v, HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_4)); }
     },
+#else // if HWVER < 2
+{
+    .name   = "led red",
+    .enter  = [] { HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_0); },
+    .showval= [] (char *v) { vyesno(v, HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0)); }
+},
+{
+    .name   = "led blue",
+    .enter  = [] { HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_1); },
+    .showval= [] (char *v) { vyesno(v, HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_1)); }
+},
+#endif // if HWVER < 2
     {
         .name   = "logbook test",
         .enter  = [] {
@@ -425,6 +438,16 @@ static const MenuStatic::el_t _system[] = {
         .name   = "chg hi",
         .enter  = [] { HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_13); },
         .showval= [] (char *v) { vyesno(v, HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_13)); }
+    },
+    {
+        .name   = "sdcard en",
+        .enter  = [] { HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_4); },
+        .showval= [] (char *v) { vyesno(v, HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_4)); }
+    },
+    {
+        .name   = "sdcard cs",
+        .enter  = [] { HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_3); },
+        .showval= [] (char *v) { vyesno(v, HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_3)); }
     },
 #endif // if HWVER < 2
     {

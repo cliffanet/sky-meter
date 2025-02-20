@@ -21,7 +21,9 @@ namespace pwr {
     
     void init();
     void off();
+#if HWVER < 2
     void hwen(bool en);
+#endif
 };
 
  extern "C" {

@@ -22,24 +22,25 @@
 extern SPI_HandleTypeDef hspi1;
 extern RTC_HandleTypeDef hrtc;
 
-static void clk_chg(uint32_t BaudRatePrescaler) {
+static uint32_t clk_chg(uint32_t BaudRatePrescaler) {
+	uint32_t _prv = hspi1.Instance->CR1 & SPI_CR1_BR_Msk;
     WRITE_REG(
         hspi1.Instance->CR1,
         (READ_REG(hspi1.Instance->CR1) & ~SPI_CR1_BR_Msk) | (BaudRatePrescaler & SPI_CR1_BR_Msk)
     );
+	return _prv;
 }
-static void clk_slow() {
-    clk_chg(SPI_BAUDRATEPRESCALER_256);
+static uint32_t clk_slow() {
+    return clk_chg(SPI_BAUDRATEPRESCALER_256);
 }
+
+/*
+static void clk_fast() {
+    clk_chg(SPI_BAUDRATEPRESCALER_16);
+}
+*/
 
 #if HWVER < 2
-static void clk_fast() {
-    clk_chg(SPI_BAUDRATEPRESCALER_8);
-}
-
-#define sdcard_on()
-#define sdcard_off()
-
 static void cs_hi() {
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_4, GPIO_PIN_SET);
 }
@@ -47,16 +48,14 @@ static void cs_lo() {
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_4, GPIO_PIN_RESET);
 }
 #else
-static void clk_fast() {
-    clk_chg(SPI_BAUDRATEPRESCALER_4);
-}
-
+/*
 static void sdcard_on() {
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_SET);
 }
 static void sdcard_off() {
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_RESET);
 }
+*/
 
 static void cs_hi() {
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
@@ -402,9 +401,7 @@ DSTATUS disk_initialize (
 
 	if (Stat & STA_NODISK) return Stat;	/* Is card existing in the soket? */
 
-	sdcard_on();
-
-	clk_slow();
+	uint32_t cperv = clk_slow();
     
     cs_hi();
     for (uint8_t i = 0; i < 20; i++) {
@@ -421,7 +418,7 @@ DSTATUS disk_initialize (
     Stat = STA_NOINIT;
     if (send_cmd_(CMD0, 0) != 1) { /* Put the card SPI/Idle state */
         deselect();
-        clk_fast();
+        clk_chg(cperv);
         CONSOLE("IDLE failed");
         return Stat;
     }		
@@ -432,7 +429,7 @@ DSTATUS disk_initialize (
     if (send_cmd_recv(CMD8, 0x1AA, ocr, 4) == 1) {	/* SDv2? */
         if (ocr[2] == 0x01 && ocr[3] == 0xAA) {				/* Is the card supports vcc of 2.7-3.6V? */
             if ((send_cmd_recv(CMD58, 0, ocr, 4) != 1) || !(ocr[1] & (1 << 4))) {
-                clk_fast();
+				clk_chg(cperv);
                 CONSOLE("READ_OCR failed: 0x%02x%02x%02x%02x", ocr[0], ocr[1], ocr[2], ocr[3]);
                 return Stat;
             }
@@ -470,13 +467,9 @@ DSTATUS disk_initialize (
 	if (CardType)			/* OK */
 		Stat &= ~STA_NOINIT;	/* Clear STA_NOINIT flag */
 	
-    clk_fast();			/* Set fast clock */
+    clk_chg(cperv);			/* Set fast clock */
 
 	return Stat;
-}
-
-void disk_poweroff() {
-	sdcard_off();
 }
 
 
