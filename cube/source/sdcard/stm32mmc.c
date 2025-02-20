@@ -423,6 +423,7 @@ DSTATUS disk_initialize (
         return Stat;
     }		
     deselect();
+	HAL_Delay(100);
 
     TMR(1000);  						/* Initialization timeout = 1 sec */
 	BYTE ocr[4];

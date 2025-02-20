@@ -5,9 +5,6 @@
 
 #include "../ff/diskio.h"
 
-extern "C"
-void disk_poweroff();
-
 #if HWVER >= 2
 #include "../sys/stm32drv.h"
 extern "C" {
