@@ -34,8 +34,9 @@ class BMP280 {
 
     TransWire &_dev;
 
-    uint16_t read16le(uint8_t reg);
-    uint32_t read24(uint8_t reg);
+    bool read16le(uint8_t reg, uint16_t &v);
+    bool read16le(uint8_t reg, int16_t &v);
+    bool read24(uint8_t reg, int32_t &v);
 
     struct {
         uint16_t    t1;
@@ -52,9 +53,9 @@ class BMP280 {
         int16_t     p8;
         int16_t     p9;
     } _calib;
-    void calib();
+    bool calib();
 
-    int32_t tempfine(); 
+    bool tempfine(int32_t &v);
 
     public:
         BMP280(TransWire &_dev);
@@ -129,8 +130,8 @@ class BMP280 {
 
         bool reset();
 
-        float temp();
-        float press();
+        bool temp(float &v);
+        bool press(float &v);
 };
 
 

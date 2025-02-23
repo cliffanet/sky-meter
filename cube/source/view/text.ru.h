@@ -50,6 +50,8 @@ extern const uint8_t u8g2_font_robotobd_08_tx[] U8G2_FONT_SECTION("u8g2_font_rob
 #define TXT_TEST_PRESSID            "ID барометра"
 #define TXT_TEST_PRESSURE           "Давление"
 #define TXT_TEST_PRESSVAL           "(%0.0f Па) %s"
+#define TXT_TEST_PTEMP              "Температура"
+#define TXT_TEST_PTEMPVAL           "%0.1f"
 #define TXT_TEST_LIGHT              "Подсветка"
 #define TXT_TEST_SDCARD             "SD карта"
 

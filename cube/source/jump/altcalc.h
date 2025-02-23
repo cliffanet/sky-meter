@@ -26,6 +26,7 @@ class AltBuf {
 
     // очередное полученное значение давления и интервал в ms после предыдущего вычисления
     void tick(float alt, uint16_t ms);
+    void clear();
 
     // суммарный интервал времени, за которое собраны данные
     const uint32_t  interval()  const;
@@ -80,7 +81,7 @@ float press2alt(float pressgnd, float pressure);
 class AltCalc {
     AltBuf _b;
     ring<float, AC_DATA_COUNT> _press;
-    float _pressgnd = 101325;
+    float _pressgnd = 0;
 
 public:
     const AltBuf &      buf()   const { return _b; }
@@ -90,6 +91,7 @@ public:
     // Текущее давление у земли
     const float     pressgnd()  const { return _pressgnd; }
     const bool      isinit()    const { return !_b->full(); }
+    const bool      isempty()   const { return _b->empty(); }
     // Текущее давление
     const float     press()     const { return _press.size() > 0 ? _press.last() : 0; }
         
@@ -99,6 +101,7 @@ public:
     // сбрасывает "ноль" высоты в текущие показания и обнуляет все состояния
     void gndreset();
     void gndset(float press, uint16_t ms = 100);
+    void clear();
 };
 
 /**************************************************************************/

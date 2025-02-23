@@ -43,6 +43,8 @@
 #define TXT_TEST_BATTCHARGE         "Batt charge"
 #define TXT_TEST_PRESSID            "Press ID"
 #define TXT_TEST_PRESSURE           "Pressure"
+#define TXT_TEST_PTEMP              "Temp"
+#define TXT_TEST_PTEMPVAL           "%0.1f"
 #define TXT_TEST_PRESSVAL           "(%0.0f Pa) %s"
 #define TXT_TEST_LIGHT              "Light test"
 #define TXT_TEST_SDCARD             "SD-card"

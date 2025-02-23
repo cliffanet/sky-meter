@@ -11,7 +11,7 @@
 
 void AltBuf::tick(float alt, uint16_t ms) {
     if (_buf.empty())
-        _alt0 = 0;
+        _alt0 = alt;
     else
     if (_buf.full())
         _alt0   = _buf.frst().alt;
@@ -20,6 +20,11 @@ void AltBuf::tick(float alt, uint16_t ms) {
         ms,
         alt
     });
+}
+
+void AltBuf::clear() {
+    _alt0 = 0;
+    _buf.clear();
 }
 
 const uint32_t AltBuf::interval() const {
@@ -126,13 +131,13 @@ float press2alt(float pressgnd, float pressure) {
 }
 
 void AltCalc::tick(float press, uint16_t ms) {
-    bool full = _b->full();
     _press.push(press);
     
-    if (!full)
+    if (_pressgnd > 1000)
+        _b.tick(press2alt(_pressgnd, press), ms);
+    else
+    if (_press.size() > 5)
         gndreset();
-
-    _b.tick(press2alt(_pressgnd, press), ms);
 }
 
 void AltCalc::gndreset() {
@@ -145,6 +150,29 @@ void AltCalc::gndreset() {
 
 void AltCalc::gndset(float press, uint16_t ms) {
     _pressgnd = press;
+    /*
+        Попробуем больше не забивать принудительно буфер.
+
+        Работаем теперь по принципу, что даже если буфер
+        не заполнен, он планомерно забивается в рабочем
+        режиме. Это надо, чтобы не было глюков типа когда
+        выходим из сна (например в подъёме), у нас не было
+        медленного пересчёта до текущей высоты, а сразу
+        будет считаться текущее нормальное значение.
+
+        Да, у нас останется одно главное ограничение -
+        пока буфер не заполнен (мы в инициализации),
+        автоматика не будет пытаться переключиться
+        в takeoff. Но высоту будет хотябы правильную показывать.
+
+        А забиванием буфера, мы создаём ситуацию, что пока
+        не заполнится весь буфер, он будет выводить среднее
+        значение сильно ниже реального.
+
+        Помимо этого, надо будет сделать, чтобы при переходе
+        в сон и обратно буфер всегда чистился, т.к. там
+        уже просроченные данные.
+
     // если мы делаем gndset ещё до полной инициализации,
     // забиваем массив данных текущим давлением, 
     // тем самым мы принудительно завершаем инициализацию
@@ -152,6 +180,12 @@ void AltCalc::gndset(float press, uint16_t ms) {
         _press.push(press);
     while (!_b->full())
         _b.tick(press, ms);
+    */
+}
+
+void AltCalc::clear() {
+    _press.clear();
+    _b.clear();
 }
 
 /*******************************
@@ -602,7 +636,7 @@ void AltStrict::reset() {
 
 #include "../sys/log.h"
 void AltSleep::tick(float press) {
-    if (_istoff || (_pressgnd == 0)) {
+    if (_istoff || (_pressgnd < 1000)) {
         clear();
         _pressgnd = press;
         return;

@@ -94,6 +94,7 @@ static int _lmin = 0, _lmax = 0;
         
         char s[strsz], m[strsz], t[strsz];
 
+    if (!_ac.isempty()) {
         // info
         DSPL_FONT(u8g2_font_6x13B_tr);
 
@@ -125,14 +126,20 @@ static int _lmin = 0, _lmax = 0;
         sprn("s[%d]:%s(%s)", _jstr.prof().num(), modestr(m, _jstr.mode()), strtm(t, _jstr.tm()));
         DSPL_STR(DSPL_S_RIGHT(s)-15, DSPL_DHEIGHT-1, s);
 #endif // USE_JMPINFO
+
+    }
+
+        // alt
+        if (_ac.isempty())
+            sprn("-");
+        else
+            sprn("%d", alt());
         
         switch (page) {
             case 0: {
                 // alt
                 DSPL_FONT(u8g2_font_logisoso62_tn);
-                sprn("%d", alt());
                 DSPL_STR(DSPL_S_RIGHT(s), 80, s);
-
             }
             break;
 #ifdef USE_JMPTRACE
@@ -141,7 +148,6 @@ static int _lmin = 0, _lmax = 0;
                 DSPL_FONT(u8g2_font_fub20_tr);
 
                 int y = DSPL_S_HEIGHT;
-                sprn("%d", alt());
                 DSPL_STR(90-DSPL_S_WIDTH(s), y, s);
 
                 // вертикальная шкала
@@ -232,8 +238,11 @@ namespace jmp {
         return _bmp.chipid();
     }
 
-    float press() {
-        return _bmp.press();
+    bool press(float &v) {
+        return _bmp.press(v);
+    }
+    bool temp(float &v) {
+        return _bmp.temp(v);
     }
 
     AltJmp::mode_t mode() {
@@ -255,7 +264,9 @@ namespace jmp {
     void sleep() {
         _slp.clear();
         _slp.tick(_ac.pressgnd());
-        _slp.tick(_ac.press());
+        if (!_ac.isinit())
+            _slp.tick(_ac.press());
+        _ac.clear();
         _bmp.setctrl(BMP280::MODE_SLEEP, BMP280::SAMPLING_NONE, BMP280::SAMPLING_NONE);
         CONSOLE("saved");
     }
@@ -263,19 +274,25 @@ namespace jmp {
     bool sleep2toff(uint32_t ms) {
         if (!_bmp.setctrl()) {
             CONSOLE("NO BMP280");
+            _slp.clear();
             return false;
         }
         
-        auto press = _bmp.press();
+        float press;
+        if (!_bmp.press(press)) {
+            CONSOLE("ERROR BMP280");
+            _slp.clear();
+            return false;
+        }
         _slp.tick(press);
-        _ac.tick(press, ms);
-        _ac.gndset(_slp.pressgnd());
         if (!_slp.istoff()) {
             _bmp.setctrl(BMP280::MODE_SLEEP, BMP280::SAMPLING_NONE, BMP280::SAMPLING_NONE);
             return false;
         }
 
         CONSOLE("TAKEOFF _pressgnd: %0.2f", _slp.pressgnd());
+        _ac.tick(press, ms);
+        _ac.gndset(_slp.pressgnd());
         _jmp.reset(AltJmp::TAKEOFF);
 #ifdef USE_JMPINFO
         _sq.reset();
@@ -287,7 +304,13 @@ namespace jmp {
     }
 
     void tick(uint32_t ms) {
-        _ac.tick(_bmp.press(), ms);
+        float press;
+        if (!_bmp.press(press)) {
+            _ac.clear();
+            return;
+        }
+        _ac.tick(press, ms);
+
         static auto m = _jmp.mode();
         _jmp.tick(_ac);
         const bool chgmode = m != _jmp.mode();

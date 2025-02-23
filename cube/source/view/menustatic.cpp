@@ -98,12 +98,14 @@ static const MenuStatic::el_t _alt[] = {
     },
     {
         .name   = TXT_ALT_RESETGND,
-        .enter  = [] { new MenuConfirm(jmp::resetgnd); }
+        .enter  = [] { new MenuConfirm([] () { jmp::resetgnd(); jmp::resetmode(); }); }
     },
+    /*
     {
         .name   = TXT_ALT_RESETMODE,
         .enter  = [] { new MenuConfirm(jmp::resetmode); }
     }
+    */
 };
 
 static const MenuStatic::el_t _hwtest[] {
@@ -165,10 +167,28 @@ static const MenuStatic::el_t _hwtest[] {
         .enter = NULL,
         .showval = [] (char *txt) {
             char ok[16];
-            float press = jmp::press();
+            float p;
+            if (!jmp::press(p)) {
+                strcpy(txt, "-");
+                return;
+            }
             
-            vok(ok, (press > 60000) && (press < 150000));
-            snprintf(txt, MENUSZ_VAL, TXT_TEST_PRESSVAL, press, ok);
+            vok(ok, (p > 60000) && (p < 150000));
+            snprintf(txt, MENUSZ_VAL, TXT_TEST_PRESSVAL, p, ok);
+        },
+    },
+    {
+        .name = TXT_TEST_PTEMP,
+        .enter = NULL,
+        .showval = [] (char *txt) {
+            char ok[16];
+            float t;
+            if (!jmp::temp(t)) {
+                strcpy(txt, "-");
+                return;
+            }
+            
+            snprintf(txt, MENUSZ_VAL, TXT_TEST_PTEMPVAL, t);
         },
     },
     {
