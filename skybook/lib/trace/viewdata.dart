@@ -68,7 +68,7 @@ class TraceViewArea {
                 break;
         
         final r = <AxisItem>[];
-        final frst = (- _trans.point.dx) * _rcount / width;
+        final frst = -1 * _trans.point.dx * _rcount / width / _trans.scale;
         int val = (frst / dv).floor() * dv;
         while (true) {
             final px = x(val);
@@ -91,7 +91,7 @@ class TraceViewArea {
                 break;
         
         final r = <AxisItem>[];
-        final frst = _trans.point.dy * _rmaxalt / height;
+        final frst = _trans.point.dy * _rmaxalt / height / _trans.scale;
         int val = (frst / dv).floor() * dv;
         while (true) {
             final py = y(val);
