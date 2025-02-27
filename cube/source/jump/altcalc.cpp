@@ -4,6 +4,7 @@
 
 #include "altcalc.h"
 #include <math.h>
+#include "../sys/log.h"
 
 /*******************************
  *          AltBuf: базовые методы
@@ -146,10 +147,12 @@ void AltCalc::gndreset() {
     for (auto &p: _press)
         pr += p;
     _pressgnd = pr / _press.size();
+    CONSOLE("_pressgnd: %.2f", _pressgnd);
 }
 
 void AltCalc::gndset(float press, uint16_t ms) {
     _pressgnd = press;
+    CONSOLE("_pressgnd: %.2f", _pressgnd);
     /*
         Попробуем больше не забивать принудительно буфер.
 
@@ -186,6 +189,7 @@ void AltCalc::gndset(float press, uint16_t ms) {
 void AltCalc::clear() {
     _press.clear();
     _b.clear();
+    _pressgnd = 0;
 }
 
 /*******************************
@@ -634,7 +638,6 @@ void AltStrict::reset() {
  *          AltSleep
  *******************************/
 
-#include "../sys/log.h"
 void AltSleep::tick(float press) {
     if (_istoff || (_pressgnd < 1000)) {
         clear();

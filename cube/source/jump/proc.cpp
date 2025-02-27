@@ -303,6 +303,11 @@ namespace jmp {
         return true;
     }
 
+    void sleep2gnd() {
+        _ac.gndset(_slp.pressgnd());
+        _slp.clear();
+    }
+
     void tick(uint32_t ms) {
         float press;
         if (!_bmp.press(press)) {

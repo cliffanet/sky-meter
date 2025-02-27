@@ -46,6 +46,7 @@ namespace jmp {
 
     void sleep();
     bool sleep2toff(uint32_t ms);
+    void sleep2gnd();
 
     void tick(uint32_t ms);
 } // namespace jmp

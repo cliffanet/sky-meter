@@ -88,3 +88,11 @@
 7. Если всё скомпилировалось успешно, во вложенной директории build будет лежать файл sky-meter.stm32f411ceu.bin
 
 [Инструкция по обновлению прошивки](download.md#обновление-прошивки)
+
+
+## Предыдущая аппаратная версия
+
+- [плата v1.0](../hw/v1.0/sky-meter.v1.0.zip)
+- CubeMX файлы:
+    - [sky-meter.stm32g431cbu.ioc](../cube/sky-meter.stm32g431cbu.ioc) и [Makefile.stm32g431](../cube/Makefile.stm32g431)
+    - [sky-meter.stm32g473ceu.ioc](../cube/sky-meter.stm32g473ceu.ioc) и [Makefile.stm32g473](../cube/Makefile.stm32g473)

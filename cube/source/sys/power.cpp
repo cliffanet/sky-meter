@@ -135,7 +135,7 @@ static void _spi_on() {
 #endif // HWVER
 
     HAL_SPI_Init(&hspi1);
-    HAL_Delay(20); // на f411 между SPI-init и сбором с bmp280 без этой паузы показания зависают
+    HAL_Delay(50); // на f411 между SPI-init и сбором с bmp280 без этой паузы показания зависают
 }
 
 /* ------  power on/off  --------- */
@@ -266,10 +266,14 @@ static void _off() {
                             GPIO_PIN_9|GPIO_PIN_10||GPIO_PIN_11||GPIO_PIN_12|GPIO_PIN_15;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+    //HAL_GPIO_WritePin(GPIOA, GPIO_InitStruct.Pin, GPIO_PIN_RESET);
+    //HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+    HAL_GPIO_DeInit(GPIOA, GPIO_InitStruct.Pin);
     GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6|
                             GPIO_PIN_10|GPIO_PIN_10||GPIO_PIN_13||GPIO_PIN_14|GPIO_PIN_15;
-    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+    //HAL_GPIO_WritePin(GPIOB, GPIO_InitStruct.Pin, GPIO_PIN_RESET);
+    //HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+    HAL_GPIO_DeInit(GPIOB, GPIO_InitStruct.Pin);
 #endif
 }
 
@@ -435,7 +439,6 @@ void pwr_tick() {
             
             _spi_on();
             _on();
-            jmp::init();
             return;
 
         case PWR_SLEEP:
@@ -462,6 +465,7 @@ void pwr_tick() {
             while (Btn::ispushed())
                 asm("");
             _on();
+            jmp::sleep2gnd();
             return;
         
         case PWR_PASSIVE:
