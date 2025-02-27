@@ -14,6 +14,9 @@
 ***
 ## Внутри
 
+[![](doc/img/inside1.jpg)](doc/img/inside1.full.jpg)
+[![](doc/img/inside2.jpg)](doc/img/inside2.full.jpg)
+
 
 ***
 ## Документация
