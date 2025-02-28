@@ -18,7 +18,9 @@
 
 #ifndef FWVER_NUM
 #define FWVER_NUM           .dev
+#ifndef FWVER_DEBUG
 #define FWVER_DEBUG
+#endif
 #endif
 
 #ifndef FWVER_LANG

@@ -74,6 +74,7 @@ static void cs_lo() {
    Module Private Functions
 
 ---------------------------------------------------------------------------*/
+#include "../ff/ff.h"
 #include "../ff/diskio.h"
 
 
