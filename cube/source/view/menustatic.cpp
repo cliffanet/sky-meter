@@ -181,7 +181,6 @@ static const MenuStatic::el_t _hwtest[] {
         .name = TXT_TEST_PTEMP,
         .enter = NULL,
         .showval = [] (char *txt) {
-            char ok[16];
             float t;
             if (!jmp::temp(t)) {
                 strcpy(txt, "-");

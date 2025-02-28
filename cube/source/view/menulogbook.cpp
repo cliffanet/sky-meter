@@ -4,6 +4,7 @@
 
 #include "menulogbook.h"
 #include "../sys/maincfg.h"
+#include "../view/text.h"
 
 #include <string.h>
 

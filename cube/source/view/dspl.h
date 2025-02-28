@@ -39,7 +39,7 @@
 #else
 #define DSPL_STRU(x, y, s)      DSPL_STR(x, y, s)
 #define DSPL_PRNU(x, y, s, ...) DSPL_STR(x, y, s, ##__VA_ARGS__)
-#define DSPL_S_WIDTH(s)         u8g2_GetStrWidth(s)
+#define DSPL_S_WIDTH(s)         u8g2_GetStrWidth(u8g2, s)
 #endif
 
 #define DSPL_S_HEIGHT           u8g2_GetAscent(u8g2)

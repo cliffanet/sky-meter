@@ -9,6 +9,7 @@
 #include "menu.h"
 #include "../sys/log.h"
 #include "../view/btn.h"
+#include "../view/text.h"
 #include <string.h>
 
 MenuModal::MenuModal(uint8_t lncnt) :
