@@ -44,11 +44,9 @@ endif
 
 # lang
 ifeq ($(VLANG),R)
-BUILD_DIR := $(BUILD_DIR).ru
 TARGET := $(TARGET).ru
 endif
 ifeq ($(VLANG),E)
-BUILD_DIR := $(BUILD_DIR).en
 TARGET := $(TARGET).en
 endif
 
