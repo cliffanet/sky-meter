@@ -2,8 +2,8 @@
 
 Стабильная версия прошивки:
 
-* RU: [sky-meter.v1.0.stm32f411ceu.ru.bin](https://github.com/cliffanet/sky-meter/releases/download/v0.7.7/sky-meter.v1.0.stm32f411ceu.ru.bin)
-* EN: [sky-meter.v1.0.stm32f411ceu.en.bin](https://github.com/cliffanet/sky-meter/releases/download/v0.7.7/sky-meter.v1.0.stm32f411ceu.en.bin)
+* RU: [sky-meter.stm32f411ceu.v1.00.ru.bin](https://github.com/cliffanet/sky-meter/releases/download/v1.00/sky-meter.stm32f411ceu.v1.00.ru.bin)
+* EN: [sky-meter.stm32f411ceu.v1.00.en.bin](https://github.com/cliffanet/sky-meter/releases/download/v1.00/sky-meter.stm32f411ceu.v1.00.en.bin)
 
 ## Обновление прошивки
 
