@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-const char m_CRC7Table[] = {
+#include <stdint.h>
+
+const uint8_t m_CRC7Table[] = {
     0x00, 0x09, 0x12, 0x1B, 0x24, 0x2D, 0x36, 0x3F,
     0x48, 0x41, 0x5A, 0x53, 0x6C, 0x65, 0x7E, 0x77,
     0x19, 0x10, 0x0B, 0x02, 0x3D, 0x34, 0x2F, 0x26,
@@ -49,16 +51,15 @@ const char m_CRC7Table[] = {
     0x46, 0x4F, 0x54, 0x5D, 0x62, 0x6B, 0x70, 0x79
 };
 
-char CRC7(const char* data, int length)
-{
+uint8_t CRC7(const uint8_t *d, int sz) {
     char crc = 0;
-    for (int i = 0; i < length; i++) {
-        crc = m_CRC7Table[(crc << 1) ^ data[i]];
-    }
+    for (int i = 0; i < sz; i++)
+        crc = m_CRC7Table[(crc << 1) ^ d[i]];
+    
     return crc;
 }
 
-const unsigned short m_CRC16Table[256] = {
+const uint16_t m_CRC16Table[256] = {
     0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50A5, 0x60C6, 0x70E7,
     0x8108, 0x9129, 0xA14A, 0xB16B, 0xC18C, 0xD1AD, 0xE1CE, 0xF1EF,
     0x1231, 0x0210, 0x3273, 0x2252, 0x52B5, 0x4294, 0x72F7, 0x62D6,
@@ -93,11 +94,9 @@ const unsigned short m_CRC16Table[256] = {
     0x6E17, 0x7E36, 0x4E55, 0x5E74, 0x2E93, 0x3EB2, 0x0ED1, 0x1EF0
 };
 
-unsigned short CRC16(const char* data, int length)
-{
-    unsigned short crc = 0;
-    for (int i = 0; i < length; i++) {
-        crc = (crc << 8) ^ m_CRC16Table[((crc >> 8) ^ data[i]) & 0x00FF];
-    }
+uint16_t CRC16(const uint8_t *d, int sz) {
+    uint16_t crc = 0;
+    for (int i = 0; i < sz; i++)
+        crc = (crc << 8) ^ m_CRC16Table[((crc >> 8) ^ d[i]) & 0x00FF];
     return crc;
 }
