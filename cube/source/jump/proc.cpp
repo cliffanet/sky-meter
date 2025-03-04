@@ -267,7 +267,7 @@ namespace jmp {
         if (!_ac.isinit())
             _slp.tick(_ac.press());
         _ac.clear();
-        _bmp.setctrl(BMP280::MODE_SLEEP, BMP280::SAMPLING_NONE, BMP280::SAMPLING_NONE);
+        _bmp.sleep();
         CONSOLE("saved");
     }
 
@@ -286,13 +286,13 @@ namespace jmp {
         }
         _slp.tick(press);
         if (!_slp.istoff()) {
-            _bmp.setctrl(BMP280::MODE_SLEEP, BMP280::SAMPLING_NONE, BMP280::SAMPLING_NONE);
+            _bmp.sleep();
             return false;
         }
 
         CONSOLE("TAKEOFF _pressgnd: %0.2f", _slp.pressgnd());
-        _ac.tick(press, ms);
         _ac.gndset(_slp.pressgnd());
+        _ac.tick(press, ms);
         _jmp.reset(AltJmp::TAKEOFF);
 #ifdef USE_JMPINFO
         _sq.reset();
@@ -304,6 +304,8 @@ namespace jmp {
     }
 
     void sleep2gnd() {
+        if (_slp.isempty())
+            return;
         _ac.gndset(_slp.pressgnd());
         _slp.clear();
     }

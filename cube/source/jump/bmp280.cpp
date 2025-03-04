@@ -122,7 +122,12 @@ bool BMP280::setconf(ctrl_filter_t filter, ctrl_standby_t standby) {
     );
 }
 
-bool BMP280::reset() {
+bool BMP280::sleep() {
+    return setctrl(BMP280::MODE_SLEEP, BMP280::SAMPLING_NONE, BMP280::SAMPLING_NONE);
+}
+
+bool BMP280::reset()
+{
     return _dev.write8(REG_SOFTRESET, 0xB6);
 }
 

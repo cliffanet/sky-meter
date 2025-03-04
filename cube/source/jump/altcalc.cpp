@@ -639,7 +639,7 @@ void AltStrict::reset() {
  *******************************/
 
 void AltSleep::tick(float press) {
-    if (_istoff || (_pressgnd < 1000)) {
+    if (isempty()) {
         clear();
         _pressgnd = press;
         return;

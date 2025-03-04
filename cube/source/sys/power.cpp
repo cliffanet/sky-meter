@@ -12,6 +12,7 @@
 #include "../view/dspl.h"
 #include "../view/menu.h"
 
+//#define PWRDEBUG
 
 /* ------  RTC timer  --------- */
 extern RTC_HandleTypeDef hrtc;
@@ -256,8 +257,10 @@ static void _off() {
 #if HWVER >= 2
     HAL_ADC_DeInit(&hadc1);
 #endif
+#ifndef PWRDEBUG
     USBD_Stop(&hUsbDeviceFS);
     USBD_DeInit(&hUsbDeviceFS);
+#endif
 
 #if HWVER >= 2
     // Попробуем отключить все пины
@@ -289,7 +292,9 @@ static void _on() {
 
     HAL_ADC_Init(&hadc1);
 #endif
+#ifndef PWRDEBUG
     usb_init();
+#endif
 
     CONSOLE("init");
     pwr::init();
@@ -444,28 +449,47 @@ void pwr_tick() {
         case PWR_SLEEP:
             CONSOLE("sleep");
             _off();
-            _spi_off();
-
-            _stop();
-            CONSOLE("sleep resume: _tmr=%d", _tmr);
             
-            _spi_on();
+            while (true) {
+                _spi_off();
 
-            if (_tmr > 0) {
+#ifdef PWRDEBUG
+                while (_tmr == 0) asm("");
+#else
+                _stop();
+#endif
+                CONSOLE("sleep resume: _tmr=%d", _tmr);
+
+                _spi_on();
+
+                if (_tmr == 0) {
+                    // проснулись по кнопке, продолжаем инициализацию
+                    jmp::sleep2gnd(); // для ускорения инициализации высотомера
+                    // При уходе в сон мы сбрасываем буфер AltCalc и его _pressgnd.
+                    // Но при этом остаётся работать AltSleep и поддерживает свой
+                    // _pressgnd. При выходе из сна jmp::sleep2gnd() перекидывает
+                    // _pressgnd из AltSleep в AltCalc, это ускоряет его инициализацию.
+                    // Но делать это надо только при выходе по кнопке.
+                    // Выход по jmp::sleep2toff(...) сбрасывает AltSleep и его
+                    // _pressgnd становится уже неактуальным.
+                    break;
+                }
+
                 // проверка высотомера, не на до ли просыпаться
                 bool toff = jmp::sleep2toff(_tmr);
                 _tmr = 0;
-                if (!toff) {
-                    batt::tick(true);
-                    return;
-                }
+                if (toff)
+                    // проснулись по началу подъёма
+                    break;
+                
+                // продолжаем сон, но во сне всё равно обновляем состояние зарядки
+                batt::tick(true);
             }
 
             //CONSOLE("sleep end");
             while (Btn::ispushed())
                 asm("");
             _on();
-            jmp::sleep2gnd();
             return;
         
         case PWR_PASSIVE:

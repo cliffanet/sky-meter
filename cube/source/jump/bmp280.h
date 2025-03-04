@@ -128,6 +128,7 @@ class BMP280 {
         } ctrl_standby_t;
         bool setconf(ctrl_filter_t filter = FILTER_OFF, ctrl_standby_t standby = STANDBY_MS_1);
 
+        bool sleep();
         bool reset();
 
         bool temp(float &v);

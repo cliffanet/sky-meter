@@ -331,6 +331,7 @@ class AltSleep {
 public:
     const bool  istoff()    const { return _istoff; }
     const float pressgnd()  const { return _pressgnd; }
+    const bool  isempty()   const { return _pressgnd < 1000; }
 
     void tick(float press);
     void clear();
