@@ -65,9 +65,6 @@ static void MX_SPI1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-void GPIO_Init(void) {
-    MX_GPIO_Init();
-}
 
 /* USER CODE END 0 */
 

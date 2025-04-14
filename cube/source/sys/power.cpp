@@ -99,7 +99,7 @@ private:
 #define M(x)    (1 << x)
 
 public:
-    _PStop() :
+    _PStop(bool chgled = false) :
         _ssave(_sysr_get()),
         _a(GPIOA),
         _b(GPIOB),
@@ -119,15 +119,20 @@ public:
 
         // -------------------------
         _sysr_set(_snull);
-        _gpio_set(GPIOA
+        _gpio_set(GPIOA, ~(
+                        (chgled ? M(0) : 0UL)
 #ifdef PWRDEBUG // не трогаем: usb-пины
-                        , ~( M(11) | M(12) )
+                        | M(11) | M(12)
 #endif
-                );
-        _gpio_set(GPIOB, ~( M(7) | M(8) | M(9) | M(10) )); // не трогаем: кнопки и bmp280-cs
+            ));
+        // флаг chgled означает что нам надо сохранить зарядный индикатор, это:
+        // сам индикатор, сигнал с контроллера и переключатель быстрой зарядки
+        _gpio_set(GPIOB, ~( (chgled ? M(12) | M(13) : 0UL) | M(7) | M(8) | M(9) | M(10) )); // не трогаем: кнопки и bmp280-cs
         _gpio_set(GPIOC);
     }
     ~_PStop() {
+        SystemClock_Config();
+
         _a.rest(GPIOA);
         _b.rest(GPIOB);
         _c.rest(GPIOC);
@@ -138,6 +143,17 @@ public:
         Dspl::on();
         Btn::init();
         jmp::init();
+    }
+
+    static void stop() {
+        HAL_SuspendTick();
+        HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_STOPENTRY_WFI);
+        HAL_ResumeTick();
+    }
+
+    static void pause() {
+        stop();
+        SystemClock_Config();
     }
 
     // временное возобновление spi
@@ -294,13 +310,6 @@ static pwr_mode_t _mode() {
     return PWR_SLEEP;
 }
 
-static void _stop() {
-    HAL_SuspendTick();
-    HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_STOPENTRY_WFI);
-    HAL_ResumeTick();
-    SystemClock_Config();
-}
-
 /* ------  -------  --------- */
 
 namespace pwr {
@@ -384,31 +393,38 @@ void pwr_tick() {
 
             bool slp = true;
             while (slp) {
-#ifndef PWRDEBUG
+#ifdef PWRDEBUG
+                while (!Btn::ispushed()) asm("");
+#else
                 _tmr_stop();
-                _stop();
+                _s.stop();
 #endif
                 CONSOLE("power resume: _tmr=%d", _tmr);
 
-                uint32_t beg = HAL_GetTick();
+                uint32_t c = 0;
                 while (Btn::ispushed())
-                    if (slp && ((HAL_GetTick() - beg) > 2000)) {
+                    if (slp && (c > 400000)) {
+                        // рассчёт счётчика:
+                        // при нормальном тактировании 96МГц тут 1млн ~ 0.8сек
+                        // базовое тактирование (? видимо 16МГц) имперически - примерно в 6 раз медленнее
                         CONSOLE("power on: _tmr=%d", _tmr);
                         slp = false;
                     }
+                    else
+                        c++;
             }
             return;
         }
 
         case PWR_SLEEP: {
             CONSOLE("sleep");
-            _PStop _s;
+            _PStop _s(true);
             
             for (;;) {
 #ifdef PWRDEBUG
                 while (_tmr == 0) asm("");
 #else
-                _stop();
+                _s.stop();
 #endif
                 CONSOLE("sleep resume: _tmr=%d", _tmr);
 
@@ -447,7 +463,7 @@ void pwr_tick() {
         }
         
         case PWR_PASSIVE:
-            _stop();
+            _PStop::pause();
             return;
         
         default:
