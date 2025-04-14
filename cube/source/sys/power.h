@@ -29,6 +29,7 @@ namespace pwr {
  extern "C" {
 #endif
 
+void pwr_preinit();
 void pwr_tick();
 
 #ifdef __cplusplus

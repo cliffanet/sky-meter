@@ -96,6 +96,8 @@ int main(void)
 
   /* USER CODE BEGIN SysInit */
 
+    pwr_preinit();
+
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */

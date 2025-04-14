@@ -38,116 +38,123 @@ static void _tmr_set(uint32_t ms) {
     HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, ms*2048/1000-1, RTC_WAKEUPCLOCK_RTCCLK_DIV16);
 }
 
-/* ------  spi on/off  --------- */
-// нам надо отдельно вкл/выкл spi во сне,
-// чтобы проверять барометр
+/* ------  register management  --------- */
 
-extern SPI_HandleTypeDef hspi1;
+// класс гашения перефирии
+// при создании класса все нужные системные регистры сохраняются в нём и обнуляются
+// при уничтожении класса регистры восстанавливаются
+typedef struct {
+    ADC_TypeDef             adc;
+    SPI_TypeDef             spi;
+    USB_OTG_GlobalTypeDef   usb;
+} sysr_t;
+static sysr_t _snull;
 
-static void _spi_off() {
-    // spi даёт 0.22 mA
-    HAL_SPI_DeInit(&hspi1);
-    // Почему-то, до отключения spi подключение/отключение
-    // дисплея (весь шлейф) добавляло около 0.1 мА.
-    // Но после отключения spi отключение шлейфа дисплея
-    // наоборот увеличивает потребление с 0.2 мА до 0.5 мА
-#if HWVER < 2
-    // SPI
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_RESET);
-    // bmp280 cs
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
-    // display cs
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_11, GPIO_PIN_RESET);
-    // sdcard cs
-    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_4, GPIO_PIN_RESET);
-    GPIO_InitTypeDef GPIO_InitStruct = {0};
-    GPIO_InitStruct.Pin = GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7;
-    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-    GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_11;
-    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-    GPIO_InitStruct.Pin = GPIO_PIN_4;
-    HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-#else
-    /*
-    // SPI
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_RESET);
-    // bmp280 cs
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_RESET);
-    // display cs
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_RESET);
-    // sdcard cs
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
-    // sdcard en
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_RESET);
-    */
-    GPIO_InitTypeDef GPIO_InitStruct = {0};
-    GPIO_InitStruct.Pin = GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_4|GPIO_PIN_3;
-    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-    GPIO_InitStruct.Pin = GPIO_PIN_10;
-    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-#endif // HWVER
+static inline sysr_t _sysr_get() {
+    return { *ADC1, *SPI1, *USB_OTG_FS };
+}
+static inline void _sysr_set(sysr_t r) {
+    *ADC1       = r.adc;
+    *SPI1       = r.spi;
+#ifndef PWRDEBUG
+    *USB_OTG_FS = r.usb;
+#endif
 }
 
-static void _spi_on() {
-#if HWVER < 2
-    // bmp280 cs
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
-    // display cs
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_11, GPIO_PIN_SET);
-    // sdcard cs
-    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_4, GPIO_PIN_SET);
-    GPIO_InitTypeDef GPIO_InitStruct = {0};
-    GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_11;
-    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-    GPIO_InitStruct.Pin = GPIO_PIN_4;
-    HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-#else
-    /*
-    // bmp280 cs
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET);
-    // display cs
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_SET);
-    // sdcard cs
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
-    // sdcard en
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_SET);
-    */
-    GPIO_InitTypeDef GPIO_InitStruct = {0};
-    GPIO_InitStruct.Pin = GPIO_PIN_8|GPIO_PIN_4|GPIO_PIN_3;
-    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-    GPIO_InitStruct.Pin = GPIO_PIN_10;
-    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-#endif // HWVER
+class _PStop {
+private:
+    sysr_t _ssave;
 
-    HAL_SPI_Init(&hspi1);
-    HAL_Delay(50); // на f411 между SPI-init и сбором с bmp280 без этой паузы показания зависают
-}
+    class _gpio {
+    public:
+        uint32_t mode, type, speed, pupd;
+        _gpio() : mode(0), type(0), speed(0), pupd(0) {}
+        _gpio(GPIO_TypeDef *gpio) :
+            mode    (gpio->MODER),
+            type    (gpio->OTYPER),
+            speed   (gpio->OSPEEDR),
+            pupd    (gpio->PUPDR)
+        {}
+        void rest(GPIO_TypeDef *gpio) {
+            gpio->PUPDR     = pupd;
+            gpio->MODER     = mode;
+            gpio->OSPEEDR   = speed;
+            gpio->OTYPER    = type;
+        }
+    };
+    _gpio _a, _b, _c;
+
+
+    static void _gpio_set(GPIO_TypeDef *gpio, uint16_t mask = 0xffff, uint32_t mode = 0xffffffff, uint32_t type = 0, uint32_t speed = 0, uint32_t pupd = 0) {
+        uint32_t msk2 = 0;
+        uint32_t f1 = 1, f2 = 3;
+        for (int n = 0; n < 32; n++, f1 <<= 1, f2 <<= 2)
+            if ((mask & f1) > 0)
+                msk2 |= f2;
+        gpio->PUPDR     = (gpio->PUPDR & (~msk2))   | (pupd & msk2);
+        gpio->MODER     = (gpio->MODER & (~msk2))   | (mode & msk2);
+        gpio->OSPEEDR   = (gpio->OSPEEDR & (~msk2)) | (speed& msk2);
+        gpio->OTYPER    = (gpio->OTYPER & (~mask))  | (type & mask);
+    }
+#define M(x)    (1 << x)
+
+public:
+    _PStop() :
+        _ssave(_sysr_get()),
+        _a(GPIOA),
+        _b(GPIOB),
+        _c(GPIOC)
+    {
+        while (Btn::ispushed())
+            asm("");
+        
+        _tmr = 0;
+    
+    #ifdef USE_MENU
+        Menu::clear();
+    #endif // USE_MENU
+        
+        Dspl::off();
+        Btn::sleep();
+
+        // -------------------------
+        _sysr_set(_snull);
+        _gpio_set(GPIOA
+#ifdef PWRDEBUG // не трогаем: usb-пины
+                        , ~( M(11) | M(12) )
+#endif
+                );
+        _gpio_set(GPIOB, ~( M(7) | M(8) | M(9) | M(10) )); // не трогаем: кнопки и bmp280-cs
+        _gpio_set(GPIOC);
+    }
+    ~_PStop() {
+        _a.rest(GPIOA);
+        _b.rest(GPIOB);
+        _c.rest(GPIOC);
+        _sysr_set(_ssave);
+
+        CONSOLE("init");
+        pwr::init();
+        Dspl::on();
+        Btn::init();
+        jmp::init();
+    }
+
+    // временное возобновление spi
+    // через класс нельзя, т.к. возврат (сброс) надо делать не всегда (лучше вручную)
+    void spion() {
+        *SPI1 = _ssave.spi;
+        _gpio_set(GPIOA, M(5) | M(6) | M(7),
+            _a.mode, _a.type, _a.speed, _a.pupd
+        );
+    }
+    void spioff() {
+        *SPI1 = _snull.spi;
+        _gpio_set(GPIOA, M(5) | M(6) | M(7));
+    }
+};
 
 /* ------  power on/off  --------- */
-
-//extern "C" void Error_Handler(void);
-#if HWVER >= 2
-extern ADC_HandleTypeDef hadc1;
-#endif // HWVER
-
-//#include "usbd_cdc_if.h"
-//extern USBD_HandleTypeDef hUsbDeviceFS;
 
 // Замеры:
 // В passive режиме цикл работы: 7 мс из 100
@@ -222,86 +229,37 @@ extern ADC_HandleTypeDef hadc1;
     кушает bmp280. В пустой прошивке нет возможности перевести bmp280 в сон.
     На полной прошивке опытным путём определил, если не уводить bmp в сон, это прибавляет
     примерно 0.6-0.8 мА к потреблению. А выпаивание bmp280 не даёт заметного уменьшения
-    потребления по сравнениб, когда bmp280 есть и он тоже уходит в сон. Это значит,
+    потребления по сравнению, когда bmp280 есть и он тоже уходит в сон. Это значит,
     что на полной прошивке почему-то не отключаются некоторые службы, которые
-    изначально не запускаются на полной прошивке.
+    изначально не запускаются на пустой прошивке.
 
+    _____________________________________________
+    Вторая попытка разобраться с f411.
+
+    Взял отдельную dev-плату на f401ret, удалось выяснить:
+        - очень много жрут пины, если их не переводить в нужные состояния
+        - потребление сильно растёт, если не включать тактирование блока пинов (особенно GPIOC)
+        - лучше всего снижается потребление при переключении пинов в analog (можно всем блоком)
+        - альтернативно (по ситуации) - включение на вход с подтяжкой к "+" или "-"
+        - если не делать подтяжку при режиме цифр-вход, состояние (триггер) прыгает и это сильно жрёт
+        - на голой прошивке на плате с f401ret удалось снизить потр. до 130 мкА, ниже никак (только режимом пинов)
+    
+    После этого вернулся к плате sky-meter v.2 и выяснилось, что больше всего жрет USB,
+    который почему-то не отключается - около 200+ мкА.
+    Удалось снизить потребление до 120-130мкА суммарно за счёт:
+        - перевода всех пинов в аналог (прям без разбора пачкой),
+        - отключением USB через изменение регистра  USB_OTG_FS
+            - запоминаем его значение до инициализации
+            - при отключении питания переписываем весь блок регистров на значение "до инициализации"
+    
+    Ниже 125 мкА уменьшить пока никак не удаётся. Как получились 60 мкА, непонятно. Тогда выпаивался bmp280,
+    но врядли он в спящем режиме 60+ мкА кушает.
+
+    Вообще, хорошей практикой, наверное будет для ухода в сон запоминать все нужные регистры,
+    полностью их сбрасывать и потом восстанавливать. Только оставить кнопки и CS-пины, подтянутые к верху.
+    Это даже удобнее, чем тащить сюда и работать с HAL-структурами и функциями вроде HAL_SPI_DeInit и т.п.
     
 */
-
-#include "usbd_cdc_if.h"
-extern USBD_HandleTypeDef hUsbDeviceFS;
-
-#if HWVER < 2
-extern "C" void MX_USB_Device_Init(void);
-#define usb_init()      MX_USB_Device_Init()
-#else
-extern "C" void MX_USB_DEVICE_Init(void);
-#define usb_init()      MX_USB_DEVICE_Init()
-#endif
-
-static void _off() {
-    while (Btn::ispushed())
-        asm("");
-    
-    _tmr = 0;
-
-#ifdef USE_MENU
-    Menu::clear();
-#endif // USE_MENU
-    
-    Dspl::off();
-    Btn::sleep();
-
-    // отключение usb и adc даёт не более 20 мкА
-#if HWVER >= 2
-    HAL_ADC_DeInit(&hadc1);
-#endif
-#ifndef PWRDEBUG
-    USBD_Stop(&hUsbDeviceFS);
-    USBD_DeInit(&hUsbDeviceFS);
-#endif
-
-#if HWVER >= 2
-    // Попробуем отключить все пины
-    GPIO_InitTypeDef GPIO_InitStruct = {0};
-    GPIO_InitStruct.Pin = GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7|GPIO_PIN_8|
-                            GPIO_PIN_9|GPIO_PIN_10||GPIO_PIN_11||GPIO_PIN_12|GPIO_PIN_15;
-    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    //HAL_GPIO_WritePin(GPIOA, GPIO_InitStruct.Pin, GPIO_PIN_RESET);
-    //HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-    HAL_GPIO_DeInit(GPIOA, GPIO_InitStruct.Pin);
-    GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6|
-                            GPIO_PIN_10|GPIO_PIN_10||GPIO_PIN_13||GPIO_PIN_14|GPIO_PIN_15;
-    //HAL_GPIO_WritePin(GPIOB, GPIO_InitStruct.Pin, GPIO_PIN_RESET);
-    //HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-    HAL_GPIO_DeInit(GPIOB, GPIO_InitStruct.Pin);
-#endif
-}
-
-#if HWVER >= 2
-extern "C"
-void GPIO_Init(void);
-#endif
-
-static void _on() {
-#if HWVER >= 2
-    // в _off мы отключаем все пины, поэтому проще их просто стандартно проинициировать
-    GPIO_Init();
-
-    HAL_ADC_Init(&hadc1);
-#endif
-#ifndef PWRDEBUG
-    usb_init();
-#endif
-
-    CONSOLE("init");
-    pwr::init();
-    Dspl::on();
-    Btn::init();
-    jmp::init();
-}
 
 typedef enum {
     PWR_OFF = 0,
@@ -372,8 +330,14 @@ namespace pwr {
 /* ------  -------  --------- */
 
 #ifdef __cplusplus
- extern "C"
+extern "C" {
 #endif
+
+void pwr_preinit() {
+    // тут сохраняем все регистры сразу после старта:
+    _snull = _sysr_get();;
+}
+
 void pwr_tick() {
     if (_tmr > 0) {
         jmp::tick(_tmr);
@@ -412,55 +376,41 @@ void pwr_tick() {
     }
     
     switch (_m) {
-        case PWR_OFF:
+        case PWR_OFF: {
             CONSOLE("power off");
-            _off();
             jmp::sleep();
-            _spi_off();
-            _tmr_stop();
 
-            _stop();
+            _PStop _s;
 
-            //HAL_ADC_DeInit(&hadc1);
-            //USBD_Stop(&hUsbDeviceFS);
-            //USBD_DeInit(&hUsbDeviceFS);
-            //HAL_SuspendTick();
-            //HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_STOPENTRY_WFI);
-            //HAL_PWREx_EnterSHUTDOWNMode();
-            CONSOLE("power resume: _tmr=%d", _tmr);
+            bool slp = true;
+            while (slp) {
+#ifndef PWRDEBUG
+                _tmr_stop();
+                _stop();
+#endif
+                CONSOLE("power resume: _tmr=%d", _tmr);
 
-            {
                 uint32_t beg = HAL_GetTick();
-                bool ok = false;
                 while (Btn::ispushed())
-                    if (!ok && ((HAL_GetTick() - beg) > 2000)) {
+                    if (slp && ((HAL_GetTick() - beg) > 2000)) {
                         CONSOLE("power on: _tmr=%d", _tmr);
-                        ok = true;
+                        slp = false;
                     }
-            
-                if (!ok)
-                    return;
             }
-            
-            _spi_on();
-            _on();
             return;
+        }
 
-        case PWR_SLEEP:
+        case PWR_SLEEP: {
             CONSOLE("sleep");
-            _off();
+            _PStop _s;
             
-            while (true) {
-                _spi_off();
-
+            for (;;) {
 #ifdef PWRDEBUG
                 while (_tmr == 0) asm("");
 #else
                 _stop();
 #endif
                 CONSOLE("sleep resume: _tmr=%d", _tmr);
-
-                _spi_on();
 
                 if (_tmr == 0) {
                     // проснулись по кнопке, продолжаем инициализацию
@@ -475,6 +425,8 @@ void pwr_tick() {
                     break;
                 }
 
+                _s.spion();
+
                 // проверка высотомера, не на до ли просыпаться
                 bool toff = jmp::sleep2toff(_tmr);
                 _tmr = 0;
@@ -484,13 +436,15 @@ void pwr_tick() {
                 
                 // продолжаем сон, но во сне всё равно обновляем состояние зарядки
                 batt::tick(true);
+                _s.spioff();
             }
 
             //CONSOLE("sleep end");
             while (Btn::ispushed())
                 asm("");
-            _on();
+            
             return;
+        }
         
         case PWR_PASSIVE:
             _stop();
@@ -500,3 +454,7 @@ void pwr_tick() {
             while (_tmr == 0) asm("");
     }
 }
+
+#ifdef __cplusplus
+}
+#endif
