@@ -460,13 +460,13 @@ static const MenuStatic::el_t _system[] = {
     },
     {
         .name   = "sdcard en",
-        .enter  = [] { HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_4); },
-        .showval= [] (char *v) { vyesno(v, HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_4)); }
+        .enter  = [] { HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_3); },
+        .showval= [] (char *v) { vyesno(v, HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_3)); }
     },
     {
         .name   = "sdcard cs",
-        .enter  = [] { HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_3); },
-        .showval= [] (char *v) { vyesno(v, HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_3)); }
+        .enter  = [] { HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_4); },
+        .showval= [] (char *v) { vyesno(v, HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_4)); }
     },
 #endif // if HWVER < 2
     {

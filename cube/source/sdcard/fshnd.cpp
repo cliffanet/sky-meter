@@ -8,15 +8,15 @@
 #if HWVER >= 2
 #include "../sys/stm32drv.h"
 extern "C" {
-    //void sdcard_on();
-    //void sdcard_off();
+    void sdcard_on();
+    void sdcard_off();
 }
 #endif
 
 FSMount::FSMount(const char *path) {
 #if HWVER >= 2
-    //sdcard_on();
-    //HAL_Delay(200);
+    sdcard_on();
+    HAL_Delay(200);
 #endif
     strncpy(_path, path, sizeof(_path));
     _path[sizeof(_path)-1] = '\0';
@@ -36,7 +36,7 @@ FSMount::~FSMount() {
     
     CONSOLE("unmount: %d", r);
 #if HWVER >= 2
-    //sdcard_off();
+    sdcard_off();
 #endif
 }
 
