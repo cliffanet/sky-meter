@@ -61,6 +61,11 @@ static inline void _sysr_set(sysr_t r) {
 #endif
 }
 
+#ifndef PWRDEBUG
+extern "C"
+void MX_USB_DEVICE_Init();
+#endif
+
 class _PStop {
 private:
     sysr_t _ssave;
@@ -137,6 +142,13 @@ public:
         _b.rest(GPIOB);
         _c.rest(GPIOC);
         _sysr_set(_ssave);
+
+#ifndef PWRDEBUG
+        // несмотря на то, что мы мосстанавливаем usb-регистр, тем не менее,
+        // это не восстанавливает работу usb, приходится всё-таки заного
+        // инициализировать через hal
+        MX_USB_DEVICE_Init();
+#endif
 
         CONSOLE("init");
         pwr::init();
