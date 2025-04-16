@@ -16,7 +16,7 @@ class ViewTransform {
 
 class AxisItem {
     double point;
-    int value;
+    double value;
     AxisItem(this.point, this.value);
 }
 
@@ -45,31 +45,31 @@ class TraceViewArea {
     Offset get lbot => Offset(_xmin, _ymax);
     Offset get rbot => Offset(_xmax, _ymax);
 
-    bool isin(double x, double y) => 
-        (x >= _xmin) && (x <= _xmax) &&
-        (y >= _ymin) && (y <= _ymax);
+    bool isinx(double x) => (x >= _xmin) && (x <= _xmax);
+    bool isiny(double y) => (y >= _ymin) && (y <= _ymax);
+    bool isin(Offset p) => isinx(p.dx) && isiny(p.dy);
 
     // получение координат без учёта сдвигов пальцами
-    double bx(int n)    => _xmin + width * n / _rcount;
-    double by(int alt)  => _ymax - height * alt / _rmaxalt;
-    Offset base(int n, int alt)     => Offset(bx(n), by(alt));
+    double bx(double n)    => _xmin + width * n / _rcount;
+    double by(double alt)  => _ymax - height * alt / _rmaxalt;
+    Offset base(double n, double alt)     => Offset(bx(n), by(alt));
 
-    double x(int n)     => bx(n)    * _trans.scale + _trans.point.dx;
-    double y(int alt)   => by(alt)  * _trans.scale + _trans.point.dy;
-    Offset point(int n, int alt)    => Offset(x(n), y(alt));
+    double x(double n)      => bx(n)    * _trans.scale + _trans.point.dx;
+    double y(double alt)    => by(alt)  * _trans.scale + _trans.point.dy;
+    Offset point(double n, double alt)    => Offset(x(n), y(alt));
 
     List<AxisItem> get axisx {
         if ((_rcount <= 0) || (width <= 0))
             return [];
         
-        int dv = 1;
+        double dv = 1;
         for (dv in [1, 5, 10, 50, 100, 200, 300, 600, 1200])
             if (x(dv)-x(0) >= 50)
                 break;
         
         final r = <AxisItem>[];
         final frst = -1 * _trans.point.dx * _rcount / width / _trans.scale;
-        int val = (frst / dv).floor() * dv;
+        double val = (frst / dv).floor() * dv;
         while (true) {
             final px = x(val);
             if (px > _xmax)
@@ -85,14 +85,14 @@ class TraceViewArea {
         if ((_rmaxalt <= 0) || (height <= 0))
             return [];
         
-        int dv = 1;
+        double dv = 1;
         for (dv in [1, 5, 10, 20, 25, 50, 100, 200, 500, 1000])
             if (y(0)-y(dv) >= 50)
                 break;
         
         final r = <AxisItem>[];
         final frst = _trans.point.dy * _rmaxalt / height / _trans.scale;
-        int val = (frst / dv).floor() * dv;
+        double val = (frst / dv).floor() * dv;
         while (true) {
             final py = y(val);
             if (py < _ymin)

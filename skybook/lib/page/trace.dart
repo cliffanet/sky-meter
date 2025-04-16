@@ -32,6 +32,7 @@ class PageTrace extends StatelessWidget {
             try {
                 _data.add(TraceItem(
                     alt: alt,
+                    inf: jump.info(),
                     clc: (r.length > 1) && r[1].isNotEmpty ? r[1].codeUnitAt(0) : 0,
                     chg: (r.length > 2) && r[2].isNotEmpty ? r[2].codeUnitAt(0) : 0,
                 ));

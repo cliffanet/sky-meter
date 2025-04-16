@@ -1,7 +1,84 @@
 import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'item.dart';
 import 'viewdata.dart';
+
+
+class _drawSect {
+    final Canvas canvas;
+    final int n;
+    final TraceViewArea a;
+    final TraceItem e, p;
+
+    _drawSect(this.canvas, this.n, this.a, TraceViewData data) :
+        e = data[n],
+        p = data[n-1]
+    {
+        _line((e) => e.inf.avg.alt, Colors.green);
+        _line((e) => e.inf.app.alt, Colors.brown);
+        _line((e) => e.alt.toDouble(), Colors.deepOrangeAccent);
+
+        if (((e.clc ?? 0) > 0) || ((e.chg ?? 0) > 0)) {
+            _cursorv(Colors.grey);
+            _cursorh( e.inf.app.alt, Colors.grey);
+        }
+    }
+
+    void _line(double Function(TraceItem i) alt, Color c) {
+        final pnt = Paint()
+            ..color = c
+            ..strokeWidth = 1;
+        final pp = a.point(n-1, alt(p));
+        final pe = a.point(n.toDouble(), alt(e));
+        if (a.isin(pp) || a.isin(pe))
+            canvas.drawLine(pp, pe, pnt);
+    }
+
+    void _cursorv(Color c) {
+        final pnt = Paint()
+            ..color = c
+            ..strokeWidth = 1;
+
+        final x = a.x(n.toDouble());
+        if (a.isinx(x))
+            _dashedLine(Offset(x, a.ymax), Offset(x, a.ymin), [2, 5], pnt);
+    }
+
+    void _cursorh(double alt, Color c) {
+        final pnt = Paint()
+            ..color = c
+            ..strokeWidth = 1;
+
+        final p = a.point(n.toDouble(), alt);
+        if (a.isin(p))
+            _dashedLine(Offset(a.xmin, p.dy), p, [2, 5], pnt);
+    }
+
+    void _dashedLine(
+        Offset p1,
+        Offset p2,
+        Iterable<double> pattern,
+        Paint paint,
+    ) {
+        assert(pattern.length.isEven);
+        final distance = (p2 - p1).distance;
+        final normalizedPattern = pattern.map((width) => width / distance).toList();
+        final points = <Offset>[];
+        double t = 0;
+        int i = 0;
+        while (t < 1) {
+            points.add(Offset.lerp(p1, p2, t)!);
+            t += normalizedPattern[i++];  // dashWidth
+            points.add(Offset.lerp(p1, p2, t.clamp(0, 1))!);
+            t += normalizedPattern[i++];  // dashSpace
+            i %= normalizedPattern.length;
+        }
+        canvas.drawPoints(PointMode.lines, points, paint);
+    }
+}
+
+
 
 class TracePaint extends CustomPainter {
     final TraceViewData _data;
@@ -25,29 +102,6 @@ class TracePaint extends CustomPainter {
             item(v, x.round());
         
         item(max, width-1);
-    }
-    
-    static void _dashedLine(
-        Canvas canvas,
-        Offset p1,
-        Offset p2,
-        Iterable<double> pattern,
-        Paint paint,
-    ) {
-        assert(pattern.length.isEven);
-        final distance = (p2 - p1).distance;
-        final normalizedPattern = pattern.map((width) => width / distance).toList();
-        final points = <Offset>[];
-        double t = 0;
-        int i = 0;
-        while (t < 1) {
-            points.add(Offset.lerp(p1, p2, t)!);
-            t += normalizedPattern[i++];  // dashWidth
-            points.add(Offset.lerp(p1, p2, t.clamp(0, 1))!);
-            t += normalizedPattern[i++];  // dashSpace
-            i %= normalizedPattern.length;
-        }
-        canvas.drawPoints(PointMode.lines, points, paint);
     }
 
     @override
@@ -101,25 +155,8 @@ class TracePaint extends CustomPainter {
             text.paint(canvas, Offset(15, e.point-10));
         }
 
-        paint.color = Colors.deepOrangeAccent;
-        paint.strokeWidth = 1;
-        final pchg = Paint.from(paint);
-        pchg.color = Colors.grey;
-        for (int n = 1; n < _data.count; n++) {
-            final el = _data[n];
-            final l = a.point(n-1, _data[n-1].alt);
-            if (!a.isin(l.dx, l.dy))
-                continue;
-            final p = a.point(n, el.alt);
-            if (!a.isin(p.dx, p.dy))
-                continue;
-            
-            canvas.drawLine(l, p, paint);
-            if (((el.clc ?? 0) > 0) || ((el.chg ?? 0) > 0)) {
-                _dashedLine(canvas, Offset(p.dx, a.ymax), p, [2, 5], pchg);
-                _dashedLine(canvas, Offset(a.xmin, p.dy), p, [2, 5], pchg);
-            }
-        }
+        for (int n = 1; n < _data.count; n++)
+            _drawSect(canvas, n, a, _data);
 
         canvas.restore();
     }

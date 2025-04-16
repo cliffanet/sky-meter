@@ -4,7 +4,12 @@
 
 #include "altcalc.h"
 #include <math.h>
+
+#ifdef STM32
 #include "../sys/log.h"
+#else
+#define CONSOLE(txt, ...)
+#endif
 
 /*******************************
  *          AltBuf: базовые методы
@@ -83,7 +88,7 @@ AltBuf::VApp::VApp(const AltBuf &ab) :
     double sy = ab._alt0, sxy = 0, sx = 0, sx2 = 0;
     // количество элементов на один больше, чем src.size(),
     // т.к. нулевой элемент находится не в src, а в alt0
-    uint32_t x = 0, n = ab._buf.size() + 1;
+    uint32_t x = 0, n = static_cast<uint32_t>(ab._buf.size()) + 1;
     
     for (const auto &d: ab._buf) {
         if (d.ms == 0)
