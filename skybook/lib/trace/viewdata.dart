@@ -1,109 +1,185 @@
 import 'item.dart';
 import 'package:flutter/material.dart';
+import 'package:vector_math/vector_math_64.dart';
+import 'dart:developer' as developer;
 
-class ViewTransform {
-    final Offset point;
-    final double scale;
+class ViewMatrix {
+    final _notify = ValueNotifier<int>(0);
+    get notify => _notify;
 
-    ViewTransform(this.point, this.scale);
-    static ViewTransform get zero => ViewTransform(Offset.zero, 1);
+    // общая матрица преобразования
+    final Matrix4 _matr = Matrix4.identity();
+    Matrix4 get matr => _matr;
+    void _matrupd() => _matr.setFrom( _trbeg * _scal * _move * _trend );
+    void _viewupd() {
+        _matrupd();
 
-    ViewTransform operator+(ViewTransform t) =>
-        ViewTransform(point + t.point, scale * t.scale);
-    ViewTransform operator-(ViewTransform t) =>
-        ViewTransform(point - t.point, scale / t.scale);
-}
+        // Ограничиваем перемещение
+        Offset d = Offset.zero;
+        Offset p = pnt(0, 0);
+        if (p.dx > _size.width)
+            d -= Offset(p.dx - _size.width, 0);
+        if (p.dy < 0)
+            d -= Offset(0, p.dy);
 
-class AxisItem {
-    double point;
-    double value;
-    AxisItem(this.point, this.value);
-}
-
-class TraceViewArea {
-    final double _xmin = 10, _ymin = 10;
-    final double _xmax, _ymax;
-    final int _rmaxalt, _rcount;
-    final ViewTransform _trans;
-
-    TraceViewArea(TraceViewData data, Size size) :
-        _xmax = size.width-10,
-        _ymax = size.height-10,
-        _rmaxalt = data._rmaxalt,
-        _rcount  = data._rcount,
-        _trans   = data.transform;
-    
-    double get xmin => _xmin;
-    double get xmax => _xmax;
-    double get ymin => _ymin;
-    double get ymax => _ymax;
-    double get width    => _xmax-_xmin;
-    double get height   => _ymax-_ymin;
-    // точки углов графика
-    Offset get ltop => Offset(_xmin, _ymin);
-    Offset get rtop => Offset(_xmax, _ymin);
-    Offset get lbot => Offset(_xmin, _ymax);
-    Offset get rbot => Offset(_xmax, _ymax);
-
-    bool isinx(double x) => (x >= _xmin) && (x <= _xmax);
-    bool isiny(double y) => (y >= _ymin) && (y <= _ymax);
-    bool isin(Offset p) => isinx(p.dx) && isiny(p.dy);
-
-    // получение координат без учёта сдвигов пальцами
-    double bx(double n)    => _xmin + width * n / _rcount;
-    double by(double alt)  => _ymax - height * alt / _rmaxalt;
-    Offset base(double n, double alt)     => Offset(bx(n), by(alt));
-
-    double x(double n)      => bx(n)    * _trans.scale + _trans.point.dx;
-    double y(double alt)    => by(alt)  * _trans.scale + _trans.point.dy;
-    Offset point(double n, double alt)    => Offset(x(n), y(alt));
-
-    List<AxisItem> get axisx {
-        if ((_rcount <= 0) || (width <= 0))
-            return [];
+        p = pnt(_omax.dx.toInt(), _omax.dy);
+        if (p.dx < 0)
+            d -= Offset(p.dx, 0);
+        if (p.dy > _size.height)
+            d -= Offset(0, p.dy - _size.height);
         
+        if ((d.dx != 0) || (d.dy != 0)) {
+            _move.translate(d.dx, d.dy);
+            _matrupd();
+        }
+
+        _dataupd();
+
+        _notify.value ++;
+    }
+
+    // размер viewport
+    Size _size = Size.zero;
+    Size get size => _size;
+    // _trbeg и _trend нужны, чтобы все преобразования выполнялись
+    // из центра рисуемого окна, а не из начала координат
+    final _trbeg = Matrix4.identity();
+    final _trend = Matrix4.identity();
+    // масштаб к оригинальным данным
+    Offset _dmap = Offset(1, 1);
+    set size(Size sz) {
+        _size = sz;
+        _trbeg
+            ..setIdentity()
+            ..translate(_size.width/2, _size.height/2);
+        _trend
+            ..setIdentity()
+            ..translate(-_size.width/2, -_size.height/2);
+        // тут не нужно оповещать о необходимости перерисовать,
+        // т.к. изменение size мы делаем уже из метода перерисовки
+        //_notify.value ++;
+
+        // однако, коэфициенты и границы данных надо обновить
+        _dmap = Offset(
+            _omax.dx > 0 ? (_size.width-20)  / _omax.dx : 1,
+            _omax.dy > 0 ? (_size.height-20) / _omax.dy : 1
+        );
+        _dataupd();
+    }
+    Offset get viewLT => Offset(10,                 10);
+    Offset get viewRT => Offset(_size.width - 10,   10);
+    Offset get viewLB => Offset(10,                 _size.height - 10);
+    Offset get viewRB => Offset(_size.width - 10,   _size.height - 10);
+    bool prng(Offset p) => 
+        (p.dx >= 10) && (p.dx <= _size.width - 10) &&
+        (p.dy >= 10) && (p.dy <= _size.height - 10);
+
+    // move
+    Offset _pnt = Offset.zero;
+    final _move = Matrix4.identity();
+    final _mbeg = Matrix4.identity();
+    
+    // scale
+    final _scal = Matrix4.identity();
+    final _sbeg = Matrix4.identity();
+    void scaleStart(ScaleStartDetails details) {
+        // Сохранение начальных значений
+        _pnt = details.focalPoint;
+        _mbeg.setFrom(_move);
+        _sbeg.setFrom(_scal);
+    }
+    void scaleUpdate(ScaleUpdateDetails details) {
+        final delta = details.focalPoint - _pnt;
+        final dtr = Matrix4.inverted(_sbeg).transform3( Vector3(delta.dx, delta.dy, 0) );
+        _move.setFrom(
+            Matrix4.copy(_mbeg)
+            ..translate(dtr.x, dtr.y)
+        );
+
+        _scal.setFrom(
+            Matrix4.copy(_sbeg)
+            ..scale(details.scale)
+        );
+
+        _viewupd();
+    }
+    void scaleChange(double scroll) {
+        final scale = 1 / (scroll > 0 ? (100 + scroll) / 100 : -3.5 / scroll);
+        //developer.log('scale: $scale ($scroll)');
+        _scal.scale(scale);
+        _viewupd();
+    }
+    
+    void reset() {
+        _move.setIdentity();
+        _scal.setIdentity();
+        _matr.setIdentity();
+
+        _viewupd();
+    }
+
+    Offset pnt(int n, double val) {
+        // метод .transform3 модифицирует Vector3, который мы ему передаём,
+        // поэтому надо передавать копию.
+        final t = _matr.transform3( Vector3(n * _dmap.dx, _size.height - 20 - val * _dmap.dy, 0) );
+
+        return Offset(
+            t.x + 10,
+            t.y + 10
+        );
+    }
+
+    // максимальный размер исходных данных
+    // этот диапазон нужен, чтобы:
+    //  - отрисовать корректно оси координат
+    //  - при зуме и перетаскивании не уйти за пределы
+    //  этого диапазона, иначе потом ловить обратно
+    //  актуальную область тяжело без сброса
+    Offset _omax = Offset.zero;
+    Offset get origmax => _omax;
+    set origmax(Offset omax) {
+        _omax = omax;
+        _viewupd();
+    }
+
+    // диапазон данных, видимых на экране
+    Offset _dmin = Offset.zero;
+    Offset get datamin => _dmin;
+    Offset _dmax = Offset.zero;
+    Offset get datamax => _dmax;
+    void _dataupd() {
+        final m = Matrix4.inverted(_matr);
+        final mmin = m.transform3( Vector3(0, _size.height - 20, 0) );
+        _dmin = Offset( mmin.x / _dmap.dx, (_size.height - 20 - mmin.y) / _dmap.dy );
+        final mmax = m.transform3( Vector3(_size.width - 20, 0, 0) );
+        _dmax = Offset( mmax.x / _dmap.dx, (_size.height - 20 - mmax.y) / _dmap.dy );
+
+        //developer.log("$_dmin / $_dmax");
+    }
+    bool drng(int n, double alt) => 
+        (n >= _dmin.dx)     && (n <= _dmax.dx) &&
+        (alt >= _dmin.dy)   && (alt <= _dmax.dy);
+
+    // Оси по X и Y
+    List<double> _axis(double min, double max, int count, List<double> dlist) {
+        if ((max <= min) || dlist.isEmpty || (dlist[0] > max-min))
+            return [];
+        final n = (max-min) / count;
         double dv = 1;
         for (dv in [1, 5, 10, 50, 100, 200, 300, 600, 1200])
-            if (x(dv)-x(0) >= 50)
+            if (dv >= n)
                 break;
-        
-        final r = <AxisItem>[];
-        final frst = -1 * _trans.point.dx * _rcount / width / _trans.scale;
-        double val = (frst / dv).floor() * dv;
-        while (true) {
-            final px = x(val);
-            if (px > _xmax)
-                break;
-            if (px > _xmin + 40)
-                r.add(AxisItem(px, val));
+        double val = (min / dv).toInt() * dv;
+        while (val < min+dv*2/3)
             val += dv;
-        }
-        
+
+        final r = <double>[];
+        for (; val <= max; val += dv)
+            r.add(val);
         return r;
     }
-    List<AxisItem> get axisy {
-        if ((_rmaxalt <= 0) || (height <= 0))
-            return [];
-        
-        double dv = 1;
-        for (dv in [1, 5, 10, 20, 25, 50, 100, 200, 500, 1000])
-            if (y(0)-y(dv) >= 50)
-                break;
-        
-        final r = <AxisItem>[];
-        final frst = _trans.point.dy * _rmaxalt / height / _trans.scale;
-        double val = (frst / dv).floor() * dv;
-        while (true) {
-            final py = y(val);
-            if (py < _ymin)
-                break;
-            if (py < _ymax - 40)
-                r.add(AxisItem(py, val));
-            val += dv;
-        }
-        
-        return r;
-    }
+    List<double> get axisx => _axis(_dmin.dx, _dmax.dx, (_size.width/50) .toInt(), [1, 5, 10, 50, 100, 200, 300, 600, 1200]);
+    List<double> get axisy => _axis(_dmin.dy, _dmax.dy, (_size.height/50).toInt(), [1, 5, 10, 20, 25, 50, 100, 200, 500, 1000]);
 }
 
 class TraceViewData {
@@ -147,30 +223,4 @@ class TraceViewData {
         _maxalt = 0;
         _notify.value ++;
     }
-
-    ViewTransform _tbeg = ViewTransform.zero;
-    ViewTransform _tupd = ViewTransform.zero;
-    ViewTransform _tprv = ViewTransform.zero;
-    void scaleStart(ScaleStartDetails details) {
-        _tprv += _tupd - _tbeg;
-        _tbeg = ViewTransform(details.focalPoint, 1);
-        _tupd = ViewTransform.zero;
-    }
-    void scaleUpdate(ScaleUpdateDetails details) {
-        _tupd = ViewTransform(details.focalPoint, details.scale);
-        _notify.value ++;
-    }
-    void scaleScroll(double scroll) {
-        _tprv += _tupd - _tbeg;
-        _tbeg = ViewTransform.zero;
-        _tupd = ViewTransform.zero;
-
-        final scale = 1 / (scroll > 0 ? (100 + scroll) / 100 : -3.5 / scroll);
-        _tprv += ViewTransform(Offset.zero, scale);
-
-        _notify.value ++;
-    }
-    ViewTransform get transform => _tprv + (_tupd - _tbeg);
-
-    TraceViewArea area(Size size) => TraceViewArea(this, size);
 }

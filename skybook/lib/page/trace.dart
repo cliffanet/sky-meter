@@ -11,6 +11,7 @@ import '../jump/call.dart';
 class PageTrace extends StatelessWidget {
     final String _name;
     final _data = TraceViewData();
+    final _view = ViewMatrix();
 
     PageTrace.byFile({ super.key, required String fname }) :
         _name = File(fname).uri.pathSegments.last
@@ -39,6 +40,8 @@ class PageTrace extends StatelessWidget {
             }
             catch(ex) {}
         }
+
+        _view.origmax = Offset(_data.rcount.toDouble(), _data.rmaxalt.toDouble());
     }
 
     @override
@@ -54,20 +57,21 @@ class PageTrace extends StatelessWidget {
                     title: Text('Трассировка: $_name'),
                 ),
             body: GestureDetector(
-                onScaleStart:   _data.scaleStart,
-                onScaleUpdate:  _data.scaleUpdate,
+                onScaleStart:   _view.scaleStart,
+                onScaleUpdate:  _view.scaleUpdate,
+
                 child: ValueListenableBuilder(
-                    valueListenable: _data.notify,
+                    valueListenable: _view.notify,
                     builder: (BuildContext context, _, Widget? child) {
                         return Listener(
                             onPointerSignal: (pointerSignal) {
                                 //pointerSignal.
                                 if (pointerSignal is PointerScrollEvent) {
-                                    _data.scaleScroll(pointerSignal.scrollDelta.dy);
+                                    _view.scaleChange(pointerSignal.scrollDelta.dy);
                                 }
                             },
                             child: CustomPaint(
-                                painter: TracePaint(_data),
+                                painter: TracePaint(_data, _view),
                                 size: Size.infinite
                             )
                         );

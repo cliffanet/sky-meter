@@ -74,7 +74,7 @@ final class UnnamedStruct3 extends ffi.Struct {
 }
 
 final class UnnamedStruct4 extends ffi.Struct {
-  @ffi.UnsignedChar()
+  @ffi.Char()
   external int mode;
 
   @ffi.UnsignedLong()

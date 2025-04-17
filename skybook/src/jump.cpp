@@ -29,7 +29,7 @@ JumpInf jump_info() {
         { _abuf.sav().alt(), _abuf.sav().speed() },
 
         {
-            static_cast<uint8_t>(_jmp.mode()),
+            static_cast<int8_t>(_jmp.mode()),
             _jmp.cnt(), _jmp.tm(),
             _jmp.newcnt(), _jmp.newtm(),
         },
@@ -46,7 +46,7 @@ JumpInf jump_info() {
 FFI_PLUGIN_EXPORT
 void jump_clear() {
     _abuf = AltBuf();
-    _jmp.reset();
+    _jmp.reset(AltJmp::TAKEOFF);
     _sq.reset();
     _jstr.reset();
 }

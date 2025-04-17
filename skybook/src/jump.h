@@ -34,7 +34,7 @@ typedef struct {
     } sav;
 
     struct {
-        unsigned char mode;
+        char mode;
         unsigned long cnt, tm;
         unsigned long newcnt, newtm;
     } jmp;

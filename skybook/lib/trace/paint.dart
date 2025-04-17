@@ -4,58 +4,31 @@ import 'package:flutter/material.dart';
 import 'item.dart';
 import 'viewdata.dart';
 
+class TracePaint extends CustomPainter {
+    final TraceViewData _data;
+    final ViewMatrix _view;
 
-class _drawSect {
-    final Canvas canvas;
-    final int n;
-    final TraceViewArea a;
-    final TraceItem e, p;
+    TracePaint(this._data, this._view);
 
-    _drawSect(this.canvas, this.n, this.a, TraceViewData data) :
-        e = data[n],
-        p = data[n-1]
-    {
-        _line((e) => e.inf.avg.alt, Colors.green);
-        _line((e) => e.inf.app.alt, Colors.brown);
-        _line((e) => e.alt.toDouble(), Colors.deepOrangeAccent);
+    void _drawAlt(Canvas canvas, double Function(TraceItem i) alt, Color c) {
+        final pnt = Paint()
+            ..color = c
+            ..strokeWidth = 1;
+        
+        if (_data.count <= 0)
+            return;
 
-        if (((e.clc ?? 0) > 0) || ((e.chg ?? 0) > 0)) {
-            _cursorv(Colors.grey);
-            _cursorh( e.inf.app.alt, Colors.grey);
+        Offset p0 = _view.pnt(0, alt(_data[0]));
+        for (int n = 1; n < _data.count; n++) {
+            Offset p1 = _view.pnt(n, alt(_data[n]));
+            if (_view.prng(p0) || _view.prng(p1))
+                canvas.drawLine(p0, p1, pnt);
+            p0 = p1;
         }
     }
 
-    void _line(double Function(TraceItem i) alt, Color c) {
-        final pnt = Paint()
-            ..color = c
-            ..strokeWidth = 1;
-        final pp = a.point(n-1, alt(p));
-        final pe = a.point(n.toDouble(), alt(e));
-        if (a.isin(pp) || a.isin(pe))
-            canvas.drawLine(pp, pe, pnt);
-    }
-
-    void _cursorv(Color c) {
-        final pnt = Paint()
-            ..color = c
-            ..strokeWidth = 1;
-
-        final x = a.x(n.toDouble());
-        if (a.isinx(x))
-            _dashedLine(Offset(x, a.ymax), Offset(x, a.ymin), [2, 5], pnt);
-    }
-
-    void _cursorh(double alt, Color c) {
-        final pnt = Paint()
-            ..color = c
-            ..strokeWidth = 1;
-
-        final p = a.point(n.toDouble(), alt);
-        if (a.isin(p))
-            _dashedLine(Offset(a.xmin, p.dy), p, [2, 5], pnt);
-    }
-
     void _dashedLine(
+        Canvas canvas,
         Offset p1,
         Offset p2,
         Iterable<double> pattern,
@@ -76,53 +49,46 @@ class _drawSect {
         }
         canvas.drawPoints(PointMode.lines, points, paint);
     }
-}
+    void _drawCursorV(Canvas canvas, int n, Color c) {
+        final pnt = Paint()
+            ..color = c
+            ..strokeWidth = 1;
 
+        final p = _view.pnt(n, _view.datamin.dy);
+        if (_view.prng(p))
+            _dashedLine(canvas, Offset(p.dx, _view.viewLT.dy), Offset(p.dx, _view.viewLB.dy), [2, 5], pnt);
+    }
 
+    void _drawCursorH(Canvas canvas, int n, double alt, Color c) {
+        final pnt = Paint()
+            ..color = c
+            ..strokeWidth = 1;
 
-class TracePaint extends CustomPainter {
-    final TraceViewData _data;
-
-    TracePaint(TraceViewData data) :
-        _data = data;
-
-    static void _scale(int min, int max, int width, Function(int val, int x) item) {
-        double dx = 40;
-        if (width < dx/2)
-            return;
-        
-        int dv = ((max-min) / ((width+dx-1) / dx)).round();
-        
-        for (int r = 10; (r < 1000000) && (dv > r); r *= 10)
-            dv = (dv / r).round() * r;
-        
-        dx = width / ((max-min) / dv);
-        int v = min;
-        for (double x = 0; x <= (width-dx/2); x += dx, v += dv)
-            item(v, x.round());
-        
-        item(max, width-1);
+        final p = _view.pnt(n, alt);
+        if (_view.prng(p))
+            _dashedLine(canvas, Offset(_view.viewLT.dx, p.dy), p, [2, 5], pnt);
     }
 
     @override
     void paint(Canvas canvas, Size size) {
-        final a = _data.area(size);
+        _view.size = size;
         canvas.save();
 
         final paint = Paint()
             ..color = Colors.black
             ..strokeWidth = 1;
         
-        canvas.drawLine(a.lbot, a.rbot, paint);
-        for ( final e in a.axisx) {
-            canvas.drawLine(Offset(e.point, a.ymax), Offset(e.point, size.height), paint);
+        canvas.drawLine(_view.viewLB, _view.viewRB, paint);
+        for (final v in _view.axisx) {
+            final p = _view.pnt(v.toInt(), 0);
+            canvas.drawLine(Offset(p.dx, _view.viewRB.dy), Offset(p.dx, size.height), paint);
             final text = TextPainter(
                 text: TextSpan(
                     text:
-                            (e.value < 0 ? '-' : '') +
-                            (e.value/600).abs().floor().toString() +
+                            (v < 0 ? '-' : '') +
+                            (v/600).abs().floor().toString() +
                             ':' +
-                            ((e.value.abs() % 600) /10).floor().toString().padLeft(2,'0'),
+                            ((v.abs() % 600) /10).floor().toString().padLeft(2,'0'),
                     style: TextStyle(
                         color: Colors.black,
                         fontSize: 14,
@@ -131,19 +97,21 @@ class TracePaint extends CustomPainter {
                 textDirection: TextDirection.ltr,
             );
             text.layout();
-            canvas.translate(e.point-20, a.ymax-5);
+            final ymax = _view.viewLB.dy - 5;
+            canvas.translate(p.dx-20, ymax);
             canvas.rotate(-pi/2);
             text.paint(canvas, Offset(0, 10));
             canvas.rotate(pi/2);
-            canvas.translate(-1*(e.point-20), -1*(a.ymax-5));
+            canvas.translate(-1*(p.dx-20), -1*ymax);
         }
 
-        canvas.drawLine(a.ltop, a.lbot, paint);
-        for (final e in a.axisy) {
-            canvas.drawLine(Offset(0, e.point), Offset(a.xmin, e.point), paint);
+        canvas.drawLine(_view.viewLT, _view.viewLB, paint);
+        for (final v in _view.axisy) {
+            final p = _view.pnt(0, v);
+            canvas.drawLine(Offset(0, p.dy), Offset(_view.viewLT.dx, p.dy), paint);
             final text = TextPainter(
                 text: TextSpan(
-                    text: e.value.toString(),
+                    text: v.toInt().toString(),
                     style: TextStyle(
                         color: Colors.black,
                         fontSize: 14,
@@ -152,11 +120,28 @@ class TracePaint extends CustomPainter {
                 textDirection: TextDirection.ltr,
             );
             text.layout();
-            text.paint(canvas, Offset(15, e.point-10));
+            text.paint(canvas, Offset(15, p.dy-10));
         }
 
-        for (int n = 1; n < _data.count; n++)
-            _drawSect(canvas, n, a, _data);
+        _drawAlt(canvas, (e) => e.inf.avg.alt, Colors.green);
+        _drawAlt(canvas, (e) => e.inf.sav.alt, Colors.blue);
+        _drawAlt(canvas, (e) => e.inf.app.alt, Colors.brown);
+        _drawAlt(canvas, (e) => e.alt.toDouble(), Colors.deepOrangeAccent);
+
+        for (int n = 0; n < _data.count; n++) {
+            final d = _data[n];
+            if (((d.clc ?? 0) > 0) || ((d.chg ?? 0) > 0)) {
+                _drawCursorV(canvas, n, Colors.black12);
+                _drawCursorH(canvas, n, d.inf.sav.alt, Colors.black12);
+            }
+
+            final j = d.inf.jmp;
+            if ((n > 0) && (j.mode > 0) && (j.mode != _data[n-1].inf.jmp.mode)) {
+                _drawCursorV(canvas, n, Colors.blue);
+                if ((j.cnt > 0) && (n > j.cnt))
+                    _drawCursorV(canvas, n - j.cnt, Colors.deepPurple);
+            }
+        }
 
         canvas.restore();
     }
