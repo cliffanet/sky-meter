@@ -59,6 +59,9 @@ class PageTrace extends StatelessWidget {
             body: GestureDetector(
                 onScaleStart:   _view.scaleStart,
                 onScaleUpdate:  _view.scaleUpdate,
+                onTapDown: _view.tapDown,
+                onTapUp: (_) => _view.tapEnd(),
+                onTapCancel: _view.tapEnd,
 
                 child: ValueListenableBuilder(
                     valueListenable: _view.notify,

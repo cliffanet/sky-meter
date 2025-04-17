@@ -31,7 +31,8 @@ JumpInf jump_info() {
         {
             static_cast<int8_t>(_jmp.mode()),
             _jmp.cnt(), _jmp.tm(),
-            _jmp.newcnt(), _jmp.newtm(),
+            _jmp.mode() == AltJmp::TAKEOFF ? _jmp.ff().cnt() : _jmp.newcnt(),
+            _jmp.mode() == AltJmp::TAKEOFF ? _jmp.ff().tm() : _jmp.newtm(),
         },
 
         {

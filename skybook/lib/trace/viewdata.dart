@@ -109,6 +109,20 @@ class ViewMatrix {
         _scal.scale(scale);
         _viewupd();
     }
+
+    Offset ? _cur;
+    Offset ? get cursor => _cur;
+    void tapDown(TapDownDetails d) {
+        _cur = invert(d.localPosition);
+        if (!drng(_cur!.dx.toInt(), _cur!.dy) || (_cur!.dx < 0) || (_cur!.dx.toInt() >= _omax.dy))
+            _cur = null;
+        developer.log("down: ${_cur}");
+        _notify.value ++;
+    }
+    void tapEnd() {
+        _cur = null;
+        _notify.value ++;
+    }
     
     void reset() {
         _move.setIdentity();
@@ -127,6 +141,10 @@ class ViewMatrix {
             t.x + 10,
             t.y + 10
         );
+    }
+    Offset invert(Offset pnt) {
+        final m = Matrix4.inverted(_matr).transform3( Vector3(pnt.dx-10, pnt.dy-10, 0) );
+        return Offset( m.x / _dmap.dx, (_size.height - 20 - m.y) / _dmap.dy );
     }
 
     // максимальный размер исходных данных
@@ -148,13 +166,8 @@ class ViewMatrix {
     Offset _dmax = Offset.zero;
     Offset get datamax => _dmax;
     void _dataupd() {
-        final m = Matrix4.inverted(_matr);
-        final mmin = m.transform3( Vector3(0, _size.height - 20, 0) );
-        _dmin = Offset( mmin.x / _dmap.dx, (_size.height - 20 - mmin.y) / _dmap.dy );
-        final mmax = m.transform3( Vector3(_size.width - 20, 0, 0) );
-        _dmax = Offset( mmax.x / _dmap.dx, (_size.height - 20 - mmax.y) / _dmap.dy );
-
-        //developer.log("$_dmin / $_dmax");
+        _dmin = invert(Offset( 0, _size.height - 20 ) + Offset(10,10));
+        _dmax = invert(Offset( _size.width - 20, 0  ) + Offset(10,10));
     }
     bool drng(int n, double alt) => 
         (n >= _dmin.dx)     && (n <= _dmax.dx) &&

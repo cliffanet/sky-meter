@@ -69,6 +69,13 @@ class TracePaint extends CustomPainter {
             _dashedLine(canvas, Offset(_view.viewLT.dx, p.dy), p, [2, 5], pnt);
     }
 
+    static String sectm(double v, [bool ms=false]) =>
+            (v < 0 ? '-' : '') +
+            (v/600).abs().floor().toString() +
+            ':' +
+            ((v.abs() % 600) /10).floor().toString().padLeft(2,'0') +
+            (ms ? '.${(v.abs().toInt() % 10)}' : '');
+
     @override
     void paint(Canvas canvas, Size size) {
         _view.size = size;
@@ -84,11 +91,7 @@ class TracePaint extends CustomPainter {
             canvas.drawLine(Offset(p.dx, _view.viewRB.dy), Offset(p.dx, size.height), paint);
             final text = TextPainter(
                 text: TextSpan(
-                    text:
-                            (v < 0 ? '-' : '') +
-                            (v/600).abs().floor().toString() +
-                            ':' +
-                            ((v.abs() % 600) /10).floor().toString().padLeft(2,'0'),
+                    text: sectm(v),
                     style: TextStyle(
                         color: Colors.black,
                         fontSize: 14,
@@ -141,6 +144,49 @@ class TracePaint extends CustomPainter {
                 if ((j.cnt > 0) && (n > j.cnt))
                     _drawCursorV(canvas, n - j.cnt, Colors.deepPurple);
             }
+        }
+
+        if (_view.cursor != null) {
+            final n = _view.cursor!.dx.toInt();
+            final d = _data[n];
+            final i = d.inf;
+            _drawCursorV(canvas, n, Colors.red);
+
+            final m = [
+                'INIT',
+                'GROUND',
+                'TAKEOFF',
+                'FREEFALL',
+                'CANOPY',
+            ];
+
+            final text = TextPainter(
+                text: TextSpan(
+                    text:
+                        'time: ${sectm(_view.cursor!.dx, true)}\n' +
+                        'alt: ${d.alt} (sqdiff: ${i.sqdiff.toStringAsFixed(1)})\n' +
+                        'mode: ${m[ i.jmp.mode + 1 ]}${i.jmp.newcnt > 0 ? '(${sectm(i.jmp.newtm / 100, true)})' : ''}\n' +
+                        'avg (alt / speed): ${i.avg.alt.toStringAsFixed(0)} / ${i.avg.speed.toStringAsFixed(1)}\n' +
+                        'sav (alt / speed): ${i.sav.alt.toStringAsFixed(0)} / ${i.sav.speed.toStringAsFixed(1)}\n' +
+                        'app (alt / speed): ${i.app.alt.toStringAsFixed(0)} / ${i.app.speed.toStringAsFixed(1)}\n' +
+                        'sq: ${i.sq.val.toStringAsFixed(1)}${i.sq.isbig > 0 ? ' (big)' : ''}',
+                    style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 14,
+                    ),
+                ),
+                textDirection: TextDirection.ltr,
+            );
+            text.layout();
+            final p = _view.pnt(n, _view.cursor!.dy)+Offset(15,0);
+            canvas.drawRRect(
+                RRect.fromRectAndRadius(
+                    Rect.fromPoints(p - Offset(5, 5), p + Offset(text.width, text.height) + Offset(5, 5)),
+                    Radius.circular(10)
+                ),
+                Paint()..color = Colors.red
+            );
+            text.paint(canvas, p);
         }
 
         canvas.restore();
