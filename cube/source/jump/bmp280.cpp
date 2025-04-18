@@ -2,9 +2,7 @@
 #include "bmp280.h"
 
 #include "../sys/trwire.h"
-#include "../sys/stm32drv.h"
-
-extern SPI_HandleTypeDef hspi1;
+#include "../sys/buf.h"
 
 BMP280::BMP280(TransWire &_dev) :
     _dev(_dev)
@@ -40,6 +38,7 @@ bool BMP280::read24(uint8_t reg, int32_t &v) {
     return true;
 }
 
+/*
 bool BMP280::calib() {
     bool r[] = {
         read16le(REG_CAL_T1, _calib.t1),
@@ -61,7 +60,33 @@ bool BMP280::calib() {
             return false;
     return true;
 }
+    */
 
+bool BMP280::calib() {
+    uint8_t d[13];
+    if (!_dev.read(REG_CAL, d, sizeof(d)))
+        return false;
+
+    bufrx b(d, sizeof(d));
+
+    b.u16le(dig_T1);
+    b.d16le(dig_T2);
+    b.d16le(dig_T3);
+
+    b.u16le(dig_P1);
+    b.d16le(dig_P2);
+    b.d16le(dig_P3);
+    b.d16le(dig_P4);
+    b.d16le(dig_P5);
+    b.d16le(dig_P6);
+    b.d16le(dig_P7);
+    b.d16le(dig_P8);
+    b.d16le(dig_P9);
+    
+    return true;
+}
+
+/*
 bool BMP280::tempfine(int32_t &v) {
     int32_t adc_T;
     if (!read24(REG_TEMPDATA, adc_T)) {
@@ -80,6 +105,7 @@ bool BMP280::tempfine(int32_t &v) {
     v = v1 + v2 * v3;
     return true;
 }
+*/
 
 bool BMP280::init() {
     if (!_dev.init())
@@ -131,6 +157,7 @@ bool BMP280::reset()
     return _dev.write8(REG_SOFTRESET, 0xB6);
 }
 
+/*
 bool BMP280::temp(float &v) {
     int32_t tfine;
     if (!tempfine(tfine)) {
@@ -169,5 +196,95 @@ bool BMP280::press(float &v) {
 
     float pp = ((p + v1 + v2) >> 8) + (static_cast<int64_t>(_calib.p7) << 4);
     v = pp / 256;
+    return true;
+}
+*/
+
+bool BMP280::meas(float &press, float &temp) {
+    uint8_t d[6];
+    // datasheet настоятельно рекомендует получать
+    // температуру и давление одной командой, в этом
+    // случае чип гарантирует, что оба значения будут
+    // из одного цикла измерений (согласованные между собой)
+    if (!_dev.read(REG_TEMPPRES, d, sizeof(d)))
+        return false;
+
+    bufrx b(d, sizeof(d));
+
+    typedef int32_t BMP280_S32_t;
+    BMP280_S32_t t_fine, adc_T, adc_P;
+    b.d24(adc_P);   adc_P >>= 4;
+    b.d24(adc_T);   adc_T >>= 4;
+
+
+    // код мат-логики взят из datasheet, имена переменных,
+    // в т.ч. калибровочных подогнаны под него, чтобы
+    // минимизировать исправления и опечатки из-за них
+
+#ifdef BMP280_FIXEDPOINTMATH
+    typedef uint32_t BMP280_U32_t;
+    {
+        BMP280_S32_t var1, var2;
+        var1 = ((((adc_T>>3) - ((BMP280_S32_t)dig_T1<<1))) * ((BMP280_S32_t)dig_T2)) >> 11;
+        var2 = (((((adc_T>>4) - ((BMP280_S32_t)dig_T1)) * ((adc_T>>4) - ((BMP280_S32_t)dig_T1))) >> 12) *
+        ((BMP280_S32_t)dig_T3)) >> 14;
+        t_fine = var1 + var2;
+        float T = (t_fine * 5 + 128) >> 8;
+        temp = T / 100;
+    }
+    {
+        BMP280_S32_t var1, var2;
+        BMP280_U32_t p;
+        var1 = (((BMP280_S32_t)t_fine)>>1) - (BMP280_S32_t)64000;
+        var2 = (((var1>>2) * (var1>>2)) >> 11 ) * ((BMP280_S32_t)dig_P6);
+        var2 = var2 + ((var1*((BMP280_S32_t)dig_P5))<<1);
+        var2 = (var2>>2)+(((BMP280_S32_t)dig_P4)<<16);
+        var1 = (((dig_P3 * (((var1>>2) * (var1>>2)) >> 13 )) >> 3) + ((((BMP280_S32_t)dig_P2) * var1)>>1))>>18;
+        var1 =((((32768+var1))*((BMP280_S32_t)dig_P1))>>15);
+        if (var1 == 0)
+            return 0; // avoid exception caused by division by zero
+        
+        p = (((BMP280_U32_t)(((BMP280_S32_t)1048576)-adc_P)-(var2>>12)))*3125;
+        if (p < 0x80000000) {
+            p = (p << 1) / ((BMP280_U32_t)var1);
+        }
+        else {
+            p = (p / (BMP280_U32_t)var1) * 2;
+        }
+        var1 = (((BMP280_S32_t)dig_P9) * ((BMP280_S32_t)(((p>>3) * (p>>3))>>13)))>>12;
+        var2 = (((BMP280_S32_t)(p>>2)) * ((BMP280_S32_t)dig_P8))>>13;
+        press = (BMP280_U32_t)((BMP280_S32_t)p + ((var1 + var2 + dig_P7) >> 4));
+    }
+
+#else // ifdef BMP280_FIXEDPOINTMATH
+
+    {
+        double var1, var2;
+        var1 = (((double)adc_T)/16384.0 - ((double)dig_T1)/1024.0) * ((double)dig_T2);
+        var2 = ((((double)adc_T)/131072.0 - ((double)dig_T1)/8192.0) *
+        (((double)adc_T)/131072.0 - ((double) dig_T1)/8192.0)) * ((double)dig_T3);
+        t_fine = (BMP280_S32_t)(var1 + var2);
+        temp = (var1 + var2) / 5120.0;
+    }
+    {
+        double var1, var2, p;
+        var1 = ((double)t_fine/2.0) - 64000.0;
+        var2 = var1 * var1 * ((double)dig_P6) / 32768.0;
+        var2 = var2 + var1 * ((double)dig_P5) * 2.0;
+        var2 = (var2/4.0)+(((double)dig_P4) * 65536.0);
+        var1 = (((double)dig_P3) * var1 * var1 / 524288.0 + ((double)dig_P2) * var1) / 524288.0;
+        var1 = (1.0 + var1 / 32768.0)*((double)dig_P1);
+        if (var1 == 0.0)
+            return 0; // avoid exception caused by division by zero
+        
+        p = 1048576.0 - (double)adc_P;
+        p = (p - (var2 / 4096.0)) * 6250.0 / var1;
+        var1 = ((double)dig_P9) * p * p / 2147483648.0;
+        var2 = p * ((double)dig_P8) / 32768.0;
+        press = p + (var1 + var2 + ((double)dig_P7)) / 16.0;
+    }
+
+#endif // ifdef BMP280_FIXEDPOINTMATH
+
     return true;
 }

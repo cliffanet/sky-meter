@@ -167,12 +167,7 @@ static const MenuStatic::el_t _hwtest[] {
         .enter = NULL,
         .showval = [] (char *txt) {
             char ok[16];
-            float p;
-            if (!jmp::press(p)) {
-                strcpy(txt, "-");
-                return;
-            }
-            
+            auto p = jmp::press();
             vok(ok, (p > 60000) && (p < 150000));
             snprintf(txt, MENUSZ_VAL, TXT_TEST_PRESSVAL, p, ok);
         },
@@ -181,12 +176,7 @@ static const MenuStatic::el_t _hwtest[] {
         .name = TXT_TEST_PTEMP,
         .enter = NULL,
         .showval = [] (char *txt) {
-            float t;
-            if (!jmp::temp(t)) {
-                strcpy(txt, "-");
-                return;
-            }
-            
+            auto t = jmp::temp();
             snprintf(txt, MENUSZ_VAL, TXT_TEST_PTEMPVAL, t);
         },
     },

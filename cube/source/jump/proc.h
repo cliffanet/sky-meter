@@ -21,8 +21,8 @@ namespace jmp {
     void resetgnd();
     void resetmode();
     uint8_t chipid();
-    bool press(float &v);
-    bool temp(float &v);
+    float press();
+    float temp();
     bool isgnd();
     const LogBook::item_t &last();
 

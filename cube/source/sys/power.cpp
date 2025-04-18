@@ -65,6 +65,8 @@ static inline void _sysr_set(sysr_t r) {
 extern "C"
 void MX_USB_DEVICE_Init();
 #endif
+extern "C"
+void adcinit();
 
 class _PStop {
 private:
@@ -149,6 +151,9 @@ public:
         // инициализировать через hal
         MX_USB_DEVICE_Init();
 #endif
+        // ADC почему-то тоже не инициализируется нормально
+        // после восстановления регистров. Приходится вручную дёргать.
+        adcinit();
 
         CONSOLE("init");
         pwr::init();

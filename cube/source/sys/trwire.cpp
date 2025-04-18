@@ -55,15 +55,15 @@ bool TransSPI::write8(uint8_t reg, uint8_t val) {
 }
 
 bool TransSPI::read(uint8_t reg, uint8_t *d, size_t sz) {
+    uint8_t tx[sz+1], rx[sz+1];
+    tx[0] = reg | 0x80;
+    memset(tx+1, 0xff, sz);
+
     transbeg();
-    uint8_t /*txr = reg | 0x80,*/ rxr;
-    auto r = HAL_SPI_TransmitReceive(&hspi1, &reg, &rxr, 1, 10);
-    if (r == HAL_OK) {
-        uint8_t tx[sz];
-        memset(tx, 0xFF, sz);
-        r = HAL_SPI_TransmitReceive(&hspi1, tx, d, sz, 10);
-    }
+    auto r = HAL_SPI_TransmitReceive(&hspi1, tx, rx, sz+1, 10);
     transend();
+
+    memcpy(d, rx+1, sz);
 
     return r == HAL_OK;
 }
@@ -74,7 +74,7 @@ bool TransSPI::write(uint8_t reg, const uint8_t *d, size_t sz) {
     memcpy(tx+1, d, sz);
 
     transbeg();
-    auto r = HAL_SPI_Transmit(&hspi1, tx, 1, 10);
+    auto r = HAL_SPI_Transmit(&hspi1, tx, sz, 10);
     transend();
 
     return r == HAL_OK;

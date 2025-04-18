@@ -7,8 +7,12 @@ class TransWire;
 
 #define BMP280_CHIPID (0x58)
 
+// использовать целочисленную математику, если процессор не умеет float
+#define BMP280_FIXEDPOINTMATH
+
 class BMP280 {
     enum {
+        REG_CAL     = 0x88,
         REG_CAL_T1 = 0x88,
         REG_CAL_T2 = 0x8A,
         REG_CAL_T3 = 0x8C,
@@ -28,6 +32,7 @@ class BMP280 {
         REG_STATUS = 0xF3,
         REG_CONTROL = 0xF4,
         REG_CONFIG = 0xF5,
+        REG_TEMPPRES = 0xF7,
         REG_PRESSUREDATA = 0xF7,
         REG_TEMPDATA = 0xFA,
     };
@@ -38,21 +43,19 @@ class BMP280 {
     bool read16le(uint8_t reg, int16_t &v);
     bool read24(uint8_t reg, int32_t &v);
 
-    struct {
-        uint16_t    t1;
-        int16_t     t2;
-        int16_t     t3;
+    uint16_t    dig_T1;
+    int16_t     dig_T2;
+    int16_t     dig_T3;
 
-        uint16_t    p1;
-        int16_t     p2;
-        int16_t     p3;
-        int16_t     p4;
-        int16_t     p5;
-        int16_t     p6;
-        int16_t     p7;
-        int16_t     p8;
-        int16_t     p9;
-    } _calib;
+    uint16_t    dig_P1;
+    int16_t     dig_P2;
+    int16_t     dig_P3;
+    int16_t     dig_P4;
+    int16_t     dig_P5;
+    int16_t     dig_P6;
+    int16_t     dig_P7;
+    int16_t     dig_P8;
+    int16_t     dig_P9;
     bool calib();
 
     bool tempfine(int32_t &v);
@@ -131,8 +134,13 @@ class BMP280 {
         bool sleep();
         bool reset();
 
+        /*
         bool temp(float &v);
         bool press(float &v);
+        */
+
+        bool meas(float &press, float &temp);
+        inline bool meas(float &press) { float temp; return meas(press, temp); }
 };
 
 

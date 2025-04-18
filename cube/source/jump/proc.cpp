@@ -20,6 +20,7 @@ static TransSPI _spi(GPIOB, GPIO_PIN_0);
 static TransSPI _spi(GPIOB, GPIO_PIN_10);
 #endif
 static BMP280 _bmp(_spi);
+static float _press = 0, _temp = 0;
 
 static AltCalc _ac;
 static AltJmp _jmp(true);
@@ -123,7 +124,12 @@ static int _lmin = 0, _lmax = 0;
         sprn("q:%0.1f(%s)", _sq.val(), strtm(t, _sq.tm()));
         DSPL_STR(0, y, s);
 
-        sprn("s[%d]:%s(%s)", _jstr.prof().num(), modestr(m, _jstr.mode()), strtm(t, _jstr.tm()));
+        y += DSPL_S_HEIGHT+2;
+        sprn("p[%0.0f]:%0.1f", _ac.pressgnd(), _press-_ac.pressgnd());
+        DSPL_STR(0, y, s);
+
+        //sprn("s[%d]:%s(%s)", _jstr.prof().num(), modestr(m, _jstr.mode()), strtm(t, _jstr.tm()));
+        sprn("t:%.2f", _temp);
         DSPL_STR(DSPL_S_RIGHT(s)-15, DSPL_DHEIGHT-1, s);
 #endif // USE_JMPINFO
 
@@ -238,11 +244,11 @@ namespace jmp {
         return _bmp.chipid();
     }
 
-    bool press(float &v) {
-        return _bmp.press(v);
+    float press() {
+        return _press;
     }
-    bool temp(float &v) {
-        return _bmp.temp(v);
+    float temp() {
+        return _temp;
     }
 
     AltJmp::mode_t mode() {
@@ -279,7 +285,7 @@ namespace jmp {
         }
         
         float press;
-        if (!_bmp.press(press)) {
+        if (!_bmp.meas(press)) {
             CONSOLE("ERROR BMP280");
             _slp.clear();
             return false;
@@ -311,12 +317,13 @@ namespace jmp {
     }
 
     void tick(uint32_t ms) {
-        float press;
-        if (!_bmp.press(press)) {
+        if (!_bmp.meas(_press, _temp)) {
+            _press = 0;
+            _temp = 0;
             _ac.clear();
             return;
         }
-        _ac.tick(press, ms);
+        _ac.tick(_press, ms);
 
         static auto m = _jmp.mode();
         _jmp.tick(_ac);
