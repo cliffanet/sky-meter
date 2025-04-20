@@ -8,6 +8,7 @@ BMP280::BMP280(TransWire &_dev) :
     _dev(_dev)
 {  }
 
+/*
 bool BMP280::read16le(uint8_t reg, uint16_t &v) {
     uint8_t d[2] = { 0 };
     if (!_dev.read(reg, d, sizeof(d))) {
@@ -38,7 +39,6 @@ bool BMP280::read24(uint8_t reg, int32_t &v) {
     return true;
 }
 
-/*
 bool BMP280::calib() {
     bool r[] = {
         read16le(REG_CAL_T1, _calib.t1),
@@ -60,10 +60,10 @@ bool BMP280::calib() {
             return false;
     return true;
 }
-    */
+*/
 
 bool BMP280::calib() {
-    uint8_t d[13];
+    uint8_t d[26];
     if (!_dev.read(REG_CAL, d, sizeof(d)))
         return false;
 
@@ -216,18 +216,18 @@ bool BMP280::meas(float &press, float &temp) {
     b.d24(adc_P);   adc_P >>= 4;
     b.d24(adc_T);   adc_T >>= 4;
 
-
     // код мат-логики взят из datasheet, имена переменных,
     // в т.ч. калибровочных подогнаны под него, чтобы
     // минимизировать исправления и опечатки из-за них
 
 #ifdef BMP280_FIXEDPOINTMATH
     typedef uint32_t BMP280_U32_t;
+
     {
         BMP280_S32_t var1, var2;
         var1 = ((((adc_T>>3) - ((BMP280_S32_t)dig_T1<<1))) * ((BMP280_S32_t)dig_T2)) >> 11;
         var2 = (((((adc_T>>4) - ((BMP280_S32_t)dig_T1)) * ((adc_T>>4) - ((BMP280_S32_t)dig_T1))) >> 12) *
-        ((BMP280_S32_t)dig_T3)) >> 14;
+                ((BMP280_S32_t)dig_T3)) >> 14;
         t_fine = var1 + var2;
         float T = (t_fine * 5 + 128) >> 8;
         temp = T / 100;

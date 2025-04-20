@@ -39,9 +39,11 @@ class BMP280 {
 
     TransWire &_dev;
 
+    /*
     bool read16le(uint8_t reg, uint16_t &v);
     bool read16le(uint8_t reg, int16_t &v);
     bool read24(uint8_t reg, int32_t &v);
+    */
 
     uint16_t    dig_T1;
     int16_t     dig_T2;
