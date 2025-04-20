@@ -34,6 +34,7 @@ extern const uint8_t u8g2_font_robotobd_08_tx[] U8G2_FONT_SECTION("u8g2_font_rob
 #define TXT_ALT_CORRECT             "Превышение площадки"
 #define TXT_ALT_RESETGND            "Сбросить уровень Земли"
 #define TXT_ALT_RESETMODE           "Сбросить режим работы"
+#define TXT_ALT_SAVETRACE           "Сохранить трассировку"
 
 #define TXT_SYSTEM_DATETIME         "Изменить часы"
 #define TXT_SYSTEM_LOPWRONJMP       "Энергосбер. в прыжке"

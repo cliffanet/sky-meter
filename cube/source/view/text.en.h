@@ -28,6 +28,7 @@
 #define TXT_ALT_CORRECT             "Alt correction"
 #define TXT_ALT_RESETGND            "Reset GND now"
 #define TXT_ALT_RESETMODE           "Reset mode"
+#define TXT_ALT_SAVETRACE           "Save trace"
 
 #define TXT_SYSTEM_DATETIME         "Change Clock"
 #define TXT_SYSTEM_LOPWRONJMP       "LoPwr on jump"

@@ -3,12 +3,12 @@
 #include "bmp280.h"
 #include "altcalc.h"
 #include "logbook.h"
+#include "saver.h"
 #include "../sys/trwire.h"
 #include "../sys/stm32drv.h"
 #include "../sys/maincfg.h"
 #include "../sys/power.h"
 #include "../sys/log.h"
-#include "../sdcard/saver.h"
 #include "../view/page.h"
 
 #include <cmath>
@@ -94,6 +94,11 @@ static int _lmin = 0, _lmax = 0;
         Dspl::drawClock(u8g2);
         
         char s[strsz], m[strsz], t[strsz];
+    
+    if (jsave::isactive()) {
+        DSPL_FONT(u8g2_font_open_iconic_www_1x_t);
+        DSPL_GLYPH(30, 8, 'K');
+    }
 
     if (!_ac.isempty()) {
         // info
@@ -363,7 +368,7 @@ namespace jmp {
                 case AltJmp::GROUND:
                     if (m > AltJmp::GROUND) {
                         _last = LogBook::end(_jmp.newtm());
-                        sdcard_save();
+                        jsave::full();
                     }
                     break;
                 case AltJmp::TAKEOFF:

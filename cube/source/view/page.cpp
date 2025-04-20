@@ -32,12 +32,17 @@ void Dspl::drawBatt(DSPL_ARG) {
 
 void Dspl::drawClock(DSPL_ARG) {
     auto tm = tmNow();
+    char s[strsz];
 
     DSPL_COLOR(1);
+
     DSPL_FONT(u8g2_font_amstrad_cpc_extended_8n);
-    char s[strsz];
-    sprn("%d:%02d", tm.h, tm.m);
+    sprn("%u:%02u", tm.h, tm.m);
     DSPL_STR(DSPL_S_RIGHT(s)-25, 10, s);
+    
+    DSPL_FONT(u8g2_font_blipfest_07_tn);
+    sprn("%u.%02u.%04u", tm.day, tm.mon, tm.year);
+    DSPL_STR(DSPL_S_RIGHT(s)-26, 16, s);
 }
 
 void Dspl::page() {

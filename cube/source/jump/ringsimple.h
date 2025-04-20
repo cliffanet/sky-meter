@@ -179,6 +179,49 @@ public:
     const_it cend() const {
         return const_it(this, _csz);
     }
+
+    class snapcursor {
+        const value_type *_data;
+        size_type _cur, _csz, _i;
+    public:
+        snapcursor():
+            _data(NULL),
+            _cur(0),
+            _csz(0),
+            _i(0)
+        {}
+        snapcursor(const ring<T, _dsz> *r, size_type i) :
+            _data(r->_data),
+            _cur(r->_cur),
+            _csz(r->_csz),
+            _i(i)
+        {}
+        snapcursor& operator++() {
+            if (_i >= _csz)
+                _i = _csz-1;
+            else
+            if (_i < _csz-1)
+                _i++;
+            return *this;
+        }
+        snapcursor& operator--() {
+            if (_i < 0)
+                _i = 0;
+            else
+            if (_i > 1)
+                _i--;
+            return *this;
+        }
+
+        size_type availr() const { return (_i >= 0) && (_i < _csz) ? _csz-1-_i : 0; }
+        size_type availl() const { return _i > 0 ? _i : 0; }
+        const value_type & operator*() const {
+            return _data[(_cur + _i) % _csz];
+        }
+    };
+
+    snapcursor snapbeg() const { return snapcursor(this, 0); }
+    snapcursor snapend() const { return snapcursor(this, _csz > 0 ? _csz-1 : 0); }
 };
 
 #endif // RINGSIMPLE_H

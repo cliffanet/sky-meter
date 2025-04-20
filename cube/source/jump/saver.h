@@ -3,6 +3,13 @@
 
 #define SDCARD_LOGBOOK  "logbook.csv"
 
-void sdcard_save();
+namespace jsave {
+    bool isactive();
+
+#ifdef USE_JMPTRACE
+    void trace();
+#endif
+    void full();
+}
 
 #endif /* _sdcard_saver_H */

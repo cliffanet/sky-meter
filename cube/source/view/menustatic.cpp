@@ -16,6 +16,7 @@
 #include "../sys/maincfg.h"
 
 #include "../jump/proc.h"
+#include "../jump/saver.h"
 #include "../sys/clock.h"
 #include "../sys/power.h"
 #include "../sys/batt.h"
@@ -106,6 +107,15 @@ static const MenuStatic::el_t _alt[] = {
         .enter  = [] { new MenuConfirm(jmp::resetmode); }
     }
     */
+#ifdef USE_JMPTRACE
+    {
+        .name   = TXT_ALT_SAVETRACE,
+        .enter  = jsave::trace,
+        .showval = [] (char *txt) {
+            strcpy(txt, jsave::isactive() ? "S" : "");
+        },
+    },
+#endif // USE_JMPTRACE
 };
 
 static const MenuStatic::el_t _hwtest[] {
@@ -199,28 +209,28 @@ static const MenuStatic::el_t _hwtest[] {
             if ((t1 = HAL_GetTick()) > _t) {
                 _t = t1+2000;
 
-                FSMount fs("");
-                if (fs) {
-                    ct = fs.ctype();
-                    csz = static_cast<double>((fs->n_fatent - 2) * fs->csize) / 2000;
+                if (fs::mount()) {
+                    ct = fs::ctype();
+                    csz = static_cast<double>((fs::inf().n_fatent - 2) * fs::inf().csize) / 2000;
+                    fs::stop();
                 }
                 else
                     ct = 0;
             }
             
             const char *t =
-                ct == FSMount::CT_UNKNOWN   ? "unknown" :
-                ct == FSMount::CT_NONE      ? "-" :
-                ct == FSMount::CT_MMC3      ? "MMC3" :
-                ct == FSMount::CT_MMC4      ? "MMC4" :
-                ct == FSMount::CT_MMC       ? "MMC" :
-                ct == FSMount::CT_SDC1      ? "SDC1" :
-                ct == FSMount::CT_SDC2      ? "SDC2" :
-                ct == FSMount::CT_SDC       ? "SDC" :
-                ct == FSMount::CT_BLOCK     ? "BLOCK" :
-                ct == FSMount::CT_SDC2BL    ? "SDC2BL" : "";
+                ct == fs::CT_UNKNOWN   ? "unknown" :
+                ct == fs::CT_NONE      ? "-" :
+                ct == fs::CT_MMC3      ? "MMC3" :
+                ct == fs::CT_MMC4      ? "MMC4" :
+                ct == fs::CT_MMC       ? "MMC" :
+                ct == fs::CT_SDC1      ? "SDC1" :
+                ct == fs::CT_SDC2      ? "SDC2" :
+                ct == fs::CT_SDC       ? "SDC" :
+                ct == fs::CT_BLOCK     ? "BLOCK" :
+                ct == fs::CT_SDC2BL    ? "SDC2BL" : "";
             
-            if (ct == FSMount::CT_NONE) {
+            if (ct == fs::CT_NONE) {
                 strcpy(txt, "-");
             }
             else {
@@ -358,7 +368,6 @@ class MenuTimeEdit : public MenuModal {
 };
 
 #include "../jump/logbook.h"
-#include "../sdcard/saver.h"
 #include "../sys/iflash.h"
 extern "C"
 void Error_Handler(void);
@@ -491,10 +500,6 @@ static const MenuStatic::el_t _system[] = {
         }); },
     },
 */
-    {
-        .name   = "sdcard",
-        .enter  = [] { sdcard_save(); },
-    }
 #endif // USE_DEVMENU
 };
 

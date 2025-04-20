@@ -4,6 +4,7 @@
 
 #include "stm32drv.h"
 #include "power.h"
+#include "sproc.h"
 #include "batt.h"
 #include "maincfg.h"
 #include "log.h"
@@ -333,6 +334,9 @@ static pwr_mode_t _mode() {
         // сразу же после любого нажатия
         return PWR_ACTIVE;
     
+    if (proc::isactive())
+        return PWR_ACTIVE;
+    
     if (!jmp::isgnd())
         return PWR_PASSIVE;
     if (Btn::isactive(BTN_ACTIVE_LONG))
@@ -498,7 +502,7 @@ void pwr_tick() {
             return;
         
         default:
-            while (_tmr == 0) asm("");
+            while (_tmr == 0) proc::run();
     }
 }
 
