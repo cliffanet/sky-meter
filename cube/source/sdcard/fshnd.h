@@ -3,7 +3,8 @@
 
 #include "../ff/ff.h"
 
-#define FR(func, fail)      { CONSOLE(TOSTRING(func)); auto st = func; if (st != FR_OK) { CONSOLE(TOSTRING(func) "failed: %d", st); fail; } }
+//#define FR(func, fail)      { CONSOLE(TOSTRING(func)); auto st = func; if (st != FR_OK) { CONSOLE(TOSTRING(func) "failed: %d", st); fail; } }
+#define FR(func, fail)      { auto st = func; if (st != FR_OK) { CONSOLE(TOSTRING(func) "failed: %d", st); fail; } }
 #define F(func)            FR(func, ;)
 
 namespace fs {

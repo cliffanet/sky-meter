@@ -2,7 +2,7 @@
 #include "../../cube/source/jump/altcalc.h"
 
 static AltBuf _abuf;
-static AltJmp _jmp(true);
+static AltJmp _jmp(false);
 
 static AltSqBig _sq;
 static AltStrict _jstr;
@@ -31,8 +31,8 @@ JumpInf jump_info() {
         {
             static_cast<int8_t>(_jmp.mode()),
             _jmp.cnt(), _jmp.tm(),
-            _jmp.mode() == AltJmp::TAKEOFF ? _jmp.ff().cnt() : _jmp.newcnt(),
-            _jmp.mode() == AltJmp::TAKEOFF ? _jmp.ff().tm() : _jmp.newtm(),
+            _jmp.newcnt(),
+            _jmp.newtm(),
         },
 
         {

@@ -1,6 +1,4 @@
-import 'package:skybook/jump/bind.dart';
-
-import '../jump/call.dart';
+import '../jump/bind.dart';
 
 class TraceItem {
     final int alt;

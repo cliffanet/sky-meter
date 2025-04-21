@@ -123,6 +123,7 @@ static bool _saving_trace() {
     if (_log.availr() <= 0) {
         _saving_close();
         CONSOLE("writed: %d lines, %d bytes", _log_cnt, _log_sz);
+        return false;
     }
 
     return true;

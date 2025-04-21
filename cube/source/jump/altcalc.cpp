@@ -444,8 +444,8 @@ void AltJmp::tick(const AltBuf &ab) {
                 };
                 static const AltProfile::prof_t profile[] = {
                     { -50,  -10 },
-                    { -100, -23 },
-                    { -100, -18 },
+                    { -100, -20 },
+                    { -100, -15 },
                     { -100, -8 },
                     { -100, -4 },
                     { -100, -2 }
@@ -455,13 +455,18 @@ void AltJmp::tick(const AltBuf &ab) {
                         AltProfile(profstr, 3) :
                         AltProfile(profile, 6);
                 
-                _ff.tick(ab.sav() /* avg */, tm);
+                _ff.tick(ab.sav(10) /* avg */, tm);
+                //_ff.tick(ab.avg(), tm);
                 if (_ff.full()) {
                     // профиль закончился, принимаем окончательное решение
                     m = !_strict && (avg.speed() >= -AC_JMP_CNP_SPEED) ? CANOPY : FREEFALL;
                     // скорость средняя задерживается примерно на половину-весь размер буфера
                     _c_cnt= _ff.cnt() + 10 /* + AC_DATA_COUNT */;
                     _c_tm = _ff.tm();
+                }
+                else {
+                    _c_cnt = _ff.cnt();
+                    _c_tm  = _ff.tm();
                 }
             }
             break;

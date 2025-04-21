@@ -23,7 +23,7 @@ static BMP280 _bmp(_spi);
 static float _press = 0, _temp = 0;
 
 static AltCalc _ac;
-static AltJmp _jmp(true);
+static AltJmp _jmp(false);
 
 #ifdef USE_JMPINFO
 static AltSqBig _sq;

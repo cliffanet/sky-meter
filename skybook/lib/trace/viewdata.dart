@@ -116,7 +116,7 @@ class ViewMatrix {
         _cur = invert(d.localPosition);
         if (!drng(_cur!.dx.toInt(), _cur!.dy) || (_cur!.dx < 0) || (_cur!.dx.toInt() >= _omax.dy))
             _cur = null;
-        developer.log("down: ${_cur}");
+        developer.log("down: $_cur");
         _notify.value ++;
     }
     void tapEnd() {

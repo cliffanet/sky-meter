@@ -38,7 +38,7 @@ class PageTrace extends StatelessWidget {
                     chg: (r.length > 2) && r[2].isNotEmpty ? r[2].codeUnitAt(0) : 0,
                 ));
             }
-            catch(ex) {}
+            finally {}
         }
 
         _view.origmax = Offset(_data.rcount.toDouble(), _data.rmaxalt.toDouble());
