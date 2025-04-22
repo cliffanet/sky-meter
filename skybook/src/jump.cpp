@@ -26,7 +26,8 @@ JumpInf jump_info() {
 
         { _abuf.avg().alt(), _abuf.avg().speed() },
         { _abuf.app().alt(), _abuf.app().speed() },
-        { _abuf.sav().alt(), _abuf.sav().speed() },
+        { _abuf.sav(5).alt(), _abuf.sav(5).speed() },
+        { _abuf.sav(10).alt(), _abuf.sav(10).speed() },
 
         {
             static_cast<int8_t>(_jmp.mode()),

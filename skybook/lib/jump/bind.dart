@@ -74,6 +74,14 @@ final class UnnamedStruct3 extends ffi.Struct {
 }
 
 final class UnnamedStruct4 extends ffi.Struct {
+  @ffi.Float()
+  external double alt;
+
+  @ffi.Float()
+  external double speed;
+}
+
+final class UnnamedStruct5 extends ffi.Struct {
   @ffi.Char()
   external int mode;
 
@@ -90,7 +98,7 @@ final class UnnamedStruct4 extends ffi.Struct {
   external int newtm;
 }
 
-final class UnnamedStruct5 extends ffi.Struct {
+final class UnnamedStruct6 extends ffi.Struct {
   @ffi.Double()
   external double val;
 
@@ -118,9 +126,11 @@ final class JumpInf extends ffi.Struct {
 
   external UnnamedStruct2 app;
 
-  external UnnamedStruct3 sav;
+  external UnnamedStruct3 a05;
 
-  external UnnamedStruct4 jmp;
+  external UnnamedStruct4 a10;
 
-  external UnnamedStruct5 sq;
+  external UnnamedStruct5 jmp;
+
+  external UnnamedStruct6 sq;
 }

@@ -32,7 +32,7 @@ namespace jmp {
 #if defined(STM32G473xx)
     #define JMP_TRACE_SEC       (5*60)
 #else
-    #define JMP_TRACE_SEC       (3*60)
+    #define JMP_TRACE_SEC       (3*60+30)
 #endif
 
     typedef struct {

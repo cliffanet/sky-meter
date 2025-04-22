@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'logbook.dart';
 import 'trace.dart';
 
 //import 'dart:developer' as developer;
@@ -39,8 +40,18 @@ class PageMain extends StatelessWidget {
                             ),
                             ElevatedButton(
                                 style: st,
-                                child: Text('btn2'),
-                                onPressed: () {},
+                                child: Text('Логбук из папки'),
+                                onPressed: () async {
+                                    final dir = await FilePicker.platform.getDirectoryPath(
+                                        dialogTitle: 'Открыть папку с логбуком',
+                                    );
+                                    if ((dir == null) || dir.isEmpty)
+                                        return;
+                                    Navigator.push(
+                                        context,
+                                        MaterialPageRoute(builder: (context) => PageLogBook.byDir(dir)),
+                                    );
+                                },
                             )
                         ]
                     )

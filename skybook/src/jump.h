@@ -31,7 +31,11 @@ typedef struct {
     struct {
         float   alt;
         float   speed;
-    } sav;
+    } a05;
+    struct {
+        float   alt;
+        float   speed;
+    } a10;
 
     struct {
         char mode;
