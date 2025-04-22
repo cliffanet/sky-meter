@@ -7,6 +7,8 @@ import 'package:intl/intl.dart';
 
 import 'dart:developer' as developer;
 
+import 'trace.dart';
+
 
 extension on String {
     int get tmToMs {
@@ -69,6 +71,8 @@ class jmpitem {
     String get tmToff   => _tm(msToff);
     String get tmFF     => _tm(msFF);
     String get tmCnp    => _tm(msCnp);
+
+    List<String> get trace => _trace[num] ?? [];
 }
 
 class jmpdate {
@@ -80,6 +84,9 @@ class jmpdate {
 final _logbook = <jmpdate>[];
 final _byDate = <String, jmpdate>{};
 final _notify = ValueNotifier(0);
+
+final _trace = <int, List<String>>{};
+Function (BuildContext context, String name) _tropen = (_, __) {};
 
 class LogBook {
     static Future<bool> byDir(String dir) async {
@@ -103,6 +110,30 @@ class LogBook {
         for (final r in txt)
             add(jmpitem.byCSV(r));
         
+
+        final files =
+            (await Directory(dir).list().toList())
+                .whereType<File>()
+                .map((f) => p.basename(f.path));
+        
+        for (final fname in files) {
+            final m = RegExp(r'^jump_(\d+)_').firstMatch(fname);
+            if (m == null)
+                continue;
+            final num = int.parse(m[1]!);
+            if (!_trace.containsKey(num))
+                _trace[num] = [];
+            
+            _trace[num]!.add(fname);
+        }
+
+        _tropen = (context, fname) {
+            Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => PageTrace.byFile(fname: p.join(dir, fname))),
+            );
+        };
+        
         _notify.value++;
         
         return true;
@@ -113,6 +144,8 @@ class LogBook {
     static void clear() {
         _logbook.clear();
         _byDate.clear();
+        _trace.clear();
+        _tropen = (_, __) {};
         _notify.value++;
     }
 
@@ -185,14 +218,35 @@ class PageLogBook extends StatelessWidget {
                                     style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
                                 childrenPadding: EdgeInsets.only(left: 30),
-                                children: d.list.map((j) =>
-                                    Card(
-                                        child: ListTile(
-                                            leading: Text(j.time),
-                                            title: Text(
+                                children: d.list.map((j) {
+                                    final title = <Widget>[
+                                        Container(
+                                            width: 100,
+                                            child: Text(
                                                 j.num.toString(),
                                                 style: TextStyle(fontWeight: FontWeight.bold),
                                             ),
+                                        ),
+                                    ];
+
+                                    for (final f in j.trace)
+                                        title.add(
+                                            ElevatedButton(
+                                                style: ElevatedButton.styleFrom(
+                                                    minimumSize: const Size(120, 24),
+                                                    maximumSize: const Size(120, 24),
+                                                    textStyle: TextStyle(fontSize: 9),
+                                                    
+                                                ),
+                                                onPressed: () => _tropen(context, f),
+                                                child: Text('трассировка'),
+                                            )
+                                        );
+
+                                    return Card(
+                                        child: ListTile(
+                                            leading: Text(j.time),
+                                            title: Row(children: title),
                                             subtitle: Table(
                                                 columnWidths: {
                                                     0: IntrinsicColumnWidth(),
@@ -207,8 +261,8 @@ class PageLogBook extends StatelessWidget {
                                                 ],
                                             ),
                                         ),
-                                    )
-                                ).toList(),
+                                    );
+                                }).toList(),
                             );
                         }
                     );
