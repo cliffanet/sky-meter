@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'dart:developer' as developer;
 
 import 'trace.dart';
+import '../device.dart';
 
 
 extension on String {
@@ -139,6 +140,15 @@ class LogBook {
         return true;
     }
 
+    static Future<bool> byDev(String address) async {
+        clear();
+        if (!devConnect(address))
+            return false;
+
+        return true;
+    }
+
+
     static add(jmpitem j) => LogBook.date(j.date).list.add(j);
 
     static void clear() {
@@ -173,10 +183,18 @@ TableRow _Param(String name, String value) {
 
 class PageLogBook extends StatelessWidget {
     final String _from;
+    final bool _bydev;
     PageLogBook.byDir(String dir, {super.key}) :
-        _from = ' из папки'
+        _from = ' из папки',
+        _bydev= false
     {
         LogBook.byDir(dir);
+    }
+    PageLogBook.byDev(String address, {super.key}) :
+        _from = ' с устройства',
+        _bydev=true
+    {
+        LogBook.byDev(address);
     }
 
     @override
@@ -196,7 +214,11 @@ class PageLogBook extends StatelessWidget {
                     leading: Navigator.canPop(context) ?
                         IconButton(
                             icon: const Icon(Icons.navigate_before),
-                            onPressed: () => Navigator.pop(context),
+                            onPressed: () {
+                                Navigator.pop(context);
+                                if (_bydev)
+                                    devStop();
+                            },
                         ) : null,
                     title: Text('Логбук$_from'),
                 ),
@@ -220,8 +242,8 @@ class PageLogBook extends StatelessWidget {
                                 childrenPadding: EdgeInsets.only(left: 30),
                                 children: d.list.map((j) {
                                     final title = <Widget>[
-                                        Container(
-                                            width: 100,
+                                        SizedBox(
+                                            width: 80,
                                             child: Text(
                                                 j.num.toString(),
                                                 style: TextStyle(fontWeight: FontWeight.bold),

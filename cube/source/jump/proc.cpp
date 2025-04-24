@@ -9,6 +9,7 @@
 #include "../sys/maincfg.h"
 #include "../sys/power.h"
 #include "../sys/log.h"
+#include "../uart/uart.h"
 #include "../view/page.h"
 
 #include <cmath>
@@ -98,6 +99,10 @@ static int _lmin = 0, _lmax = 0;
     if (jsave::isactive()) {
         DSPL_FONT(u8g2_font_open_iconic_www_1x_t);
         DSPL_GLYPH(30, 8, 'K');
+    }
+    if (uart::isactive()) {
+        DSPL_FONT(u8g2_font_open_iconic_www_1x_t);
+        DSPL_GLYPH(45, 8, 'O');
     }
 
     if (!_ac.isempty()) {

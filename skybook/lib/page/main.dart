@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'logbook.dart';
 import 'trace.dart';
+import 'devselect.dart';
 
 //import 'dart:developer' as developer;
 
@@ -50,6 +51,16 @@ class PageMain extends StatelessWidget {
                                     Navigator.push(
                                         context,
                                         MaterialPageRoute(builder: (context) => PageLogBook.byDir(dir)),
+                                    );
+                                },
+                            ),
+                            ElevatedButton(
+                                style: st,
+                                child: Text('Логбук с устройства'),
+                                onPressed: () {
+                                    Navigator.push(
+                                        context,
+                                        MaterialPageRoute(builder: (context) => PageDevSelect()),
                                     );
                                 },
                             )

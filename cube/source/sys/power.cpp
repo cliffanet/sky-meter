@@ -12,6 +12,7 @@
 #include "../view/btn.h"
 #include "../view/dspl.h"
 #include "../view/menu.h"
+#include "../uart/uart.h"
 
 //#define PWRDEBUG
 
@@ -334,6 +335,8 @@ static pwr_mode_t _mode() {
         // сразу же после любого нажатия
         return PWR_ACTIVE;
     
+    if (uart::isactive())
+        return PWR_ACTIVE;
     if (proc::isactive())
         return PWR_ACTIVE;
     
@@ -388,6 +391,7 @@ void pwr_tick() {
         Btn::tick();
         Dspl::tick();
         batt::tick();
+        uart::tick();
 
         _tmr = 0;
 
