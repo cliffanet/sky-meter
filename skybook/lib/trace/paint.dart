@@ -21,7 +21,7 @@ class TracePaint extends CustomPainter {
         Offset p0 = _view.pnt(0, alt(_data[0]));
         for (int n = 1; n < _data.count; n++) {
             Offset p1 = _view.pnt(n, alt(_data[n]));
-            if (_view.prng(p0) || _view.prng(p1))
+            if (_view.pok(p0) || _view.pok(p1))
                 canvas.drawLine(p0, p1, pnt);
             p0 = p1;
         }
@@ -54,9 +54,9 @@ class TracePaint extends CustomPainter {
             ..color = c
             ..strokeWidth = 1;
 
-        final p = _view.pnt(n, _view.datamin.dy);
-        if (_view.prng(p))
-            _dashedLine(canvas, Offset(p.dx, _view.viewLT.dy), Offset(p.dx, _view.viewLB.dy), [2, 5], pnt);
+        final p = Offset(_view.pnt(n, 0).dx, _view.yu+1);
+        if (_view.pok(p))
+            _dashedLine(canvas, p, Offset(p.dx, _view.yd), [2, 5], pnt);
     }
 
     void _drawCursorH(Canvas canvas, int n, double alt, Color c) {
@@ -65,8 +65,8 @@ class TracePaint extends CustomPainter {
             ..strokeWidth = 1;
 
         final p = _view.pnt(n, alt);
-        if (_view.prng(p))
-            _dashedLine(canvas, Offset(_view.viewLT.dx, p.dy), p, [2, 5], pnt);
+        if (_view.pok(p))
+            _dashedLine(canvas, Offset(_view.xl, p.dy), p, [2, 5], pnt);
     }
 
     static String sectm(double v, [bool ms=false]) =>
@@ -85,13 +85,12 @@ class TracePaint extends CustomPainter {
             ..color = Colors.black
             ..strokeWidth = 1;
         
-        canvas.drawLine(_view.viewLB, _view.viewRB, paint);
-        for (final v in _view.axisx) {
-            final p = _view.pnt(v.toInt(), 0);
-            canvas.drawLine(Offset(p.dx, _view.viewRB.dy), Offset(p.dx, size.height), paint);
+        canvas.drawLine(Offset(_view.xl, _view.yd), Offset(_view.xr, _view.yd), paint);
+        for (final a in _view.axisx) {
+            canvas.drawLine(a.pnt, a.pnt+Offset(0,5), paint);
             final text = TextPainter(
                 text: TextSpan(
-                    text: sectm(v),
+                    text: sectm(a.val),
                     style: TextStyle(
                         color: Colors.black,
                         fontSize: 14,
@@ -100,21 +99,19 @@ class TracePaint extends CustomPainter {
                 textDirection: TextDirection.ltr,
             );
             text.layout();
-            final ymax = _view.viewLB.dy - 5;
-            canvas.translate(p.dx-20, ymax);
+            canvas.translate(a.pnt.dx-20, a.pnt.dy-5);
             canvas.rotate(-pi/2);
             text.paint(canvas, Offset(0, 10));
             canvas.rotate(pi/2);
-            canvas.translate(-1*(p.dx-20), -1*ymax);
+            canvas.translate(-1*(a.pnt.dx-20), -1*(a.pnt.dy-5));
         }
 
-        canvas.drawLine(_view.viewLT, _view.viewLB, paint);
-        for (final v in _view.axisy) {
-            final p = _view.pnt(0, v);
-            canvas.drawLine(Offset(0, p.dy), Offset(_view.viewLT.dx, p.dy), paint);
+        canvas.drawLine(Offset(_view.xl, _view.yd), Offset(_view.xl, _view.yu), paint);
+        for (final a in _view.axisy) {
+            canvas.drawLine(a.pnt, a.pnt - Offset(5, 0), paint);
             final text = TextPainter(
                 text: TextSpan(
-                    text: v.toInt().toString(),
+                    text: a.val.toInt().toString(),
                     style: TextStyle(
                         color: Colors.black,
                         fontSize: 14,
@@ -123,7 +120,7 @@ class TracePaint extends CustomPainter {
                 textDirection: TextDirection.ltr,
             );
             text.layout();
-            text.paint(canvas, Offset(15, p.dy-10));
+            text.paint(canvas, a.pnt + Offset(5, -10));
         }
 
         _drawAlt(canvas, (e) => e.inf.avg.alt, Colors.green);

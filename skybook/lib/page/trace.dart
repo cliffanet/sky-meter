@@ -70,7 +70,7 @@ class PageTrace extends StatelessWidget {
                             onPointerSignal: (pointerSignal) {
                                 //pointerSignal.
                                 if (pointerSignal is PointerScrollEvent) {
-                                    _view.scaleChange(pointerSignal.scrollDelta.dy);
+                                    _view.scaleChange(pointerSignal.scrollDelta.dy, pointerSignal.localPosition);
                                 }
                             },
                             child: CustomPaint(
