@@ -7,6 +7,7 @@ import '../trace/csv.dart';
 import '../trace/item.dart';
 import '../trace/viewdata.dart';
 import '../jump/call.dart';
+import '../device.dart';
 
 class PageTrace extends StatelessWidget {
     final String _name;
@@ -19,9 +20,25 @@ class PageTrace extends StatelessWidget {
         loadfile(fname);
     }
 
+    PageTrace.byDev({ super.key, required String fname }) :
+        _name = fname
+    {
+        loaddev(fname);
+    }
+
     void loadfile(String fname) async {
         _data.clear();
         final lnall = await File(fname).readAsLines();
+        loadcsv(lnall);
+    }
+
+    void loaddev(String fname) async {
+        _data.clear();
+        final s = await devCmd('traceget', [fname]);
+        loadcsv(s.data);
+    }
+
+    void loadcsv(List<String> lnall) {
         lnall.removeAt(0); // заголовок
 
         jump.clear();

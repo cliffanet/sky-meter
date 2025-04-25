@@ -144,7 +144,46 @@ class LogBook {
         clear();
         if (!devConnect(address))
             return false;
+        
+        {
+            final s = await devCmd('logbook', [100]);
+            if (!s.ok)
+                return false;
+            
+            for (final r in s.data.reversed) {
+                final c = CsvToListConverter(eol: null, fieldDelimiter: ',').convert(r);
+                if (c.isEmpty)
+                    continue;
+                add(jmpitem.byCSV(c[0]));
+            }
+        }
 
+        {
+            final s = await devCmd('tracelist');
+            if (!s.ok)
+                return false;
+            
+            for (final fname in s.data) {
+                final m = RegExp(r'^jump_(\d+)_').firstMatch(fname);
+                if (m == null)
+                    continue;
+                final num = int.parse(m[1]!);
+                if (!_trace.containsKey(num))
+                    _trace[num] = [];
+                
+                _trace[num]!.add(fname);
+            }
+        }
+
+        _tropen = (context, fname) {
+            Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => PageTrace.byDev(fname: fname)),
+            );
+        };
+        
+        _notify.value++;
+        
         return true;
     }
 
@@ -253,15 +292,18 @@ class PageLogBook extends StatelessWidget {
 
                                     for (final f in j.trace)
                                         title.add(
-                                            ElevatedButton(
-                                                style: ElevatedButton.styleFrom(
-                                                    minimumSize: const Size(120, 24),
-                                                    maximumSize: const Size(120, 24),
-                                                    textStyle: TextStyle(fontSize: 9),
-                                                    
-                                                ),
-                                                onPressed: () => _tropen(context, f),
-                                                child: Text('трассировка'),
+                                            Tooltip(
+                                                message: f,
+                                                child: ElevatedButton(
+                                                    style: ElevatedButton.styleFrom(
+                                                        minimumSize: const Size(120, 24),
+                                                        maximumSize: const Size(120, 24),
+                                                        textStyle: TextStyle(fontSize: 9),
+                                                        
+                                                    ),
+                                                    onPressed: () => _tropen(context, f),
+                                                    child: Text('трассировка'),
+                                                )
                                             )
                                         );
 

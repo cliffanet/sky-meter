@@ -67,17 +67,7 @@ static void _save_logbook() {
             return;
     }
 
-    const auto &tm = _l.tm;
-    sz = snprintf(s, sizeof(s), 
-            "\"%2u.%02u.%04u %2u:%02u:%02u\",%lu,\"" TXT_LOGBOOK_MINSEC "\","
-            "%u,%u,%u,\"" TXT_LOGBOOK_MINSEC "\"\n",
-            tm.day, tm.mon, tm.year, tm.h, tm.m, tm.s,
-            _l.num,
-            _l.toffsec / 60, _l.toffsec % 60,
-            _l.begalt, _l.ffsec,
-            _l.cnpalt,
-            _l.cnpsec / 60, _l.cnpsec % 60
-        );
+    sz = jsave::logbook2csv(s, sizeof(s), _l);
     if (!fh.write(s, sz))
         return;
 }
@@ -168,6 +158,21 @@ static void _save_trace(bool byjmp = true) {
 namespace jsave {
     bool isactive() {
         return _ftr;
+    }
+
+    int logbook2csv(char *s, size_t sz, LogBook::item_t &_l) {
+
+        const auto &tm = _l.tm;
+        return snprintf(s, sz, 
+            "\"%2u.%02u.%04u %2u:%02u:%02u\",%lu,\"" TXT_LOGBOOK_MINSEC "\","
+            "%u,%u,%u,\"" TXT_LOGBOOK_MINSEC "\"\n",
+            tm.day, tm.mon, tm.year, tm.h, tm.m, tm.s,
+            _l.num,
+            _l.toffsec / 60, _l.toffsec % 60,
+            _l.begalt, _l.ffsec,
+            _l.cnpalt,
+            _l.cnpsec / 60, _l.cnpsec % 60
+        );
     }
 
 #ifdef USE_JMPTRACE

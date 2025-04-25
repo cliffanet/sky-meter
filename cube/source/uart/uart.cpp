@@ -2,6 +2,12 @@
 #include "uart.h"
 #include "cmdtxt.h"
 #include "../sys/log.h"
+#include "../sys/iflash.h"
+#include "../jump/saver.h"
+
+#include "../sdcard/fshnd.h"
+#include "../ff/diskio.h"
+#include "../sys/bufline.h"
 
 #include <cstring>
 
@@ -28,6 +34,84 @@ class _cmd : public CmdTxt {
     void _term() {
         _active = 0;
     }
+
+    void _logbook() {
+        auto cnt = argavail() ? argnum() : 50;
+        LogBook::item_t l;
+        char s[128];
+
+        for (auto r = iflash::last(iflash::TYPE_LOGBOOK); r && (cnt > 0); r = r.prevme(), cnt--)
+            if (r.read(l)) {
+                auto n = jsave::logbook2csv(s, sizeof(s), l);
+                s[n-1] = '\0'; // убираем терминирующий \n
+                rep("%s", s);
+            }
+    }
+
+    void _tracelist() {
+        fs::mounter _mnt;
+        if (!_mnt) {
+            CONSOLE("sdcard fail");
+            return;
+        }
+        
+        DIR dh;
+        FR(f_opendir(&dh, "/"), return);
+
+        FILINFO f;
+        while (f_readdir(&dh, &f) == FR_OK) {
+            if (f.fname[0] == '\0')
+                break;
+            if (f.fattrib & AM_DIR)
+                continue;
+            auto l = strlen(f.fname);
+            if (
+                    (l < 10) ||
+                    (strncmp(f.fname, "jump_", 5) != 0) ||
+                    (strncmp(f.fname + l - 4, ".csv", 4) != 0) ||
+                    (f.fname[5] < '0') ||
+                    (f.fname[5] > '9')
+                )
+                continue;
+            
+            rep("%s", f.fname);
+        }
+
+        F(f_closedir(&dh))
+    }
+
+    void _traceget() {
+        auto fname = argfetch();
+        if (fname == NULL)
+            return;
+        
+        fs::mounter _mnt;
+        if (!_mnt) {
+            CONSOLE("sdcard fail");
+            return;
+        }
+        
+        fs::File fh(fname);
+        if (!fh)
+            return;
+        
+        bufline<> b;
+        for (;;) {
+            // -1 в size - чтобы можно было поставить терминатор '\0'
+            auto sz = fh.read(b.readbuf(), b.readsz());
+            if (sz <= 0)
+                break;
+            b.readed(sz);
+
+            const char *s;
+            while ((s = b.strline()) != NULL)
+                rep("%s", s);
+        }
+
+        auto t = b.tail();
+        if (*t)
+            rep("%s", t);
+    }
 public:
     _cmd(const char *id, const char *name, const str_t *arg, uint8_t acnt) :
         CmdTxt(id, arg, acnt)
@@ -52,6 +136,9 @@ public:
 
         _cc(echo)
         _cc(term)
+        _cc(logbook)
+        _cc(tracelist)
+        _cc(traceget)
         err("Unknown cmd");
 
 #undef _cc

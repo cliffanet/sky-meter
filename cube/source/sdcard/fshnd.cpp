@@ -103,6 +103,13 @@ bool File::close() {
     return true;
 }
 
+int32_t File::read(void *buff, UINT btr) {
+    UINT szr;
+    
+    FR(f_read(&_fh, buff, btr, &szr), return -1);
+    return szr;
+}
+
 bool File::write(const void *buff, UINT btw) {
     UINT szw;
     

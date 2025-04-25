@@ -95,8 +95,8 @@ void CmdTxt::fin() {
     const uint8_t x[] = { ':', '\n' };
     write(x, 1);
     write(reinterpret_cast<const uint8_t *>(id), strlen(id));
+    write(x, 1);
     if (_e[0]) {
-        write(x, 1);
         write(reinterpret_cast<const uint8_t *>(_e), strlen(_e));
     }
     write(x+1, 1);

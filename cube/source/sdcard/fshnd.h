@@ -11,6 +11,14 @@ namespace fs {
     bool mount();
     bool stop();
 
+    class mounter {
+        bool _ok;
+    public:
+        mounter() { _ok = mount(); }
+        ~mounter(){ if (_ok) stop(); }
+        operator bool() const { return _ok; }
+    };
+
     const FATFS & inf();
 
     typedef enum {
@@ -41,6 +49,7 @@ namespace fs {
             operator bool() const { return _ok; };
             FIL * operator&() { return &_fh; }
             const FIL * operator->() const { return &_fh; }
+            int32_t read(void *buff, UINT btw);
             bool write(const void *buff, UINT btw);
     };
 }
