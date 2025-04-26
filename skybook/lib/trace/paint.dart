@@ -10,7 +10,7 @@ class TracePaint extends CustomPainter {
 
     TracePaint(this._data, this._view);
 
-    void _drawAlt(Canvas canvas, double Function(TraceItem i) alt, Color c) {
+    void _drawAlt(Canvas canvas, double ? Function(TraceItem i) alt, Color c) {
         final pnt = Paint()
             ..color = c
             ..strokeWidth = 1;
@@ -18,9 +18,16 @@ class TracePaint extends CustomPainter {
         if (_data.count <= 0)
             return;
 
-        Offset p0 = _view.pnt(0, alt(_data[0]));
+        final a = alt(_data[0]);
+        if (a == null)
+            return;
+        
+        Offset p0 = _view.pnt(0, a);
         for (int n = 1; n < _data.count; n++) {
-            Offset p1 = _view.pnt(n, alt(_data[n]));
+            final a = alt(_data[n]);
+            if (a == null)
+                continue;
+            Offset p1 = _view.pnt(n, a);
             if (_view.pok(p0) || _view.pok(p1))
                 canvas.drawLine(p0, p1, pnt);
             p0 = p1;
@@ -123,21 +130,24 @@ class TracePaint extends CustomPainter {
             text.paint(canvas, a.pnt + Offset(5, -10));
         }
 
-        _drawAlt(canvas, (e) => e.inf.avg.alt, Colors.green);
-        _drawAlt(canvas, (e) => e.inf.a05.alt, Colors.blue);
-        _drawAlt(canvas, (e) => e.inf.a10.alt, Colors.lightBlue);
-        _drawAlt(canvas, (e) => e.inf.app.alt, Colors.brown);
+        _drawAlt(canvas, (e) => e.inf != null ? e.inf!.avg.alt : null, Colors.green);
+        _drawAlt(canvas, (e) => e.inf != null ? e.inf!.a05.alt : null, Colors.blue);
+        _drawAlt(canvas, (e) => e.inf != null ? e.inf!.a10.alt : null, Colors.lightBlue);
+        _drawAlt(canvas, (e) => e.inf != null ? e.inf!.app.alt : null, Colors.brown);
         _drawAlt(canvas, (e) => e.alt.toDouble(), Colors.deepOrangeAccent);
 
         for (int n = 0; n < _data.count; n++) {
             final d = _data[n];
             if (((d.clc ?? 0) > 0) || ((d.chg ?? 0) > 0)) {
                 _drawCursorV(canvas, n, Colors.black12);
-                _drawCursorH(canvas, n, d.inf.a10.alt, Colors.black12);
+                _drawCursorH(canvas, n, d.inf != null ? d.inf!.a10.alt : d.alt.toDouble(), Colors.black12);
             }
 
-            final j = d.inf.jmp;
-            if ((n > 0) && (j.mode > 0) && (j.mode != _data[n-1].inf.jmp.mode)) {
+            if (d.inf == null)
+                continue;
+            
+            final j = d.inf!.jmp;
+            if ((n > 0) && (j.mode > 0) && (j.mode != _data[n-1].inf!.jmp.mode)) {
                 _drawCursorV(canvas, n, Colors.blue);
                 if ((j.cnt > 0) && (n > j.cnt))
                     _drawCursorV(canvas, n - j.cnt, Colors.deepPurple);
@@ -162,13 +172,16 @@ class TracePaint extends CustomPainter {
                 text: TextSpan(
                     text:
                         'time: ${sectm(_view.cursor!.dx, true)}\n' +
-                        'alt: ${d.alt} (sqdiff: ${i.sqdiff.toStringAsFixed(1)})\n' +
-                        'mode: ${m[ i.jmp.mode + 1 ]}${i.jmp.newcnt > 0 ? '(${i.jmp.newcnt} / ${sectm(i.jmp.newtm / 100, true)})' : ''}\n' +
-                        'avg (alt / speed): ${i.avg.alt.toStringAsFixed(0)} / ${i.avg.speed.toStringAsFixed(1)}\n' +
-                        'a05 (alt / speed): ${i.a05.alt.toStringAsFixed(0)} / ${i.a05.speed.toStringAsFixed(1)}\n' +
-                        'a10 (alt / speed): ${i.a10.alt.toStringAsFixed(0)} / ${i.a10.speed.toStringAsFixed(1)}\n' +
-                        'app (alt / speed): ${i.app.alt.toStringAsFixed(0)} / ${i.app.speed.toStringAsFixed(1)}\n' +
-                        'sq: ${i.sq.val.toStringAsFixed(1)}${i.sq.isbig > 0 ? ' (big)' : ''}',
+                        ( i != null ?
+                            'alt: ${d.alt} (sqdiff: ${i!.sqdiff.toStringAsFixed(1)})\n' +
+                            'mode: ${m[ i!.jmp.mode + 1 ]}${i!.jmp.newcnt > 0 ? '(${i!.jmp.newcnt} / ${sectm(i!.jmp.newtm / 100, true)})' : ''}\n' +
+                            'avg (alt / speed): ${i!.avg.alt.toStringAsFixed(0)} / ${i!.avg.speed.toStringAsFixed(1)}\n' +
+                            'a05 (alt / speed): ${i!.a05.alt.toStringAsFixed(0)} / ${i!.a05.speed.toStringAsFixed(1)}\n' +
+                            'a10 (alt / speed): ${i!.a10.alt.toStringAsFixed(0)} / ${i!.a10.speed.toStringAsFixed(1)}\n' +
+                            'app (alt / speed): ${i!.app.alt.toStringAsFixed(0)} / ${i!.app.speed.toStringAsFixed(1)}\n' +
+                            'sq: ${i!.sq.val.toStringAsFixed(1)}${i!.sq.isbig > 0 ? ' (big)' : ''}'
+                            : ''
+                        ),
                     style: TextStyle(
                         color: Colors.black,
                         fontSize: 14,

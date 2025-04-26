@@ -7,6 +7,7 @@ import '../trace/csv.dart';
 import '../trace/item.dart';
 import '../trace/viewdata.dart';
 import '../jump/call.dart';
+import '../jump/bind.dart';
 import '../device.dart';
 
 class PageTrace extends StatelessWidget {
@@ -28,34 +29,41 @@ class PageTrace extends StatelessWidget {
 
     void loadfile(String fname) async {
         _data.clear();
+        _view.loading = true;
         final lnall = await File(fname).readAsLines();
         loadcsv(lnall);
+        _view.loading = false;
     }
 
     void loaddev(String fname) async {
         _data.clear();
+        _view.loading = true;
         final s = await devCmd('traceget', [fname]);
         loadcsv(s.data);
+        _view.loading = false;
     }
 
     void loadcsv(List<String> lnall) {
         lnall.removeAt(0); // заголовок
 
-        jump.clear();
+        try {
+            jump.clear();
+        } catch (_) {}
 
         for (final l in lnall) {
             final r = bycsv(l);
             final alt = int.parse(r[0]);
-            jump.add(alt * 1.0);
+            JumpInf ?inf;
             try {
-                _data.add(TraceItem(
-                    alt: alt,
-                    inf: jump.info(),
-                    clc: (r.length > 1) && r[1].isNotEmpty ? r[1].codeUnitAt(0) : 0,
-                    chg: (r.length > 2) && r[2].isNotEmpty ? r[2].codeUnitAt(0) : 0,
-                ));
-            }
-            finally {}
+                jump.add(alt * 1.0);
+                inf = jump.info();
+            } catch (_) {}
+            _data.add(TraceItem(
+                alt: alt,
+                inf: inf,
+                clc: (r.length > 1) && r[1].isNotEmpty ? r[1].codeUnitAt(0) : 0,
+                chg: (r.length > 2) && r[2].isNotEmpty ? r[2].codeUnitAt(0) : 0,
+            ));
         }
 
         _view.origmax = Offset(_data.rcount.toDouble(), _data.rmaxalt.toDouble());
@@ -83,6 +91,10 @@ class PageTrace extends StatelessWidget {
                 child: ValueListenableBuilder(
                     valueListenable: _view.notify,
                     builder: (BuildContext context, _, Widget? child) {
+                        if (_view.loading)
+                            return Center(
+                                child: CircularProgressIndicator()
+                            );
                         return Listener(
                             onPointerSignal: (pointerSignal) {
                                 //pointerSignal.

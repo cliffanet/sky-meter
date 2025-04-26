@@ -95,8 +95,8 @@ class ViewPosition {
         _min = min,
         _max = max,
         _k = Offset(
-            max.dx > min.dx ? sz.dx / (max.dx - min.dx) : 0.0,
-            max.dy > min.dy ? sz.dy / (max.dy - min.dy) : 0.0,
+            max.dx > min.dx ? sz.dx / (max.dx - min.dx) : 1.0,
+            max.dy > min.dy ? sz.dy / (max.dy - min.dy) : 1.0,
         );
     static ViewPosition get zero => ViewPosition(Offset.zero, Offset.zero);
 
@@ -125,7 +125,7 @@ class ViewPosition {
 */
 class ViewModify {
     Offset _pi = Offset.zero, _po = Offset.zero;
-    double _scal = 1.0;
+    double _scal = 1.0, _scbeg = 1.0;
 
     // прямое преобразование
     Offset pnt(Offset val) => (val - _pi) * _scal + _po;
@@ -138,13 +138,17 @@ class ViewModify {
         // т.е. в итоге эти точки визуально должны совпасть
         _pi = inv(pnt);
         _po = pnt;
+        _scbeg = _scal;
     }
 
-    set move(Offset pnt) => _po = pnt;
+    void move(Offset pnt, double scale) {
+        _po = pnt;
+        _scal = _scbeg*scale;
+    }
     void scale(double scale, Offset center) {
         pfoc = center;
         _scal *= scale;
-    }
+    } 
 }
 
 class AxisItem {
@@ -198,7 +202,7 @@ class ViewMatrix {
         _mod.pfoc = _port.inv(details.localFocalPoint);
     }
     void scaleUpdate(ScaleUpdateDetails details) {
-        _mod.move = _port.inv(details.localFocalPoint);
+        _mod.move(_port.inv(details.localFocalPoint), details.scale);
         _viewupd();
     }
     void scaleChange(double scroll, Offset cur) {
@@ -264,6 +268,13 @@ class ViewMatrix {
         _axis(_dmin.dy, _dmax.dy, (_size.height/50).toInt(), [1, 5, 10, 20, 25, 50, 100, 200, 500, 1000])
         .map((v) => AxisItem(Offset( xl, pnt(0,v).dy ), v))
         .toList();
+    
+    bool _loading = false;
+    bool get loading => _loading;
+    set loading(bool _l) {
+        _loading = _l;
+        _notify.value ++;
+    }
 }
 
 class TraceViewData {
