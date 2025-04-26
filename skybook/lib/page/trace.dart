@@ -10,6 +10,8 @@ import '../jump/call.dart';
 import '../jump/bind.dart';
 import '../device.dart';
 
+import 'dart:developer' as developer;
+
 class PageTrace extends StatelessWidget {
     final String _name;
     final _data = TraceViewData();
@@ -48,7 +50,9 @@ class PageTrace extends StatelessWidget {
 
         try {
             jump.clear();
-        } catch (_) {}
+        } catch (e) {
+            developer.log('jump(altcalc) fail: $e');
+        }
 
         for (final l in lnall) {
             final r = bycsv(l);

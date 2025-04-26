@@ -1,0 +1,12 @@
+я долго мучался и так и не нашёл способ в windows нативно
+подцеплять свою dll в процессинг сборки.
+Оказалось, проще вручную собрать библиотеку и закинуть её
+в build в папку с exe-файлом.
+
+Создаём тут же папку build, переходим в неё и оттуда выполняем (именно 64-битная версия):
+
+d:\VisualStudio\VC\Auxiliary\Build\vcvars64.bat && cl /O2 /D_USRDLL /D_WINDLL ../altcalc.cpp ../jump.cpp /LD /Fejump
+
+или (отличается только путь к vcvars64.bat):
+
+"c:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat" && cl /O2 /D_USRDLL /D_WINDLL ../altcalc.cpp ../jump.cpp /LD /Fejump
