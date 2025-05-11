@@ -27,6 +27,7 @@ extern const uint8_t u8g2_font_robotobd_08_tx[] U8G2_FONT_SECTION("u8g2_font_rob
 #define TXT_MAIN_FLIP180            "Развернуть на 180"
 #define TXT_MAIN_CONTRAST           "Контраст"
 #define TXT_MAIN_ALT                "Высотомер"
+#define TXT_MAIN_BARGRAPH           "Барометр"
 #define TXT_MAIN_SYSTEM             "Система"
 
 #define TXT_ALT_AUTOGND             "Автоподстройка Земли"

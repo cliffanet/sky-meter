@@ -215,6 +215,8 @@ bool BMP280::meas(float &press, float &temp) {
     BMP280_S32_t t_fine, adc_T, adc_P;
     b.d24(adc_P);   adc_P >>= 4;
     b.d24(adc_T);   adc_T >>= 4;
+    if ((adc_P == 0) || (adc_T == 0))
+        return false;
 
     // код мат-логики взят из datasheet, имена переменных,
     // в т.ч. калибровочных подогнаны под него, чтобы

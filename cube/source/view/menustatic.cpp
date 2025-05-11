@@ -17,6 +17,7 @@
 
 #include "../jump/proc.h"
 #include "../jump/saver.h"
+#include "../jump/bargraph.h"
 #include "../sys/clock.h"
 #include "../sys/power.h"
 #include "../sys/batt.h"
@@ -526,6 +527,10 @@ static const MenuStatic::el_t _main[] = {
     {
         .name   = TXT_MAIN_ALT,
         .enter  = [] { MENU_STATIC(_alt); },
+    },
+    {
+        .name   = TXT_MAIN_BARGRAPH,
+        .enter  = bar::setdraw,
     },
     {
         .name   = TXT_MAIN_SYSTEM,

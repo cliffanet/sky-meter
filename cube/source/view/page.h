@@ -11,6 +11,7 @@ namespace Dspl {
 
     void drawBatt(DSPL_ARG);
     void drawClock(DSPL_ARG);
+    void drawServ(DSPL_ARG);
 
     void page();
 

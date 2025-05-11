@@ -4,12 +4,12 @@
 #include "altcalc.h"
 #include "logbook.h"
 #include "saver.h"
+#include "bargraph.h"
 #include "../sys/trwire.h"
 #include "../sys/stm32drv.h"
 #include "../sys/maincfg.h"
 #include "../sys/power.h"
 #include "../sys/log.h"
-#include "../uart/uart.h"
 #include "../view/page.h"
 
 #include <cmath>
@@ -93,17 +93,9 @@ static int _lmin = 0, _lmax = 0;
     static void _draw(DSPL_ARG) {
         Dspl::drawBatt(u8g2);
         Dspl::drawClock(u8g2);
+        Dspl::drawServ(u8g2);
         
         char s[strsz], m[strsz], t[strsz];
-    
-    if (jsave::isactive()) {
-        DSPL_FONT(u8g2_font_open_iconic_www_1x_t);
-        DSPL_GLYPH(30, 8, 'K');
-    }
-    if (uart::isactive()) {
-        DSPL_FONT(u8g2_font_open_iconic_www_1x_t);
-        DSPL_GLYPH(45, 8, 'O');
-    }
 
     if (!_ac.isempty()) {
         // info
@@ -171,13 +163,13 @@ static int _lmin = 0, _lmax = 0;
                 DSPL_LINE(DSPL_DWIDTH-5, DSPL_DHEIGHT-1,    DSPL_DWIDTH, DSPL_DHEIGHT-1);
                 DSPL_LINE(DSPL_DWIDTH-5, DSPL_DHEIGHT/2,    DSPL_DWIDTH, DSPL_DHEIGHT/2);
 
-                DSPL_FONT(u8g2_font_b10_b_t_japanese1);
+                DSPL_FONT(u8g2_font_blipfest_07_tn);
                 sprn("%d", _lmin);
-                DSPL_STR(DSPL_S_RIGHT(s)-5, DSPL_DHEIGHT-1, s);
+                DSPL_STR(DSPL_S_RIGHT(s)-6, DSPL_DHEIGHT-1, s);
                 sprn("%d", _lmax);
-                DSPL_STR(DSPL_S_RIGHT(s)-5, DSPL_S_HEIGHT, s);
+                DSPL_STR(DSPL_S_RIGHT(s)-6, DSPL_S_HEIGHT, s);
                 sprn("%d", _lmin+(_lmax-_lmin)/2);
-                DSPL_STR(DSPL_S_RIGHT(s)-5, (DSPL_DHEIGHT+DSPL_S_HEIGHT-1)/2, s);
+                DSPL_STR(DSPL_S_RIGHT(s)-6, (DSPL_DHEIGHT+DSPL_S_HEIGHT-1)/2, s);
 
                 // рисуем графики
 #define LPADD 12
@@ -301,6 +293,7 @@ namespace jmp {
             return false;
         }
         _slp.tick(press);
+        bar::tick(press, ms);
         if (!_slp.istoff()) {
             _bmp.sleep();
             return false;
@@ -327,16 +320,13 @@ namespace jmp {
     }
 
     void tick(uint32_t ms) {
-        if (!_bmp.meas(_press, _temp)) {
-            _press = 0;
-            _temp = 0;
-            _ac.clear();
+        if (!_bmp.meas(_press, _temp))
             return;
-        }
         _ac.tick(_press, ms);
 
         static auto m = _jmp.mode();
         _jmp.tick(_ac);
+        bar::tick(_jmp.mode() == AltJmp::GROUND ? _press : _ac.pressgnd(), ms);
         const bool chgmode = m != _jmp.mode();
 #ifdef USE_JMPINFO
         _sq.tick(_ac);

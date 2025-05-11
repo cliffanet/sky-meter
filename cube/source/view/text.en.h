@@ -21,6 +21,7 @@
 #define TXT_MAIN_FLIP180            "Flipped 180"
 #define TXT_MAIN_CONTRAST           "Contrast"
 #define TXT_MAIN_ALT                "Altimeter"
+#define TXT_MAIN_BARGRAPH           "Barometer"
 #define TXT_MAIN_SYSTEM             "System"
 
 #define TXT_ALT_AUTOGND             "Auto correct GND"
