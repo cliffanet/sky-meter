@@ -25,8 +25,13 @@ extension on String {
             int.parse((vs.length > 1 ? vs[1] : '0').padRight(3, '0'));
     }
     DateTime get toDT {
+        // DateFormat из intl не переваривает дополнительные пробелы
+        var s = this;
+        while (s.indexOf(' ') == 0)
+            s = s.substring(1, s.length-1);
+        s = s.replaceFirst('  ', ' ');
         try {
-            final d = DateFormat("d.MM.yyyy H:mm:ss").parse(this);
+            final d = DateFormat("d.MM.yyyy H:mm:ss").parse(s);
             return d;
         }
         catch (e) {

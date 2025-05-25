@@ -29,10 +29,10 @@ namespace jmp {
 
 #ifdef USE_JMPTRACE
 
-#if defined(STM32G473xx)
-    #define JMP_TRACE_SEC       (5*60)
+#if defined(FWVER_DEBUG)
+    #define JMP_TRACE_SEC       (12*60)
 #else
-    #define JMP_TRACE_SEC       (3*60+30)
+    #define JMP_TRACE_SEC       (6*60)
 #endif
 
     typedef struct {
