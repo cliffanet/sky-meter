@@ -40,6 +40,11 @@ static void _tmr_set(uint32_t ms) {
     HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, ms*2048/1000-1, RTC_WAKEUPCLOCK_RTCCLK_DIV16);
 }
 
+/* ------  usb connected        --------- */
+
+#include "usbd_cdc_if.h"
+extern USBD_HandleTypeDef hUsbDeviceFS;
+
 /* ------  register management  --------- */
 
 // класс гашения перефирии
@@ -308,6 +313,11 @@ public:
     полностью их сбрасывать и потом восстанавливать. Только оставить кнопки и CS-пины, подтянутые к верху.
     Это даже удобнее, чем тащить сюда и работать с HAL-структурами и функциями вроде HAL_SPI_DeInit и т.п.
     
+    _____________________________________________
+    Замеры на f411 v2.1:
+
+    - потребление всей платы без bmp280 в спящем: 75 мкА.
+    - после впаивания bmp280 возрастает до: 120-175 мкА.
 */
 
 typedef enum {
@@ -338,6 +348,9 @@ static pwr_mode_t _mode() {
     if (uart::isactive())
         return PWR_ACTIVE;
     if (proc::isactive())
+        return PWR_ACTIVE;
+
+    if (hUsbDeviceFS.dev_state == USBD_STATE_CONFIGURED)
         return PWR_ACTIVE;
     
     if (!jmp::isgnd())

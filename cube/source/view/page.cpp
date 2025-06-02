@@ -47,14 +47,21 @@ void Dspl::drawClock(DSPL_ARG) {
     DSPL_STR(DSPL_S_RIGHT(s)-26, 16, s);
 }
 
+#include "usbd_cdc_if.h"
+extern USBD_HandleTypeDef hUsbDeviceFS;
+
 void Dspl::drawServ(DSPL_ARG) {
     if (jsave::isactive()) {
         DSPL_FONT(u8g2_font_open_iconic_www_1x_t);
-        DSPL_GLYPH(30, 8, 'K');
+        DSPL_GLYPH(25, 8, 'K');
+    }
+    if (hUsbDeviceFS.dev_state == USBD_STATE_CONFIGURED) {
+        DSPL_FONT(u8g2_font_open_iconic_www_1x_t);
+        DSPL_GLYPH(35, 8, 'O');
     }
     if (uart::isactive()) {
         DSPL_FONT(u8g2_font_open_iconic_www_1x_t);
-        DSPL_GLYPH(45, 8, 'O');
+        DSPL_GLYPH(45, 8, 'S');
     }
 }
 

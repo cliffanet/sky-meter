@@ -30,6 +30,13 @@ const char * __extrfname(const char * path) {
 }
 
 static void vtxtlog(const char *s, va_list ap) {
+    USBD_CDC_HandleTypeDef *hcdc = (USBD_CDC_HandleTypeDef*)hUsbDeviceFS.pClassData;
+    // при неподключенном usb tx может вызывать
+    // USBD_BUSY, в результате мы будем ждать
+    // несуществующую отправку.
+    if (hcdc->TxState != 0)
+        return;
+
     int len = vsnprintf(NULL, 0, s, ap), sbeg = 0;
     char str[len+60]; // +48=dt +12=debug mill/tick
     
@@ -55,7 +62,6 @@ static void vtxtlog(const char *s, va_list ap) {
     
     CDC_Transmit_FS((uint8_t *)str, len);
     // надо дождаться окончания передачи, т.к. она ассинхронная, а буфер str уничтожается при выходе
-    USBD_CDC_HandleTypeDef *hcdc = (USBD_CDC_HandleTypeDef*)hUsbDeviceFS.pClassData;
     for (volatile int i = 0; (i < 100000) && (hcdc->TxState != 0); i++);
 }
 

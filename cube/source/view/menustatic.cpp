@@ -431,6 +431,7 @@ static const MenuStatic::el_t _system[] = {
     .showval= [] (char *v) { vyesno(v, HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_1)); }
 },
 #endif // if HWVER < 2
+/*
     {
         .name   = "logbook test",
         .enter  = [] {
@@ -441,6 +442,7 @@ static const MenuStatic::el_t _system[] = {
         },
         //.showval= [] (char *v) { vyesno(v, HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_6)); }
     },
+*/
 #if HWVER < 2
     {
         .name   = "chg hi",
@@ -458,6 +460,7 @@ static const MenuStatic::el_t _system[] = {
         .enter  = [] { HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_13); },
         .showval= [] (char *v) { vyesno(v, HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_13)); }
     },
+/*
     {
         .name   = "sdcard en",
         .enter  = [] { HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_3); },
@@ -468,7 +471,9 @@ static const MenuStatic::el_t _system[] = {
         .enter  = [] { HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_4); },
         .showval= [] (char *v) { vyesno(v, HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_4)); }
     },
+*/
 #endif // if HWVER < 2
+/*
     {
         .name   = "test fatal",
         .enter  = [] { new MenuConfirm(Error_Handler); },
@@ -481,7 +486,6 @@ static const MenuStatic::el_t _system[] = {
         .name   = "test memory fail",
         .enter  = [] { new MenuConfirm([] () { char s[] = ""; CONSOLE("s: %s", s+20); free(s); }); },
     },
-/*
     {
         .name   = "flash fill",
         .enter  = [] { new MenuConfirm([] () { 
