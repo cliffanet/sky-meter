@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "../ff/diskio.h"
+#include "../sys/log.h"
 
 #if HWVER >= 2
 #include "../sys/stm32drv.h"
@@ -12,6 +13,15 @@ extern "C" {
     void sdcard_off();
 }
 #endif
+
+#ifdef FWVER_DEBUG
+
+#include "../sys/log.h"
+#include "../sys/clock.h"
+#include <stdint.h>
+#include <stdio.h>
+
+#endif // FWVER_DEBUG
 
 FATFS _fs = { 0 };
 bool _ok;
@@ -121,5 +131,60 @@ bool File::write(const void *buff, UINT btw) {
 
     return true;
 }
+
+#ifdef FWVER_DEBUG
+
+    static void _dumpdir() {
+        DIR dh;
+        FR(f_opendir(&dh, "/"), return);
+
+        FILINFO finf;
+        uint32_t dcnt = 0, fcnt = 0;
+        CONSOLE("Root directory:");
+        for (;;) {
+            if (f_readdir(&dh, &finf) != FR_OK)
+                break;
+            if (finf.fname[0] == '\0')
+                break;
+            
+            if (finf.fattrib & AM_DIR) {
+                CONSOLE("  DIR  %s", finf.fname);
+                dcnt++;
+            } else {
+                CONSOLE("  FILE %s", finf.fname);
+                fcnt++;
+            }
+        }
+
+        CONSOLE("total: %lu dirs, %lu files", dcnt, fcnt);
+
+        F(f_closedir(&dh))
+    }
+
+    bool test() {
+        mounter m;
+
+        if (!m)
+            return false;
+
+        uint32_t fre;
+        FATFS* fsi = NULL;
+        FR(f_getfree("", &fre, &fsi), return false); // Warning! This fills fs.n_fatent and fs.csize!
+        CONSOLE("SD mount OK: total = %lu Mb; free = %lu Mb", (fs::inf().n_fatent - 2) * fs::inf().csize / 2048, fre * fs::inf().csize / 2048);
+
+        _dumpdir();
+
+
+        auto tm = tmNow();
+        char fname[64];
+        snprintf(fname, sizeof(fname), "test.%04u-%02u-%02u.%02u-%02u-%02d_man.csv", tm.year, tm.mon, tm.day, tm.h, tm.m, tm.s);
+
+        File fh(fname, FA_CREATE_ALWAYS | FA_WRITE);
+        if (!fh || !fh.write(fname, strlen(fname)))
+            return false;
+
+        return true;
+    }
+#endif // FWVER_DEBUG
 
 } // namespace fs

@@ -12,7 +12,7 @@
 namespace proc {
     typedef bool (*elem_t)();
 
-    void add(elem_t proc);
+    void add(elem_t proc, bool multi = true);
     bool isactive();
     void run();
 }

@@ -373,6 +373,24 @@ class MenuTimeEdit : public MenuModal {
 extern "C"
 void Error_Handler(void);
 
+#ifdef FWVER_DEBUG
+#include "../sdcard/fshnd.h"
+#include "../sys/sproc.h"
+static const char *_sdtest_val = NULL;
+static int _sdtest_cnt = 0;
+static bool _sdtest_tmr() {
+    if (_sdtest_cnt <= 0)
+        return false;
+    
+    _sdtest_cnt--;
+    if (_sdtest_cnt > 0)
+        return true;
+    
+    _sdtest_val = NULL;
+    return false;
+}
+#endif // FWVER_DEBUG
+
 static const MenuStatic::el_t _system[] = {
     {
         .name   = TXT_SYSTEM_DATETIME,
@@ -505,6 +523,24 @@ static const MenuStatic::el_t _system[] = {
         }); },
     },
 */
+
+#ifdef FWVER_DEBUG
+    {
+        .name   = "sdcard test",
+        .enter  = [] {
+            _sdtest_val = fs::test() ? "OK" : "FAIL";
+            _sdtest_cnt = 2000000;
+            proc::add(_sdtest_tmr, false);
+        },
+        .showval= [] (char *v) {
+            if (_sdtest_val == NULL)
+                *v = '\0';
+            else
+                strcpy(v, _sdtest_val);
+        }
+    },
+#endif // FWVER_DEBUG
+
 #endif // USE_DEVMENU
 };
 

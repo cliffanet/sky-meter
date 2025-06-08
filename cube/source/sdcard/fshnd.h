@@ -2,6 +2,7 @@
 #define _sdcard_fshnd_H
 
 #include "../ff/ff.h"
+#include "../def.h"
 
 //#define FR(func, fail)      { CONSOLE(TOSTRING(func)); auto st = func; if (st != FR_OK) { CONSOLE(TOSTRING(func) "failed: %d", st); fail; } }
 #define FR(func, fail)      { auto st = func; if (st != FR_OK) { CONSOLE(TOSTRING(func) "failed: %d", st); fail; } }
@@ -52,6 +53,10 @@ namespace fs {
             int32_t read(void *buff, UINT btw);
             bool write(const void *buff, UINT btw);
     };
+
+#ifdef FWVER_DEBUG
+    bool test();
+#endif // FWVER_DEBUG
 }
 
 #endif // _sdcard_fshnd_H

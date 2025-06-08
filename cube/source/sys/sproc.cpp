@@ -10,7 +10,11 @@ static std::vector<proc::elem_t> _all;
 static std::vector<proc::elem_t>::iterator _nxt = _all.end();
 
 namespace proc {
-    void add(elem_t proc) {
+    void add(elem_t proc, bool multi) {
+        if (!multi)
+            for (auto p : _all)
+                if (p == proc)
+                    return;
         _all.push_back(proc);
         _nxt = _all.begin();
     }
