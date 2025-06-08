@@ -40,10 +40,13 @@
 
 #endif
 
+#ifdef FWVER_DEBUG
 #define USE_CONSOLE
 #define USE_DEVMENU
-#define USE_MENU
 #define USE_JMPINFO
+#endif
+
+#define USE_MENU
 #define USE_JMPTRACE
 #define USE_LOGBOOK
 

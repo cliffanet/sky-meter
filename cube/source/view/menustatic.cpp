@@ -143,6 +143,13 @@ static const MenuStatic::el_t _hwtest[] {
     },
 #endif // FLASH_SIZE
     {
+        .name = TXT_TEST_FWVER,
+        .enter = NULL,
+        .showval = [] (char *txt) {
+            strcpy(txt, TOSTRING(FWVER_NUM) " - " __DATE__);
+        },
+    },
+    {
         .name = TXT_TEST_CLOCK,
         .enter = NULL,
         .showval = [] (char *txt) {

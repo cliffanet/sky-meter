@@ -40,6 +40,7 @@
 
 #define TXT_TEST_SERIAL             "s/n"
 #define TXT_TEST_FLASHSZ            "Flash size"
+#define TXT_TEST_FWVER              "FW ver"
 #define TXT_TEST_CLOCK              "Clock"
 #define TXT_TEST_BATTERY            "Battery"
 #define TXT_TEST_BATTCHARGE         "Batt charge"
