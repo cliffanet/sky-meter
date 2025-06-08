@@ -191,14 +191,26 @@ class TracePaint extends CustomPainter {
             );
             text.layout();
             final p = _view.pnt(n, _view.cursor!.dy)+Offset(15,0);
-            canvas.drawRRect(
+            final rect =
                 RRect.fromRectAndRadius(
-                    Rect.fromPoints(p - Offset(5, 5), p + Offset(text.width, text.height) + Offset(5, 5)),
+                    Rect.fromPoints(p - Offset(5, 5), p + Offset(text.width + 20, text.height) + Offset(5, 5)),
                     Radius.circular(10)
-                ),
-                Paint()..color = Colors.red
-            );
-            text.paint(canvas, p);
+                );
+            canvas.drawRRect(rect, Paint()..color = Colors.white70);
+            canvas.drawRRect(rect, Paint()..color = Colors.black38 ..style = PaintingStyle.stroke);
+            text.paint(canvas, p + Offset(20, 0));
+
+            final th = text.height/8;
+            // orig
+            canvas.drawCircle(p + Offset(7.5, th * 1 + th/2+2), 4, Paint()..color = Colors.deepOrangeAccent);
+            // avg
+            canvas.drawCircle(p + Offset(7.5, th * 3 + th/2+2), 4, Paint()..color = Colors.green);
+            // a05
+            canvas.drawCircle(p + Offset(7.5, th * 4 + th/2+2), 4, Paint()..color = Colors.blue);
+            // a10
+            canvas.drawCircle(p + Offset(7.5, th * 5 + th/2+2), 4, Paint()..color = Colors.lightBlue);
+            // app
+            canvas.drawCircle(p + Offset(7.5, th * 6 + th/2+2), 4, Paint()..color = Colors.brown);
         }
 
         canvas.restore();

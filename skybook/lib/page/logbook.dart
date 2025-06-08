@@ -59,7 +59,7 @@ class jmpitem {
         msToff  = (r[2] ?? '').toString().tmToMs,
         altBeg  = r[3] is int ? r[3] : int.parse(r[3] ?? ''),
         msFF    = (r[4] ?? '').toString().tmToMs,
-        altCnp  = r[5] is int ? r[1] : int.parse(r[5] ?? ''),
+        altCnp  = r[5] is int ? r[5] : int.parse(r[5] ?? ''),
         msCnp   = (r[6] ?? '').toString().tmToMs;
     
     static String _tm(int v) {

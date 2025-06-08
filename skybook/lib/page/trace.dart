@@ -46,7 +46,8 @@ class PageTrace extends StatelessWidget {
     }
 
     void loadcsv(List<String> lnall) {
-        lnall.removeAt(0); // заголовок
+        if (lnall.isNotEmpty)
+            lnall.removeAt(0); // заголовок
 
         try {
             jump.clear();
