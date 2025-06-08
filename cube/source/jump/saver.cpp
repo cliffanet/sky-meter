@@ -14,36 +14,6 @@
 
 #include "../ff/diskio.h"
 
-
-#ifdef FWVER_DEBUG
-static void _dumpdir() {
-    DIR dh;
-    FR(f_opendir(&dh, "/"), return);
-
-    FILINFO finf;
-    uint32_t dcnt = 0, fcnt = 0;
-    CONSOLE("Root directory:");
-    for (;;) {
-        if (f_readdir(&dh, &finf) != FR_OK)
-            break;
-        if (finf.fname[0] == '\0')
-            break;
-        
-        if (finf.fattrib & AM_DIR) {
-            CONSOLE("  DIR  %s", finf.fname);
-            dcnt++;
-        } else {
-            CONSOLE("  FILE %s", finf.fname);
-            fcnt++;
-        }
-    }
-
-    CONSOLE("total: %lu dirs, %lu files", dcnt, fcnt);
-
-    F(f_closedir(&dh))
-}
-#endif
-
 #ifdef USE_LOGBOOK
 static void _save_logbook() {
     CONSOLE("Writing to " SDCARD_LOGBOOK "...");
@@ -119,20 +89,22 @@ static bool _saving_trace() {
     return true;
 }
 
-static void _save_trace(bool byjmp = true) {
-    char fname[64];
+static void _trace_name_jmp(char *fname, size_t sz) {
+    auto _l = jmp::last();
+    const auto &tm = _l.tm;
 
-    if (byjmp) {
-        auto _l = jmp::last();
-        const auto &tm = _l.tm;
+    snprintf(fname, sz, "jump_%lu_%u-%02u-%04u_%u-%02u.csv", _l.num, tm.day, tm.mon, tm.year, tm.h, tm.m);
+}
 
-        snprintf(fname, sizeof(fname), "jump_%lu_%u-%02u-%04u_%u-%02u.csv", _l.num, tm.day, tm.mon, tm.year, tm.h, tm.m);
-    }
-    else {
-        auto tm = tmNow();
+static void _trace_name_man(char *fname, size_t sz) {
+    auto tm = tmNow();
 
-        snprintf(fname, sizeof(fname), "jump_%lu_%u-%02u-%04u_%u-%02u-%02d_man.csv", cfg->jmpcnt, tm.day, tm.mon, tm.year, tm.h, tm.m, tm.s);
-    }
+    snprintf(fname, sz, "jump_%lu_%u-%02u-%04u_%u-%02u-%02d_man.csv", cfg->jmpcnt, tm.day, tm.mon, tm.year, tm.h, tm.m, tm.s);
+}
+
+static void _save_trace(const char *fname) {
+    if (!fs::mount())
+        return;
 
     if (!_ftr.open(fname, FA_CREATE_ALWAYS | FA_WRITE)) {
         fs::stop();
@@ -177,32 +149,26 @@ namespace jsave {
 
 #ifdef USE_JMPTRACE
     void trace() {
-        if (!fs::mount())
-            return;
-
-        _save_trace(false);
+        char fname[64];
+        _trace_name_man(fname, sizeof(fname));
+        _save_trace(fname);
     }
 #endif // USE_JMPTRACE
 
     void full() {
-        if (!fs::mount())
-            return;
-
-#ifdef FWVER_DEBUG
-        uint32_t fre;
-        FATFS* fsi = NULL;
-        FR(f_getfree("", &fre, &fsi), return); // Warning! This fills fs.n_fatent and fs.csize!
-        CONSOLE("SD mount OK: total = %lu Mb; free = %lu Mb", (fs::inf().n_fatent - 2) * fs::inf().csize / 2048, fre * fs::inf().csize / 2048);
-
-        _dumpdir();
-#endif
+#ifdef USE_JMPTRACE
+        char fname[64];
+        // получить имя файла по текущему прыжку нам надо до выполнения _save_logbook()
+        // т.к. она сбрасывает данные о прыжке после себя
+        _trace_name_jmp(fname, sizeof(fname));
+#endif // USE_JMPTRACE
 
 #ifdef USE_LOGBOOK
         _save_logbook();
 #endif // USE_LOGBOOK
 
 #ifdef USE_JMPTRACE
-        _save_trace(true);
+        _save_trace(fname);
 #endif // USE_JMPTRACE
     }
 
