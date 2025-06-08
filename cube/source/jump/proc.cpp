@@ -296,6 +296,10 @@ namespace jmp {
         bar::tick(press, ms);
         if (!_slp.istoff()) {
             _bmp.sleep();
+            // Почему-то с первого раза не всегда уходит в сон.
+            // Причём, перед повтором надо сделать паузу.
+            HAL_Delay(1);
+            _bmp.sleep();
             return false;
         }
 
