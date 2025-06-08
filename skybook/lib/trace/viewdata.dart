@@ -271,8 +271,8 @@ class ViewMatrix {
     
     bool _loading = false;
     bool get loading => _loading;
-    set loading(bool _l) {
-        _loading = _l;
+    set loading(bool l) {
+        _loading = l;
         _notify.value ++;
     }
 }

@@ -48,23 +48,23 @@ bool devConnect(String addr)  {
         _subscr = _reader!.stream.listen(_read);
         _port!.config = cfg;
 
-        int _efail = 0;
+        int efail = 0;
         _echo = Timer.periodic(
             Duration(seconds: 1),
-            (_) async {
+            (t) async {
                 if (_port == null) {
-                    _.cancel();
+                    t.cancel();
                     _echo = null;
                 }
-                _efail ++; // защита от утечки памяти, если запросы будут подвисать
+                efail ++; // защита от утечки памяти, если запросы будут подвисать
                 final s = await devCmd('echo');
                 
                 if (s.ok)
-                    _efail = 0;
+                    efail = 0;
                 else {
-                    _efail++;
-                    if (_efail > 10) {
-                        _.cancel();
+                    efail++;
+                    if (efail > 10) {
+                        t.cancel();
                         _echo = null;
                     }
                 }
