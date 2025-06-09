@@ -5,6 +5,8 @@
 #include "menulogbook.h"
 #include "../sys/maincfg.h"
 #include "../view/text.h"
+#include "../sdcard/fshnd.h"
+#include "../ff/diskio.h"
 
 #include <string.h>
 
@@ -101,6 +103,44 @@ void MenuLogBook::smpldn() {
 
 #endif // if HWVER >= 2
 
+void MenuLogBook::MenuLogBookInfo::updtrc() {
+    _trc_cnt = 0;
+    _trc_nat = false;
+
+    fs::mounter m;
+    if (!m)
+        return;
+
+    char fprf[15];
+    auto l = snprintf(fprf, sizeof(fprf), "jump_%lu_", _l.num);
+    
+    DIR dh;
+    if (f_opendir(&dh, "/") != FR_OK)
+        return;
+
+    FILINFO finf;
+    for (;;) {
+        if (f_readdir(&dh, &finf) != FR_OK)
+            break;
+        if (finf.fname[0] == '\0')
+            break;
+        
+        if (finf.fattrib & AM_DIR)
+            continue;
+        
+        if (strncmp(finf.fname, fprf, l) != 0)
+            continue;
+        
+        _trc_cnt++;
+        if (!_trc_nat) {
+            auto l1 = strlen(finf.fname);
+            if ((l1 > 10) && (strncmp(finf.fname + l1 - 8, "_man.csv", 8) != 0))
+                _trc_nat = true;
+        }
+    }
+
+    f_closedir(&dh);
+}
 
 void MenuLogBook::MenuLogBookInfo::updinf() {
     int i = _s.ipos(_s._isel);
@@ -112,6 +152,7 @@ void MenuLogBook::MenuLogBookInfo::updinf() {
             _s._d[i].l :
 #endif
             LogBook::item_t();
+    updtrc();
 }
 
 MenuLogBook::MenuLogBookInfo::MenuLogBookInfo(MenuLogBook &s) :
@@ -164,6 +205,14 @@ void MenuLogBook::MenuLogBookInfo::draw(DSPL_ARG) {
     y += 10;
     DSPL_STRU(0, y, TXT_LOGBOOK_TIMECNP);
     snprintf(s, sizeof(s), TXT_LOGBOOK_MINSEC, _l.cnpsec / 60, _l.cnpsec % 60);
+    DSPL_STRU(DSPL_S_RIGHT(s), y, s);
+
+    y += 10;
+    DSPL_STRU(0, y, TXT_LOGBOOK_TRACE);
+    if (_trc_cnt)
+        snprintf(s, sizeof(s), _trc_nat ? TXT_MENU_YES " (%u)" : "man (%u)", _trc_cnt);
+    else
+        strcpy(s, "-");
     DSPL_STRU(DSPL_S_RIGHT(s), y, s);
 }
 

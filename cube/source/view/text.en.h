@@ -60,5 +60,6 @@
 #define TXT_LOGBOOK_TIMESEC         "%d s"
 #define TXT_LOGBOOK_MINSEC          "%d:%02d"
 #define TXT_LOGBOOK_TIMECNP         "CNP time"
+#define TXT_LOGBOOK_TRACE           "Trace"
 
 #endif // _view_text_lang_H

@@ -35,6 +35,9 @@ class MenuLogBook : public Menu {
     class MenuLogBookInfo : public Menu {
         MenuLogBook &_s;
         LogBook::item_t _l;
+        uint8_t _trc_cnt;
+        bool _trc_nat;
+        void updtrc();
         void updinf();
 
         public:

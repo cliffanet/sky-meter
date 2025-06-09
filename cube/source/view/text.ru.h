@@ -66,5 +66,6 @@ extern const uint8_t u8g2_font_robotobd_08_tx[] U8G2_FONT_SECTION("u8g2_font_rob
 #define TXT_LOGBOOK_TIMESEC         "%d с"
 #define TXT_LOGBOOK_MINSEC          "%d:%02d"
 #define TXT_LOGBOOK_TIMECNP         "Длит. пилотир"
+#define TXT_LOGBOOK_TRACE           "Трассировка"
 
 #endif // _view_text_lang_H
