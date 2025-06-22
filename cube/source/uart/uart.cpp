@@ -19,11 +19,16 @@ static uint8_t _active = 0;
 
 class _cmd : public CmdTxt {
     void write(const uint8_t *d, size_t sz) {
+        USBD_CDC_HandleTypeDef *hcdc = (USBD_CDC_HandleTypeDef*)hUsbDeviceFS.pClassData;
+        // при неподключенном usb tx может вызывать
+        // USBD_BUSY, в результате мы будем ждать
+        // несуществующую отправку.
+        if (hcdc->TxState != 0)
+            return;
         if (sz == 0)
             return;
         CDC_Transmit_FS(const_cast<uint8_t *>(d), sz);
         // надо дождаться окончания передачи, т.к. она ассинхронная, а буфер str уничтожается при выходе
-        USBD_CDC_HandleTypeDef *hcdc = (USBD_CDC_HandleTypeDef*)hUsbDeviceFS.pClassData;
         for (volatile int i = 0; (i < 1000000) && (hcdc->TxState != 0); i++) asm("");
     }
 

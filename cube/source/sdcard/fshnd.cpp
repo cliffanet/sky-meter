@@ -34,7 +34,7 @@ namespace fs {
 
     #if HWVER >= 2
         sdcard_on();
-        HAL_Delay(200);
+        HAL_Delay(20);
     #endif
         strncpy(_path, "", sizeof(_path));
         _path[sizeof(_path)-1] = '\0';
@@ -61,6 +61,8 @@ namespace fs {
     #if HWVER >= 2
         sdcard_off();
     #endif
+
+        _ok = false;
 
         return true;
     }

@@ -132,7 +132,7 @@ uint16_t CRC16(const uint8_t *d, int sz);
 static void dummy(uint8_t sz) {
     uint8_t tx[sz];
     memset(tx, 0xff, sizeof(tx));
-    HAL_SPI_Transmit(&hspi1, tx, sizeof(tx), 200);
+    HAL_SPI_Transmit(&hspi1, tx, sizeof(tx), 100);
 }
 
 static void recv(uint8_t *rx, uint16_t sz) {
@@ -143,7 +143,7 @@ static void recv(uint8_t *rx, uint16_t sz) {
 
 static uint8_t rcv() {
     uint8_t tx = 0xff, rx;
-    HAL_SPI_TransmitReceive(&hspi1, &tx, &rx, 1, 10);
+    HAL_SPI_TransmitReceive(&hspi1, &tx, &rx, 1, 2);
     return rx;
 }
 
@@ -323,6 +323,7 @@ static uint8_t acmd(uint8_t cmd, uint32_t arg) {
 DSTATUS disk_initialize(
     BYTE drv /* Physical drive number (0) */
 ) {
+    CONSOLE("begin");
     if (drv)
         return STA_NOINIT; /* Supports only drive 0 */
 
@@ -337,18 +338,36 @@ DSTATUS disk_initialize(
     dummy(10);
     beg();
 
-    // Fix mount issue - wait_ready fail ignored before command GO_IDLE_STATE
-    if (!wait(500)) {
-        CONSOLE("wait_ready fail ignored, card initialize continues");
-    }
-
     CardType = 0;
     Stat = STA_NOINIT;
     _encrc = 1;
-    if (_cmd(CMD0, 0) != 0x01) /* Put the card SPI/Idle state */
-        fail("IDLE failed");
+    for (int i = 1;; i++) {
+        // Сразу после подачи питания на sd-карту, она не сразу готова
+        // к работе. delay-задержки, даже в пару секунд, не решают проблему.
+        // А вот если делать несколько попыток инициализации с паузой,
+        // то, как правило, уже вторая попытка становится успешной.
+        if (!wait(100)) {
+            // Fix mount issue - wait_ready fail ignored before command GO_IDLE_STATE
+            CONSOLE("wait_ready fail ignored, card initialize continues");
+        }
+
+        CONSOLE("cmd0...%d", i);
+        if (_cmd(CMD0, 0) == 0x01) /* Put the card SPI/Idle state */
+            break;
+        
+        if (i >= 5)
+            fail("IDLE failed");
+        // при неуспешной попытке инициализации sd-карты (частая проблема
+        // сразу после подачи питания на неё), необходимо завершить
+        // spi-подключение и выждать паузу. Опытным путём определено,
+        // что только такой алгоритм наиболее эффективен.
+        // Пауза после завершения spi-сессии должна быть минимум 60 мс.
+        end();
+        HAL_Delay(100);
+        beg();
+    }
+
     end();
-    //HAL_Delay(100);
 
     {   
         /* пробуем включить контроль CRC - это есть только в esp32 */
