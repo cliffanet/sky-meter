@@ -67,6 +67,8 @@ namespace fs {
         return true;
     }
 
+    bool ismount() { return _ok; }
+
     const FATFS &inf() {
         return _fs;
     }

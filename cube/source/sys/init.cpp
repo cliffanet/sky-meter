@@ -4,6 +4,7 @@
 #include "clock.h"
 #include "maincfg.h"
 #include "iflash.h"
+#include "log.h"
 #include "../view/dspl.h"
 #include "../view/btn.h"
 #include "../jump/proc.h"
@@ -51,6 +52,7 @@ void init_full() {
         tmAdjust(tm, 0);
     }
     
+    logbufinit();
     iflash::init();
     Config::init();
     Btn::init(); // д.б. перед Dspl::init, т.к. Dspl::init выбирает страницу и присваивает хендлеры

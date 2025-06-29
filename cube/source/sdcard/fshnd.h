@@ -11,6 +11,7 @@
 namespace fs {
     bool mount();
     bool stop();
+    bool ismount();
 
     class mounter {
         bool _ok;

@@ -412,9 +412,12 @@ namespace jmp {
             // будем сами увеличивать кол-во прыжков
             (*cfg)->jmpcnt ++;
             cfg.save();
+            jsave::full();
         }
 
 #endif // USE_LOGBOOK
+
+
 
 
 #ifdef USE_JMPTRACE

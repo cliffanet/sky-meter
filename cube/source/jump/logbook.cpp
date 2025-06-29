@@ -109,11 +109,13 @@ namespace LogBook {
     void beg_toff() {
         bzero(&_cur, sizeof(_cur));
         _keygen();
+        CONSOLE("generated key: %u", _cur.key);
         _ms = 0;
     }
 
     void beg_ff(uint32_t ms, int16_t alt) {
         _keygen();
+        CONSOLE("generated key: %u", _cur.key);
         _cur.begalt = alt;
         
         auto sec = ms / 1000;
@@ -126,6 +128,7 @@ namespace LogBook {
 
     void beg_cnp(uint32_t ms, int16_t alt) {
         _keygen();
+        CONSOLE("generated key: %u", _cur.key);
         if (_cur.begalt == 0)
             _cur.begalt = alt;
         _cur.cnpalt = alt;
@@ -151,6 +154,7 @@ namespace LogBook {
     }
 
     LogBook::item_t end(uint32_t ms) {
+        CONSOLE("logbook key: %u", _cur.key);
         if (_cur.key > 0) {
             auto sec = ms / 1000;
             if (_cur.cnpsec >= sec)

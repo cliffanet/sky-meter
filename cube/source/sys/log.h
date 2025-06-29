@@ -17,6 +17,13 @@
 const char * __extrfname(const char * path);
 #define LOG_FMT(s)        "[%s:%u] %s(): " s, __extrfname(__FILE__), __LINE__, __FUNCTION__
 
+void logbufinit();
+typedef struct {
+    int i, n;
+} logbuf_iterator_t;
+const char * logbufbeg(logbuf_iterator_t *iter);
+const char * logbufnxt(logbuf_iterator_t *iter);
+
 void conslog(const char *s, ...);
 #define CONSOLE(txt, ...) conslog(LOG_FMT(txt), ##__VA_ARGS__)
 
