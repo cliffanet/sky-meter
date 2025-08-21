@@ -4,6 +4,7 @@
 
 #include "stm32drv.h"
 #include "clock.h"
+#include "err.h"
 
 /* ------------------------------------------------------------------------------------------- *
  *      операции со временем в формате tm_t
@@ -30,8 +31,10 @@ tm_t tmNow() {
     if (
             (HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN) != HAL_OK) ||
             (HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK)
-        )
+        ) {
+        err::add(0x72);
         return { 0 };
+    }
     
     tm_t tm = {
         .year   = static_cast<uint16_t>(static_cast<uint16_t>(sDate.Year) + 2000),
@@ -48,8 +51,10 @@ tm_t tmNow() {
 
 uint16_t tmRand() {
     RTC_TimeTypeDef sTime = {0};
-    if (HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN) != HAL_OK)
+    if (HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN) != HAL_OK) {
+        err::add(0x71);
         return 0;
+    }
     return sTime.SubSeconds * sTime.Seconds * sTime.Minutes * sTime.Hours;
 }
 
@@ -66,8 +71,10 @@ bool tmAdjust(const tm_t &tm, uint8_t wday) {
     sTime.SubSeconds = 0x0;
     sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
     sTime.StoreOperation = RTC_STOREOPERATION_RESET;
-    if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN) != HAL_OK)
+    if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN) != HAL_OK) {
+        err::add(0x73);
         return false;
+    }
 
     RTC_DateTypeDef sDate = {0};
     sDate.WeekDay       = wday;
@@ -75,8 +82,10 @@ bool tmAdjust(const tm_t &tm, uint8_t wday) {
     sDate.Date          = tm.day;
     sDate.Year          = tm.year % 100;
 
-    if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK)
+    if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK) {
+        err::add(0x74);
         return false;
+    }
     
     HAL_RTCEx_BKUPWrite(&hrtc, RTC_BKP_DR0, '*');
 

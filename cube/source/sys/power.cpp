@@ -7,6 +7,7 @@
 #include "sproc.h"
 #include "batt.h"
 #include "maincfg.h"
+#include "err.h"
 #include "log.h"
 #include "../jump/proc.h"
 #include "../view/btn.h"
@@ -409,6 +410,7 @@ void pwr_tick() {
         Dspl::tick();
         batt::tick();
         uart::tick();
+        err::tick();
 
         _tmr = 0;
 

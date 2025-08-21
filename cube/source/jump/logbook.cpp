@@ -153,6 +153,8 @@ namespace LogBook {
         _cur.cnpsec += _incms(ms);
     }
 
+    bool _saveok = false;
+
     LogBook::item_t end(uint32_t ms) {
         CONSOLE("logbook key: %u", _cur.key);
         if (_cur.key > 0) {
@@ -160,7 +162,7 @@ namespace LogBook {
             if (_cur.cnpsec >= sec)
                 _cur.cnpsec -= sec;
             
-            _save();
+            _saveok = _save();
         }
         auto _last = _cur;
         bzero(&_cur, sizeof(_cur));

@@ -23,9 +23,9 @@ void Dspl::drawBatt(DSPL_ARG) {
     auto chrg = batt::charge();
     if (chrg > 0) {
         DSPL_FONT(u8g2_font_open_iconic_embedded_1x_t);
-        DSPL_GLYPH(0, 20, 'C');
+        DSPL_GLYPH(25, 8, 'C');
         if (chrg == batt::CHRG_HI)
-            DSPL_GLYPH(10, 20, 'C');
+            DSPL_GLYPH(32, 8, 'C');
     }
     
     //DSPL_FONT(u8g2_font_helvB08_tr);
@@ -53,15 +53,15 @@ extern USBD_HandleTypeDef hUsbDeviceFS;
 void Dspl::drawServ(DSPL_ARG) {
     if (jsave::isactive()) {
         DSPL_FONT(u8g2_font_open_iconic_www_1x_t);
-        DSPL_GLYPH(25, 8, 'K');
+        DSPL_GLYPH(44, 8, 'K');
     }
     if (hUsbDeviceFS.dev_state == USBD_STATE_CONFIGURED) {
         DSPL_FONT(u8g2_font_open_iconic_www_1x_t);
-        DSPL_GLYPH(35, 8, 'O');
+        DSPL_GLYPH(58, 8, 'O');
     }
     if (uart::isactive()) {
         DSPL_FONT(u8g2_font_open_iconic_www_1x_t);
-        DSPL_GLYPH(45, 8, 'S');
+        DSPL_GLYPH(68, 8, 'S');
     }
 }
 

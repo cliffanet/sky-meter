@@ -2,6 +2,7 @@
 #include "iflash.h"
 #include "stm32drv.h"
 #include "cks.h"
+#include "err.h"
 #include "log.h"
 
 #include <memory.h>
@@ -13,6 +14,8 @@ namespace iflash {
         auto st = HAL_FLASH_Unlock();
         CONSOLE("FLASH_Unlock: %d", st);
         ok = st == HAL_OK;
+        if (!ok)
+            err::add(0x31);
     }
 
     Unlocker::~Unlocker() {
@@ -20,6 +23,8 @@ namespace iflash {
             return;
         auto st = HAL_FLASH_Lock();
         CONSOLE("HAL_FLASH_Lock: %d", st);
+        if (st != HAL_OK)
+            err::add(0x32);
     }
 
     bool erase(int addr) {
@@ -110,20 +115,25 @@ namespace iflash {
         public:
             Unlocker() {
                 auto st = HAL_FLASH_Unlock();
-                CONSOLE("FLASH_Unlock: %d", st);
+                CONSOLE("FLASH_Unlock: %d, bsy: %d", st, __HAL_FLASH_GET_FLAG(FLASH_FLAG_BSY) > 0);
                 ok = st == HAL_OK;
             }
             ~Unlocker() {
                 if (!ok)
                     return;
-                auto st = HAL_FLASH_Lock();
-                CONSOLE("HAL_FLASH_Lock: %d", st);
+#ifdef USE_CONSOLE
+                auto st = 
+#endif
+                    HAL_FLASH_Lock();
+                CONSOLE("HAL_FLASH_Lock: %d, bsy: %d", st, __HAL_FLASH_GET_FLAG(FLASH_FLAG_BSY) > 0);
             }
             operator bool() const { return ok; };
     };
 
     static bool _write(int addr, const uint8_t *d, size_t sz) {
+#ifdef USE_CONSOLE
         auto a = addr;
+#endif
         Unlocker _l;
         if (!_l)
             return false;
@@ -144,8 +154,10 @@ namespace iflash {
 
             auto st = _FLASH_WRITE(addr, v);
             CONSOLE("HAL_FLASH_Program[0x%06x]: %d, errno: 0x%04x", addr-_FLASH_BASE, st, st == HAL_OK ? 0 : HAL_FLASH_GetError());
-            if (st != HAL_OK)
+            if (st != HAL_OK) {
+                err::add(0x33);
                 return false;
+            }
             
             addr += _FLASH_WBLK_SIZE;
         }
@@ -241,8 +253,10 @@ namespace iflash {
             CONSOLE("HAL_FLASHEx_Erase[0x%06x, page: %d]: %d", _a, e.Page, st);
 #endif // HWVER
 
-            if (st != HAL_OK)
+            if (st != HAL_OK) {
+                err::add(0x34);
                 return false;
+            }
         }
         
         struct __attribute__((__packed__)) {
@@ -411,8 +425,10 @@ namespace iflash {
     }
 
     Rec save(uint8_t type, const uint8_t *d, size_t sz) {
-        if ((sz + 5 + _FLASH_PHDR_SIZE > _FLASH_PAGE_SIZE) || (sz > 255))
+        if ((sz + 5 + _FLASH_PHDR_SIZE > _FLASH_PAGE_SIZE) || (sz > 255)) {
+            err::add(0x30);
             return Rec();
+        }
         
         auto r = _last[TYPE_ANY];
 

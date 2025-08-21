@@ -9,6 +9,7 @@
 #include "../sys/stm32drv.h"
 #include "../sys/maincfg.h"
 #include "../sys/power.h"
+#include "../sys/err.h"
 #include "../sys/log.h"
 #include "../view/page.h"
 
@@ -97,6 +98,12 @@ static int _lmin = 0, _lmax = 0;
         
         char s[strsz], m[strsz], t[strsz];
 
+        err::tostr(s, strsz);
+        if (s[0] != '\0') {
+            DSPL_FONT(u8g2_font_helvB08_tr);
+            DSPL_STR(0, 17, s);
+        }
+
     if (!_ac.isempty()) {
         // info
         DSPL_FONT(u8g2_font_6x13B_tr);
@@ -155,8 +162,8 @@ static int _lmin = 0, _lmax = 0;
                 // alt
                 DSPL_FONT(u8g2_font_fub20_tr);
 
-                int y = DSPL_S_HEIGHT;
-                DSPL_STR(90-DSPL_S_WIDTH(s), y, s);
+                int y = DSPL_S_HEIGHT + 20;
+                DSPL_STR(130-DSPL_S_WIDTH(s), y, s);
 
                 // вертикальная шкала
                 DSPL_LINE(DSPL_DWIDTH-5, 0,                 DSPL_DWIDTH, 0);
@@ -214,8 +221,10 @@ namespace jmp {
     void init() {
         if (_bmp.init())
             CONSOLE("BMP280 ok: chipid=0x%02x, version=0x%02x", _bmp.chipid(), _bmp.version());
-        else
+        else {
+            err::add(0x50);
             CONSOLE("BMP280 fail (chipid: 0x%02x)", _bmp.chipid());
+        }
         // тут мы оказываемся только после физической подачи питания,
         HAL_Delay(100); // надо дать успеть датчику проинициироваться
     }
@@ -283,6 +292,7 @@ namespace jmp {
         if (!_bmp.setctrl()) {
             CONSOLE("NO BMP280");
             _slp.clear();
+            err::add(0x54);
             return false;
         }
         
@@ -290,6 +300,7 @@ namespace jmp {
         if (!_bmp.meas(press)) {
             CONSOLE("ERROR BMP280");
             _slp.clear();
+            err::add(0x55);
             return false;
         }
         _slp.tick(press);
@@ -324,8 +335,10 @@ namespace jmp {
     }
 
     void tick(uint32_t ms) {
-        if (!_bmp.meas(_press, _temp))
+        if (!_bmp.meas(_press, _temp)) {
+            err::add(0x55);
             return;
+        }
         _ac.tick(_press, ms);
 
         static auto m = _jmp.mode();

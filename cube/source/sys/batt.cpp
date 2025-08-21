@@ -5,6 +5,7 @@
 #include "stm32drv.h"
 #include "batt.h"
 #include "power.h"
+#include "err.h"
 
 
 #if HWVER < 2
@@ -28,6 +29,8 @@ uint32_t analogRead()
   if (HAL_ADC_PollForConversion(&hadc1, 1000) == HAL_OK) {
       ADCValue = HAL_ADC_GetValue(&hadc1);
   }
+  else
+      err::add(0x81);
   HAL_ADC_Stop(&hadc1);
   
   return ADCValue;

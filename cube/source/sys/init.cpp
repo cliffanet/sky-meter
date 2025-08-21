@@ -51,8 +51,11 @@ void init_full() {
         };
         tmAdjust(tm, 0);
     }
-    
+
+#ifdef USE_CONSOLE
     logbufinit();
+#endif
+
     iflash::init();
     Config::init();
     Btn::init(); // д.б. перед Dspl::init, т.к. Dspl::init выбирает страницу и присваивает хендлеры
